@@ -5,12 +5,11 @@ import 'dashboard_card.dart';
 
 class ExamDashboard extends StatelessWidget {
   final String examId;
-  final List<Paper> papers;
-  const ExamDashboard({Key? key, required this.examId, required this.papers})
-      : super(key: key);
+  const ExamDashboard({Key? key, required this.examId}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    /*
     double userScore = 0;
     for (var element in papers) {
       userScore += element.userScore;
@@ -20,6 +19,8 @@ class ExamDashboard extends StatelessWidget {
     for (var element in papers) {
       fullScore += element.fullScore;
     }
+
+     */
 
     return Column(
       children: [
@@ -55,12 +56,7 @@ class ExamDashboard extends StatelessWidget {
           },
         )
          */
-        DashboardCard(
-          examId: examId,
-          userScore: userScore,
-          fullScore: fullScore,
-          papers: papers,
-        )
+        DashboardCard(examId: examId)
       ],
     );
   }

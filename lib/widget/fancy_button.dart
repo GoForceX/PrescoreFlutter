@@ -6,9 +6,9 @@ class FancyButton extends StatelessWidget {
   final String text;
   const FancyButton(
       {Key? key,
-        required this.gradients,
-        required this.callback,
-        required this.text})
+      required this.gradients,
+      required this.callback,
+      required this.text})
       : super(key: key);
 
   @override

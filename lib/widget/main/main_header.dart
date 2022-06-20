@@ -273,7 +273,8 @@ class _FallbackAppbarWidgetState extends State<FallbackAppbarWidget> {
                             User user = User();
                             Provider.of<LoginModel>(context, listen: false)
                                 .setUser(user);
-                            Map<String, dynamic> result = await user.login(username, password);
+                            Map<String, dynamic> result =
+                                await user.login(username, password);
                             if (mounted) {
                               if (result["status"]) {
                                 Provider.of<LoginModel>(context, listen: false)
@@ -281,13 +282,15 @@ class _FallbackAppbarWidgetState extends State<FallbackAppbarWidget> {
                                 logger.d(user.session?.xToken);
                               } else {
                                 SnackBar snackBar = SnackBar(
-                                  content: Text('呜呜呜，登录失败了……\n失败原因：${result["message"]}'),
-                                  backgroundColor: ThemeMode.system ==
-                                      ThemeMode.dark
-                                      ? Colors.grey[900]
-                                      : Colors.grey[200],
+                                  content: Text(
+                                      '呜呜呜，登录失败了……\n失败原因：${result["message"]}'),
+                                  backgroundColor:
+                                      ThemeMode.system == ThemeMode.dark
+                                          ? Colors.grey[900]
+                                          : Colors.grey[200],
                                 );
-                                ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                                ScaffoldMessenger.of(context)
+                                    .showSnackBar(snackBar);
                                 Provider.of<LoginModel>(context, listen: false)
                                     .setLoading(false);
                               }

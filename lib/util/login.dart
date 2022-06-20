@@ -256,6 +256,7 @@ class User {
     diagJson["result"]["list"].forEach((element) {
       return diags.add(PaperDiagnosis(
           subjectId: element["subjectCode"],
+          subjectName: element["subjectName"],
           diagnosticScore: element["myRank"]));
     });
     logger.d("diag: success, $diags");

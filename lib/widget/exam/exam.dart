@@ -21,29 +21,10 @@ class _ExamPageState extends State<ExamPage> {
 
   @override
   Widget build(BuildContext context) {
-    logger.d(
-        "exam session: ${widget.user.session}");
+    logger.d("exam session: ${widget.user.session}");
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('出分啦'),
-      ),
-      body: ChangeNotifierProvider(
-        create: (_) => ExamModel(),
-        builder: (BuildContext context, Widget? child) {
-          ExamModel model = Provider.of<ExamModel>(context, listen: false);
-          model.user = widget.user;
-          return Center(
-            child: FutureBuilder(
-                future: Provider.of<ExamModel>(context, listen: false)
-                    .user
-                    .fetchPaper(widget.uuid),
-                builder: (BuildContext context, AsyncSnapshot snapshot) {
-                  if (snapshot.hasData) {
-                    switch (_selectedIndex) {
-                      case 0:
-                        if (!snapshot.data["state"]) {
-                          Future.delayed(Duration.zero, () {
+    /*
+    Future.delayed(Duration.zero, () {
                             SnackBar snackBar = SnackBar(
                               content: Text(
                                   '呜呜呜，数据获取失败了……\n失败原因：${snapshot.data["message"]}'),
@@ -55,30 +36,32 @@ class _ExamPageState extends State<ExamPage> {
                             ScaffoldMessenger.of(context)
                                 .showSnackBar(snackBar);
                           });
-                          return const Center(
-                            child: Icon(Icons.error),
-                          );
-                        } else {
-                          return ExamDashboard(
-                            examId: widget.uuid,
-                            papers: snapshot.data["result"],
-                          );
-                        }
-                      case 1:
-                        return const Center(
-                          child: CircularProgressIndicator(),
-                        );
-                      default:
-                        return Center(
-                          child: Container(),
-                        );
-                    }
-                  } else {
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    );
-                  }
-                }), //New
+     */
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('出分啦'),
+      ),
+      body: ChangeNotifierProvider(
+        create: (_) => ExamModel(),
+        builder: (BuildContext context, Widget? child) {
+          ExamModel model = Provider.of<ExamModel>(context, listen: false);
+          model.user = widget.user;
+          Widget chosenWidget = Container();
+          switch (_selectedIndex) {
+            case 0:
+              chosenWidget = ExamDashboard(
+                examId: widget.uuid,
+              );
+              break;
+            case 1:
+              chosenWidget = const CircularProgressIndicator();
+              break;
+            default:
+              chosenWidget = Container();
+          }
+          return Center(
+            child: chosenWidget,
           );
         },
       ),

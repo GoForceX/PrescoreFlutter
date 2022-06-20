@@ -94,8 +94,7 @@ class ExamCard extends StatelessWidget {
       elevation: 8,
       child: InkWell(
           onTap: () {
-            context.router.navigate(ExamRoute(
-                uuid: uuid, user: user));
+            context.router.navigate(ExamRoute(uuid: uuid, user: user));
           },
           child: cardMain),
     );

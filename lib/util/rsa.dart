@@ -124,8 +124,10 @@ abstract class AbstractRSAExt {
   AbstractRSAExt({
     this.publicKey,
     this.privateKey,
-  })  : _publicKeyParams = publicKey != null ? PublicKeyParameter(publicKey) : null,
-        _privateKeyParams = privateKey != null ? PrivateKeyParameter(privateKey) : null,
+  })  : _publicKeyParams =
+            publicKey != null ? PublicKeyParameter(publicKey) : null,
+        _privateKeyParams =
+            privateKey != null ? PrivateKeyParameter(privateKey) : null,
         _cipher = NoPaddingEncoding(RSAEngine());
 }
 

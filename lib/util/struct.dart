@@ -34,9 +34,9 @@ class Exam {
 
   Exam(
       {required this.uuid,
-        required this.examName,
-        required this.examType,
-        required this.examTime});
+      required this.examName,
+      required this.examType,
+      required this.examTime});
 
   @override
   String toString() {
@@ -69,10 +69,12 @@ class Paper {
 
 class PaperDiagnosis {
   String subjectId;
+  String subjectName;
   double diagnosticScore;
 
   PaperDiagnosis({
     required this.subjectId,
+    required this.subjectName,
     required this.diagnosticScore,
   });
 

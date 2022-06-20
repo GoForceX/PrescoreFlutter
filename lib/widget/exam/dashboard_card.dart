@@ -8,22 +8,117 @@ import '../../util/struct.dart';
 
 class DashboardCard extends StatefulWidget {
   final String examId;
-  final double fullScore;
-  final double userScore;
-  final List<Paper> papers;
-  const DashboardCard(
-      {Key? key,
-      required this.examId,
-      required this.fullScore,
-      required this.userScore,
-      required this.papers})
-      : super(key: key);
+  const DashboardCard({Key? key, required this.examId}) : super(key: key);
 
   @override
   State<DashboardCard> createState() => _DashboardCardState();
 }
 
 class _DashboardCardState extends State<DashboardCard> {
+  @override
+  Widget build(BuildContext context) {
+    List<Widget> children = [];
+
+    if (Provider.of<ExamModel>(context, listen: false).isPaperLoaded) {
+      List<Paper> papers =
+          Provider.of<ExamModel>(context, listen: false).papers;
+      double userScore = 0;
+      for (var element in papers) {
+        userScore += element.userScore;
+      }
+
+      double fullScore = 0;
+      for (var element in papers) {
+        fullScore += element.fullScore;
+      }
+      Widget chart = DashboardInfo(userScore: userScore, fullScore: fullScore);
+      children.add(chart);
+    } else {
+      FutureBuilder futureBuilder = FutureBuilder(
+        future: Provider.of<ExamModel>(context, listen: false)
+            .user
+            .fetchPaper(widget.examId),
+        builder: (BuildContext context, AsyncSnapshot snapshot) {
+          if (snapshot.hasData) {
+            if (snapshot.data["state"]) {
+              Provider.of<ExamModel>(context, listen: false)
+                  .setPapers(snapshot.data["result"]);
+              Provider.of<ExamModel>(context, listen: false)
+                  .setPaperLoaded(true);
+              double userScore = 0;
+              for (var element in snapshot.data["result"]) {
+                userScore += element.userScore;
+              }
+
+              double fullScore = 0;
+              for (var element in snapshot.data["result"]) {
+                fullScore += element.fullScore;
+              }
+              Widget chart =
+                  DashboardInfo(userScore: userScore, fullScore: fullScore);
+              return chart;
+            } else {
+              return Container();
+            }
+          } else {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+        },
+      );
+
+      children.add(futureBuilder);
+    }
+
+    if (Provider.of<ExamModel>(context, listen: false).isDiagLoaded) {
+      Widget chart = DashboardChart(
+          diagnoses: Provider.of<ExamModel>(context, listen: false).diagnoses);
+      children.add(chart);
+    } else {
+      FutureBuilder futureBuilder = FutureBuilder(
+        future: Provider.of<ExamModel>(context, listen: false)
+            .user
+            .fetchPaperDiagnosis(widget.examId),
+        builder: (BuildContext context, AsyncSnapshot snapshot) {
+          if (snapshot.hasData) {
+            if (snapshot.data["state"]) {
+              Provider.of<ExamModel>(context, listen: false)
+                  .setDiagnoses(snapshot.data["result"]);
+              Provider.of<ExamModel>(context, listen: false)
+                  .setDiagLoaded(true);
+              return DashboardChart(diagnoses: snapshot.data["result"]);
+            } else {
+              return Container();
+            }
+          } else {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+        },
+      );
+
+      children.add(futureBuilder);
+    }
+
+    ListView listView = ListView(
+      padding: const EdgeInsets.all(8),
+      shrinkWrap: false,
+      children: children,
+    );
+
+    return Expanded(child: listView);
+  }
+}
+
+class DashboardInfo extends StatelessWidget {
+  final double userScore;
+  final double fullScore;
+  const DashboardInfo(
+      {Key? key, required this.userScore, required this.fullScore})
+      : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     Container infoCard = Container(
@@ -52,7 +147,7 @@ class _DashboardCardState extends State<DashboardCard> {
                         ],
                       ),
                       Text(
-                        "${widget.userScore}",
+                        "$userScore",
                         style: const TextStyle(fontSize: 48),
                       ),
                       const SizedBox(
@@ -74,7 +169,7 @@ class _DashboardCardState extends State<DashboardCard> {
                         width: 16,
                       ),
                       Text(
-                        "${widget.fullScore}",
+                        "$fullScore",
                         style: const TextStyle(fontSize: 48),
                       ),
                     ],
@@ -85,7 +180,7 @@ class _DashboardCardState extends State<DashboardCard> {
             ),
             LinearPercentIndicator(
               lineHeight: 8.0,
-              percent: widget.userScore / widget.fullScore,
+              percent: userScore / fullScore,
               backgroundColor: Colors.grey,
               linearGradient: const LinearGradient(
                 begin: Alignment.centerLeft,
@@ -97,60 +192,18 @@ class _DashboardCardState extends State<DashboardCard> {
           ],
         ));
 
-    List<Widget> children = [
-      Card(
-        margin: const EdgeInsets.all(12.0),
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-        elevation: 8,
-        child: infoCard,
-      ),
-    ];
-
-    if (Provider.of<ExamModel>(context, listen: false).isDiagLoaded) {
-      Widget chart = DashboardChart(
-          papers: widget.papers, diagnoses: Provider.of<ExamModel>(context, listen: false).diagnoses);
-      children.add(chart);
-    } else {
-      FutureBuilder futureBuilder = FutureBuilder(
-        future: Provider.of<ExamModel>(context, listen: false)
-            .user
-            .fetchPaperDiagnosis(widget.examId),
-        builder: (BuildContext context, AsyncSnapshot snapshot) {
-          if (snapshot.hasData) {
-            if (snapshot.data["state"]) {
-              return DashboardChart(
-                  papers: widget.papers, diagnoses: snapshot.data["result"]);
-            } else {
-              return Container();
-            }
-          } else {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-        },
-      );
-
-      children.add(futureBuilder);
-    }
-
-    ListView listView = ListView(
-      padding: const EdgeInsets.all(8),
-      shrinkWrap: false,
-      children: children,
+    return Card(
+      margin: const EdgeInsets.all(12.0),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+      elevation: 8,
+      child: infoCard,
     );
-
-    return Expanded(child: listView);
   }
 }
 
 class DashboardChart extends StatelessWidget {
-  final List<Paper> papers;
   final List<PaperDiagnosis> diagnoses;
-  const DashboardChart(
-      {Key? key, required this.papers, required this.diagnoses})
-      : super(key: key);
+  const DashboardChart({Key? key, required this.diagnoses}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -176,7 +229,7 @@ class DashboardChart extends StatelessWidget {
                       RadarDataSet(
                         entryRadius: 0,
                         dataEntries: List.filled(
-                            papers.length, const RadarEntry(value: 100)),
+                            diagnoses.length, const RadarEntry(value: 100)),
                         fillColor: Colors.transparent,
                         borderColor: Colors.transparent,
                       )
@@ -196,7 +249,8 @@ class DashboardChart extends StatelessWidget {
                     ),
                     radarShape: RadarShape.polygon,
                     getTitle: (index, angle) {
-                      return RadarChartTitle(text: papers[index].name);
+                      return RadarChartTitle(
+                          text: diagnoses[index].subjectName);
                     },
                   ),
                   swapAnimationDuration: const Duration(milliseconds: 150),
