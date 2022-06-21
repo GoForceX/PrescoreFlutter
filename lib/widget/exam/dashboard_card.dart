@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 import '../../main.dart';
 import '../../model/exam_model.dart';
 import '../../util/struct.dart';
-import '../../util/telemetry.dart';
 
 class DashboardCard extends StatefulWidget {
   final String examId;
