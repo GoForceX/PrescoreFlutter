@@ -514,9 +514,11 @@ class User {
     Dio client = BaseDio().dio;
 
     try {
+      logger.d("fetchExamPredict: start, $examId, $score");
       Response response = await client
           .get('https://matrix.bjbybbs.com/api/exam/predict/$examId/$score');
       Map<String, dynamic> result = jsonDecode(response.data);
+      logger.d("fetchExamPredict: end, $result");
       if (result["code"] == 0) {
         return {"state": true, "message": "成功哒！", "result": result["percent"]};
       } else {

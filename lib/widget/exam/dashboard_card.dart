@@ -26,7 +26,7 @@ class _DashboardCardState extends State<DashboardCard> {
       if (Provider.of<ExamModel>(context, listen: false).isPaperLoaded &&
           Provider.of<ExamModel>(context, listen: false).isDiagFetched) {
         for (var paper
-        in Provider.of<ExamModel>(context, listen: false).papers) {
+            in Provider.of<ExamModel>(context, listen: false).papers) {
           try {
             logger.d("DashboardInfo: ${paper.name}");
             Provider.of<ExamModel>(context, listen: false)
@@ -93,6 +93,48 @@ class _DashboardCardState extends State<DashboardCard> {
       children.add(futureBuilder);
     }
 
+    children.add(Consumer(builder:
+        (BuildContext consumerContext, ExamModel examModel, Widget? child) {
+      if (examModel.isPaperLoaded) {
+        double userScore = 0;
+        for (var element in examModel.papers) {
+          userScore += element.userScore;
+        }
+
+        return FutureBuilder(
+          future: Provider.of<ExamModel>(context, listen: false)
+              .user
+              .fetchExamPredict(widget.examId, userScore),
+          builder: (BuildContext context, AsyncSnapshot snapshot) {
+            logger.d("DashboardPredict: ${snapshot.data}");
+            if (snapshot.hasData) {
+              if (snapshot.data["state"]) {
+                if (snapshot.data["result"] < 0) {
+                  Widget predict = const DashboardPredict(percentage: 0);
+                  return predict;
+                } else if (snapshot.data["result"] > 1) {
+                  Widget predict = const DashboardPredict(percentage: 1);
+                  return predict;
+                } else {
+                  Widget predict =
+                      DashboardPredict(percentage: snapshot.data["result"]);
+                  return predict;
+                }
+              } else {
+                return Container();
+              }
+            } else {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+          },
+        );
+      } else {
+        return Container();
+      }
+    }));
+
     if (Provider.of<ExamModel>(context, listen: false).isDiagLoaded) {
       Widget chart = DashboardChart(
           diagnoses: Provider.of<ExamModel>(context, listen: false).diagnoses);
@@ -105,12 +147,14 @@ class _DashboardCardState extends State<DashboardCard> {
         builder: (BuildContext context, AsyncSnapshot snapshot) {
           if (snapshot.hasData) {
             if (snapshot.data["state"]) {
-              Provider.of<ExamModel>(context, listen: false)
-                  .setDiagnoses(snapshot.data["result"]);
-              Provider.of<ExamModel>(context, listen: false)
-                  .setDiagFetched(true);
-              Provider.of<ExamModel>(context, listen: false)
-                  .setDiagLoaded(true);
+              Future.delayed(Duration.zero, () {
+                Provider.of<ExamModel>(context, listen: false)
+                    .setDiagnoses(snapshot.data["result"]);
+                Provider.of<ExamModel>(context, listen: false)
+                    .setDiagFetched(true);
+                Provider.of<ExamModel>(context, listen: false)
+                    .setDiagLoaded(true);
+              });
               return DashboardChart(diagnoses: snapshot.data["result"]);
             } else {
               Future.delayed(Duration.zero, () {
@@ -209,6 +253,86 @@ class DashboardInfo extends StatelessWidget {
             LinearPercentIndicator(
               lineHeight: 8.0,
               percent: userScore / fullScore,
+              backgroundColor: Colors.grey,
+              linearGradient: const LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: [Colors.lightBlueAccent, Colors.lightBlue, Colors.blue],
+              ),
+              barRadius: const Radius.circular(4),
+            ),
+          ],
+        ));
+
+    return Card(
+      margin: const EdgeInsets.all(12.0),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+      elevation: 8,
+      child: infoCard,
+    );
+  }
+}
+
+class DashboardPredict extends StatelessWidget {
+  final double percentage;
+  const DashboardPredict({Key? key, required this.percentage})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    Container infoCard = Container(
+        padding: const EdgeInsets.all(12.0),
+        alignment: AlignmentDirectional.topStart,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: FittedBox(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: const [
+                          Text(
+                            "预测年排百分比：",
+                            style: TextStyle(fontSize: 24),
+                          ),
+                          SizedBox(
+                            height: 12,
+                          )
+                        ],
+                      ),
+                      Text(
+                        (percentage * 100).toStringAsFixed(2),
+                        style: const TextStyle(fontSize: 48),
+                      ),
+                      const SizedBox(
+                        width: 16,
+                      ),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: const [
+                          Text(
+                            "%",
+                            style: TextStyle(fontSize: 24),
+                          ),
+                          SizedBox(
+                            height: 12,
+                          )
+                        ],
+                      ),
+                    ],
+                  ),
+                )),
+            const SizedBox(
+              height: 16,
+            ),
+            LinearPercentIndicator(
+              lineHeight: 8.0,
+              percent: percentage,
               backgroundColor: Colors.grey,
               linearGradient: const LinearGradient(
                 begin: Alignment.centerLeft,
