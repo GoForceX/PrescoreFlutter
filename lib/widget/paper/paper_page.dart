@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:prescore_flutter/widget/paper/paper_detail.dart';
 import 'package:prescore_flutter/widget/paper/paper_photo.dart';
 import 'package:provider/provider.dart';
 
@@ -56,11 +57,13 @@ class _PaperPageState extends State<PaperPage> {
           switch (_selectedIndex) {
             case 0:
               chosenWidget = PaperPhoto(
-                examId: widget.examId, paperId: widget.paperId,
+                examId: widget.examId,
+                paperId: widget.paperId,
               );
               break;
             case 1:
-              chosenWidget = const CircularProgressIndicator();
+              chosenWidget =
+                  PaperDetail(examId: widget.examId, paperId: widget.paperId);
               break;
             default:
               chosenWidget = Container();

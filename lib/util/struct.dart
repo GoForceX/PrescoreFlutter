@@ -86,8 +86,8 @@ class PaperDiagnosis {
 
 class Question {
   String questionId;
-  String userScore;
-  String fullScore;
+  double userScore;
+  double fullScore;
 
   Question({
     required this.questionId,

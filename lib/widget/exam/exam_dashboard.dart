@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../util/struct.dart';
 import 'dashboard_card.dart';
 
 class ExamDashboard extends StatelessWidget {

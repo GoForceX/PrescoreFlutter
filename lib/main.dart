@@ -6,7 +6,6 @@ import 'package:logger/logger.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:prescore_flutter/widget/exam/exam.dart';
 import 'package:prescore_flutter/main.gr.dart';
-import 'package:prescore_flutter/widget/drawer.dart';
 import 'package:auto_route/annotations.dart';
 import 'package:prescore_flutter/widget/main/exams.dart';
 import 'package:prescore_flutter/widget/main/main_header.dart';

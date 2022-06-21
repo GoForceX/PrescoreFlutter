@@ -16,8 +16,6 @@ class ExamDetail extends StatefulWidget {
 class _ExamDetailState extends State<ExamDetail> {
   @override
   Widget build(BuildContext context) {
-    ListView listView;
-
     if (Provider.of<ExamModel>(context, listen: false).isPaperLoaded) {
       List<Widget> children = [];
       List<Paper> papers =

@@ -263,7 +263,8 @@ class User {
     return {"state": true, "message": "", "result": diags};
   }
 
-  Future<Map<String, dynamic>> fetchPaperData(String examId, String paperId) async {
+  Future<Map<String, dynamic>> fetchPaperData(
+      String examId, String paperId) async {
     Dio client = BaseDio().dio;
 
     if (session == null) {
@@ -280,13 +281,26 @@ class User {
       return {"state": false, "message": json["errorInfo"], "result": null};
     }
 
-
-    List<dynamic> sheetImagesDynamic = jsonDecode(json["result"]["sheetImages"]);
+    List<dynamic> sheetImagesDynamic =
+        jsonDecode(json["result"]["sheetImages"]);
     List<String> sheetImages = [];
     for (var element in sheetImagesDynamic) {
       sheetImages.add(element);
     }
     List<Question> questions = [];
+    String sheetQuestions = json["result"]["sheetDatas"];
+    logger.d("sheetQuestions: $sheetQuestions");
+    List<dynamic> sheetQuestionsDynamic =
+        jsonDecode(sheetQuestions)["userAnswerRecordDTO"]
+            ["answerRecordDetails"];
+    logger.d("sheetQuestionsDynamic: $sheetQuestionsDynamic");
+    for (var element in sheetQuestionsDynamic) {
+      questions.add(Question(
+        questionId: element["dispTitle"],
+        fullScore: element["standardScore"],
+        userScore: element["score"],
+      ));
+    }
     logger.d("paperData: success, $sheetImages");
     PaperData paperData = PaperData(
         examId: examId,
