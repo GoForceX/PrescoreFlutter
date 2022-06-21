@@ -5,6 +5,7 @@ import '../../main.dart';
 import '../../model/exam_model.dart';
 import '../../util/login.dart';
 import 'exam_dashboard.dart';
+import 'exam_detail.dart';
 
 class ExamPage extends StatefulWidget {
   const ExamPage({Key? key, required this.uuid, required this.user})
@@ -55,7 +56,7 @@ class _ExamPageState extends State<ExamPage> {
               );
               break;
             case 1:
-              chosenWidget = const CircularProgressIndicator();
+              chosenWidget = ExamDetail(examId: widget.uuid);
               break;
             default:
               chosenWidget = Container();

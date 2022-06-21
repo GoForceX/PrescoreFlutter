@@ -112,7 +112,7 @@ packages:
       name: built_value
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "8.3.2"
+    version: "8.3.3"
   characters:
     dependency: transitive
     description:
@@ -505,7 +505,7 @@ packages:
       name: path_provider_android
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "2.0.14"
+    version: "2.0.15"
   path_provider_ios:
     dependency: transitive
     description:
