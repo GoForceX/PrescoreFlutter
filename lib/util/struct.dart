@@ -1,13 +1,16 @@
 class Session {
-  final String st;
-  final String sessionId;
-  final String xToken;
+  String st;
+  String sessionId;
+  String xToken;
+  String userId;
+  String? serverToken;
 
-  Session(this.st, this.sessionId, this.xToken);
+  Session(this.st, this.sessionId, this.xToken, this.userId,
+      {this.serverToken});
 
   @override
   String toString() {
-    return 'Session{st: $st, sessionId: $sessionId, xToken: $xToken}';
+    return 'Session{st: $st, sessionId: $sessionId, xToken: $xToken, userId: $userId, serverToken: $serverToken}';
   }
 }
 
@@ -45,6 +48,7 @@ class Exam {
 }
 
 class Paper {
+  String examId;
   String paperId;
   String name;
   String subjectId;
@@ -53,6 +57,7 @@ class Paper {
   double? diagnosticScore;
 
   Paper({
+    required this.examId,
     required this.paperId,
     required this.name,
     required this.subjectId,

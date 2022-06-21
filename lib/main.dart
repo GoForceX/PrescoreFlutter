@@ -117,6 +117,7 @@ class HomePageState extends State<HomePage> {
 class BaseDio {
   static final BaseDio _singleton = BaseDio._internal();
   final Dio dio = Dio();
+  late final PersistCookieJar cookieJar;
 
   factory BaseDio() => _singleton;
 
@@ -127,7 +128,7 @@ class BaseDio {
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.124 Safari/537.36 Edg/102.0.1245.41";
     getApplicationDocumentsDirectory().then((value) {
       String dataPath = value.path;
-      PersistCookieJar cookieJar = PersistCookieJar(
+      cookieJar = PersistCookieJar(
           storage: FileStorage(
             dataPath,
           ),

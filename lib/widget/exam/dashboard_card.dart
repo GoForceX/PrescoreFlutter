@@ -3,8 +3,10 @@ import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:provider/provider.dart';
 
+import '../../main.dart';
 import '../../model/exam_model.dart';
 import '../../util/struct.dart';
+import '../../util/telemetry.dart';
 
 class DashboardCard extends StatefulWidget {
   final String examId;
@@ -91,6 +93,8 @@ class _DashboardCardState extends State<DashboardCard> {
                   .setDiagLoaded(true);
               return DashboardChart(diagnoses: snapshot.data["result"]);
             } else {
+              Provider.of<ExamModel>(context, listen: false)
+                  .setDiagLoaded(true);
               return Container();
             }
           } else {
@@ -129,6 +133,20 @@ class DashboardInfo extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Consumer(builder: (BuildContext context, ExamModel model, _) {
+              logger.d("DashboardInfo: ${model.isPaperLoaded} ${model.isDiagLoaded}");
+              if (model.isPaperLoaded && model.isDiagLoaded) {
+                for (var paper in model.papers) {
+                  try {
+                    logger.d("DashboardInfo: ${paper.name}");
+                    Provider.of<ExamModel>(context, listen: false).user.uploadPaperData(paper);
+                  } catch (e) {
+                    logger.e(e);
+                  }
+                }
+              }
+              return Container();
+            }),
             Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: FittedBox(

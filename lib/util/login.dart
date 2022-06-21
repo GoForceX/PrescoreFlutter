@@ -33,6 +33,7 @@ class User {
     isLoading = false;
     isBasicInfoLoaded = false;
 
+    /*
     Directory dataDir = await getApplicationDocumentsDirectory();
     String dataPath = dataDir.path;
     PersistCookieJar cookieJar = PersistCookieJar(
@@ -40,6 +41,8 @@ class User {
           dataPath,
         ),
         ignoreExpires: true);
+     */
+    PersistCookieJar cookieJar = BaseDio().cookieJar;
     cookieJar.delete(Uri.parse("https://www.zhixue.com/"));
     cookieJar.delete(Uri.parse("https://open.changyan.com/"));
   }
@@ -84,6 +87,7 @@ class User {
   }
 
   Future<Session?> getSessionFromSt(String st) async {
+    /*
     Directory dataDir = await getApplicationDocumentsDirectory();
     String dataPath = dataDir.path;
     PersistCookieJar cookieJar = PersistCookieJar(
@@ -91,6 +95,9 @@ class User {
           dataPath,
         ),
         ignoreExpires: true);
+
+     */
+    PersistCookieJar cookieJar = BaseDio().cookieJar;
     Dio client = BaseDio().dio;
 
     logger.d("st: $st");
@@ -110,7 +117,7 @@ class User {
     logger.d("loginResponse: ${loginResponse.headers}");
 
     List<Cookie> cookies =
-        await cookieJar.loadForRequest(Uri.parse("https://www.zhixue.com/"));
+      await cookieJar.loadForRequest(Uri.parse("https://www.zhixue.com/"));
     logger.d("cookies: $cookies");
     for (var element in cookies) {
       if (element.name == "tlsysSessionId") {
@@ -123,7 +130,7 @@ class User {
         logger.d("tokenResponse: ${tokenResponse.data}");
         Map<String, dynamic> json = jsonDecode(tokenResponse.data);
         String xToken = json["result"];
-        Session currSession = Session(st, element.value, xToken);
+        Session currSession = Session(st, element.value, xToken, "");
         session = currSession;
         logger.d(currSession.toString());
         client.options.headers["XToken"] = currSession.xToken;
@@ -225,6 +232,7 @@ class User {
     List<Paper> papers = [];
     json["result"]["paperList"].forEach((element) {
       papers.add(Paper(
+          examId: examId,
           paperId: element["paperId"],
           name: element["subjectName"],
           subjectId: element["subjectCode"],
@@ -316,6 +324,7 @@ class User {
       {bool ignoreLoading = true,
       bool force = true,
       Function? callback,
+      Future? asyncCallback,
       BuildContext? context}) async {
     if (isLoading & !ignoreLoading) {
       return {"status": false, "message": "正在登录中，请稍后再试"};
@@ -324,6 +333,9 @@ class User {
       if (isLoggedIn()) {
         if (callback != null) {
           callback();
+        }
+        if (asyncCallback != null) {
+          await asyncCallback;
         }
         return {"status": true, "message": "已登录"};
       }
@@ -409,6 +421,12 @@ class User {
     body = body.replaceAll('\\', '').replaceAll('\'', '');
     body = body.replaceAll('(', '').replaceAll(')', '');
 
+    try {
+      await fetchBasicInfo();
+    } catch (e) {
+      logger.e("login: fetchBasicInfo error: $e");
+    }
+
     Map<String, dynamic> parsed = jsonDecode(body);
     if (parsed['code'] != 1001) {
       isLoading = false;
@@ -425,5 +443,107 @@ class User {
     }
     isLoading = false;
     return {"status": true, "message": "登录成功"};
+  }
+
+  Future<Map<String, dynamic>> telemetryLogin() async {
+    Dio client = BaseDio().dio;
+
+    try {
+      BasicInfo? bi = await fetchBasicInfo();
+      logger.d("telemetryLogin: start, ${{
+        'username': bi?.id,
+        'password': session?.sessionId,
+      }}");
+      Response response = await client.post(
+        'https://matrix.bjbybbs.com/api/token',
+        data: {
+          'username': bi?.id,
+          'password': session?.sessionId,
+        },
+        options: Options(
+          contentType: Headers.formUrlEncodedContentType,
+        )
+      );
+      logger.d('serverLogin response: ${response.data}');
+      Map<String, dynamic> parsed = jsonDecode(response.data);
+      session?.serverToken = parsed['access_token'];
+      // session.serverToken = response.data['access_token'];
+      return {
+        "state": true,
+        "message": "成功哒！",
+        "result": parsed['access_token']
+      };
+    } catch (e) {
+      logger.e(e);
+      return {"state": false, "message": e.toString(), "data": null};
+    }
+  }
+
+  Future<Map<String, dynamic>> uploadPaperData(Paper paper) async {
+    Dio client = BaseDio().dio;
+
+    try {
+      Response response = await client.post(
+        'https://matrix.bjbybbs.com/api/exam/submit',
+        data: {
+          "user_id": basicInfo?.id,
+          "exam_id": paper.examId,
+          "paper_id": paper.paperId,
+          "subject_id": paper.subjectId,
+          "subject_name": paper.name,
+          "standard_score": paper.fullScore,
+          "user_score": paper.userScore,
+          "diagnostic_score": paper.diagnosticScore,
+        },
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer ${session?.serverToken}',
+          },
+          contentType: Headers.jsonContentType,
+        ),
+      );
+      return {"state": true, "message": "成功哒！", "result": response.data};
+    } catch (e) {
+      logger.e(e);
+      return {"state": false, "message": e.toString(), "data": null};
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchExamPredict(
+      String examId, double score) async {
+    Dio client = BaseDio().dio;
+
+    try {
+      Response response = await client
+          .get('https://matrix.bjbybbs.com/api/exam/predict/$examId/$score');
+      Map<String, dynamic> result = jsonDecode(response.data);
+      if (result["code"] == 0) {
+        return {"state": true, "message": "成功哒！", "result": result["percent"]};
+      } else {
+        return {"state": false, "message": result["code"], "data": null};
+      }
+    } catch (e) {
+      logger.e(e);
+      return {"state": false, "message": e.toString(), "data": null};
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchPaperPredict(
+      String paperId, double score) async {
+    Dio client = BaseDio().dio;
+
+    try {
+      Response response = await client
+          .get('https://matrix.bjbybbs.com/api/paper/predict/$paperId/$score');
+      Map<String, dynamic> result = jsonDecode(response.data);
+      if (result["code"] == 0) {
+        return {"state": true, "message": "成功哒！", "result": result["percent"]};
+      } else {
+        return {"state": false, "message": result["code"], "data": null};
+      }
+    } catch (e) {
+      logger.e(e);
+      return {"state": false, "message": e.toString(), "data": null};
+    }
   }
 }

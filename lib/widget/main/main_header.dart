@@ -198,6 +198,8 @@ class _FallbackAppbarWidgetState extends State<FallbackAppbarWidget> {
   void callback() {
     logger.d("get callback");
     Provider.of<LoginModel>(context, listen: false).setLoggedIn(true);
+    Provider.of<LoginModel>(context, listen: false)
+        .user.telemetryLogin();
   }
 
   @override
@@ -280,6 +282,8 @@ class _FallbackAppbarWidgetState extends State<FallbackAppbarWidget> {
                                 Provider.of<LoginModel>(context, listen: false)
                                     .setLoggedIn(true);
                                 logger.d(user.session?.xToken);
+                                Provider.of<LoginModel>(context, listen: false)
+                                    .user.telemetryLogin();
                               } else {
                                 SnackBar snackBar = SnackBar(
                                   content: Text(
