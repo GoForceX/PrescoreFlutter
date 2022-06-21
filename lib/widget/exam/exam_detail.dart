@@ -24,7 +24,7 @@ class _ExamDetailState extends State<ExamDetail> {
           Provider.of<ExamModel>(context, listen: false).papers;
 
       for (var element in papers) {
-        Widget chart = DetailCard(paper: element);
+        Widget chart = DetailCard(paper: element, examId: widget.examId,);
         children.add(chart);
       }
 
@@ -51,7 +51,7 @@ class _ExamDetailState extends State<ExamDetail> {
                   .setPaperLoaded(true);
 
               for (var element in snapshot.data["result"]) {
-                Widget chart = DetailCard(paper: element);
+                Widget chart = DetailCard(examId: widget.examId, paper: element);
                 children.add(chart);
               }
 

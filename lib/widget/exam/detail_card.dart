@@ -1,11 +1,17 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
+import 'package:provider/provider.dart';
 
+import '../../main.gr.dart';
+import '../../model/exam_model.dart';
 import '../../util/struct.dart';
 
 class DetailCard extends StatelessWidget {
+  final String examId;
   final Paper paper;
-  const DetailCard({Key? key, required this.paper}) : super(key: key);
+  const DetailCard({Key? key, required this.paper, required this.examId})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -84,7 +90,15 @@ class DetailCard extends StatelessWidget {
       margin: const EdgeInsets.all(12.0),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
       elevation: 8,
-      child: infoCard,
+      child: InkWell(
+        onTap: () {
+          context.router.navigate(PaperRoute(
+              examId: examId,
+              paperId: paper.paperId,
+              user: Provider.of<ExamModel>(context, listen: false).user));
+        },
+        child: infoCard,
+      ),
     );
   }
 }

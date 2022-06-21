@@ -10,6 +10,7 @@ import 'package:prescore_flutter/widget/drawer.dart';
 import 'package:auto_route/annotations.dart';
 import 'package:prescore_flutter/widget/main/exams.dart';
 import 'package:prescore_flutter/widget/main/main_header.dart';
+import 'package:prescore_flutter/widget/paper/paper_page.dart';
 import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
@@ -34,6 +35,7 @@ Future<void> main() async {
   routes: <AutoRoute>[
     AutoRoute(page: HomePage, initial: true),
     AutoRoute(page: ExamPage),
+    AutoRoute(page: PaperPage),
   ],
 )
 class $AppRouter {}

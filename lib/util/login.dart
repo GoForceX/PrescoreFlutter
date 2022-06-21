@@ -263,6 +263,41 @@ class User {
     return {"state": true, "message": "", "result": diags};
   }
 
+  Future<Map<String, dynamic>> fetchPaperData(String examId, String paperId) async {
+    Dio client = BaseDio().dio;
+
+    if (session == null) {
+      return {"state": false, "message": "未登录", "result": null};
+    }
+    logger.d("fetchPaperData, xToken: ${session?.xToken}");
+    Response response = await client.get(
+        "https://www.zhixue.com/zhixuebao/report/checksheet/?examId=$examId&paperId=$paperId");
+    logger.d("paperData: ${response.data}");
+    Map<String, dynamic> json = jsonDecode(response.data);
+    logger.d("paperData: $json");
+    if (json["errorCode"] != 0) {
+      logger.d("paperData: failed");
+      return {"state": false, "message": json["errorInfo"], "result": null};
+    }
+
+
+    List<dynamic> sheetImagesDynamic = jsonDecode(json["result"]["sheetImages"]);
+    List<String> sheetImages = [];
+    for (var element in sheetImagesDynamic) {
+      sheetImages.add(element);
+    }
+    List<Question> questions = [];
+    logger.d("paperData: success, $sheetImages");
+    PaperData paperData = PaperData(
+        examId: examId,
+        paperId: paperId,
+        sheetImages: sheetImages,
+        questions: questions);
+
+    logger.d("paperData: success, ${json["result"]["sheetImages"]}");
+    return {"state": true, "message": "", "result": paperData};
+  }
+
   Future<Map<String, dynamic>> login(String username, String password,
       {bool ignoreLoading = true,
       bool force = true,

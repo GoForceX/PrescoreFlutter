@@ -83,3 +83,39 @@ class PaperDiagnosis {
     return 'PaperDiagnosis{subjectId: $subjectId, diagnosticScore: $diagnosticScore}';
   }
 }
+
+class Question {
+  String questionId;
+  String userScore;
+  String fullScore;
+
+  Question({
+    required this.questionId,
+    required this.userScore,
+    required this.fullScore,
+  });
+
+  @override
+  String toString() {
+    return 'Question{questionId: $questionId, userScore: $userScore, fullScore: $fullScore}';
+  }
+}
+
+class PaperData {
+  String examId;
+  String paperId;
+  List<String> sheetImages;
+  List<Question> questions;
+
+  PaperData({
+    required this.examId,
+    required this.paperId,
+    required this.sheetImages,
+    required this.questions,
+  });
+
+  @override
+  String toString() {
+    return 'PaperData{examId: $examId, paperId: $paperId, sheetImages: $sheetImages, questions: $questions}';
+  }
+}

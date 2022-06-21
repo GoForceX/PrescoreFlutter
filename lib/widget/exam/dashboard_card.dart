@@ -41,10 +41,12 @@ class _DashboardCardState extends State<DashboardCard> {
         builder: (BuildContext context, AsyncSnapshot snapshot) {
           if (snapshot.hasData) {
             if (snapshot.data["state"]) {
-              Provider.of<ExamModel>(context, listen: false)
-                  .setPapers(snapshot.data["result"]);
-              Provider.of<ExamModel>(context, listen: false)
-                  .setPaperLoaded(true);
+              Future.delayed(Duration.zero, () {
+                Provider.of<ExamModel>(context, listen: false)
+                    .setPapers(snapshot.data["result"]);
+                Provider.of<ExamModel>(context, listen: false)
+                    .setPaperLoaded(true);
+              });
               double userScore = 0;
               for (var element in snapshot.data["result"]) {
                 userScore += element.userScore;
