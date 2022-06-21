@@ -6,6 +6,7 @@ import '../util/struct.dart';
 class ExamModel extends ChangeNotifier {
   User user = User();
 
+  bool isDiagFetched = false;
   bool isDiagLoaded = false;
   List<PaperDiagnosis> diagnoses = [];
 
@@ -14,6 +15,11 @@ class ExamModel extends ChangeNotifier {
 
   void setUser(User value) {
     user = value;
+    notifyListeners();
+  }
+
+  void setDiagFetched(bool value) {
+    isDiagFetched = value;
     notifyListeners();
   }
 
