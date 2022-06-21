@@ -20,6 +20,25 @@ class _DashboardCardState extends State<DashboardCard> {
   Widget build(BuildContext context) {
     List<Widget> children = [];
 
+    Provider.of<ExamModel>(context, listen: false).addListener(() {
+      logger.d(
+          "DashboardInfo: ${Provider.of<ExamModel>(context, listen: false).isPaperLoaded} ${Provider.of<ExamModel>(context, listen: false).isDiagFetched}");
+      if (Provider.of<ExamModel>(context, listen: false).isPaperLoaded &&
+          Provider.of<ExamModel>(context, listen: false).isDiagFetched) {
+        for (var paper
+        in Provider.of<ExamModel>(context, listen: false).papers) {
+          try {
+            logger.d("DashboardInfo: ${paper.name}");
+            Provider.of<ExamModel>(context, listen: false)
+                .user
+                .uploadPaperData(paper);
+          } catch (e) {
+            logger.e(e);
+          }
+        }
+      }
+    });
+
     if (Provider.of<ExamModel>(context, listen: false).isPaperLoaded) {
       List<Paper> papers =
           Provider.of<ExamModel>(context, listen: false).papers;
@@ -130,25 +149,6 @@ class DashboardInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Provider.of<ExamModel>(context, listen: false).addListener(() {
-      logger.d(
-          "DashboardInfo: ${Provider.of<ExamModel>(context, listen: false).isPaperLoaded} ${Provider.of<ExamModel>(context, listen: false).isDiagFetched}");
-      if (Provider.of<ExamModel>(context, listen: false).isPaperLoaded &&
-          Provider.of<ExamModel>(context, listen: false).isDiagFetched) {
-        for (var paper
-            in Provider.of<ExamModel>(context, listen: false).papers) {
-          try {
-            logger.d("DashboardInfo: ${paper.name}");
-            Provider.of<ExamModel>(context, listen: false)
-                .user
-                .uploadPaperData(paper);
-          } catch (e) {
-            logger.e(e);
-          }
-        }
-      }
-    });
-
     Container infoCard = Container(
         padding: const EdgeInsets.all(12.0),
         alignment: AlignmentDirectional.topStart,
