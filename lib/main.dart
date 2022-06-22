@@ -12,11 +12,13 @@ import 'package:prescore_flutter/widget/main/main_header.dart';
 import 'package:prescore_flutter/widget/paper/paper_page.dart';
 import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:flutter_bugly/flutter_bugly.dart';
 
 import 'model/login_model.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  /*
   await SentryFlutter.init(
     (options) {
       options.dsn =
@@ -27,6 +29,17 @@ Future<void> main() async {
     },
     appRunner: () => runApp(MyApp()),
   );
+  FlutterBugly.init(
+    androidAppId: "e841898baf",
+  );
+   */
+  FlutterBugly.postCatchedException(() {
+    WidgetsFlutterBinding.ensureInitialized();
+    runApp(MyApp());
+    FlutterBugly.init(
+      androidAppId: "e841898baf",
+    );
+  });
 }
 
 @MaterialAutoRouter(
@@ -56,6 +69,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    FlutterBugly.checkUpgrade();
+    FlutterBugly.onCheckUpgrade.listen((_upgradeInfo) {
+      logger.i("${_upgradeInfo.newFeature}\n${_upgradeInfo.apkUrl}");
+    });
     return MaterialApp.router(
         routeInformationParser: _appRouter.defaultRouteParser(),
         routerDelegate: _appRouter.delegate(),
