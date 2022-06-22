@@ -12,6 +12,8 @@ import 'package:prescore_flutter/widget/main/main_header.dart';
 import 'package:prescore_flutter/widget/paper/paper_page.dart';
 import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:upgrader/upgrader.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'model/login_model.dart';
 
@@ -84,6 +86,9 @@ class HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    String appcastURL = 'https://matrix.bjbybbs.com/appcast.xml';
+    final cfg = AppcastConfiguration(url: appcastURL, supportedOS: ['android', 'windows']);
+
     return ChangeNotifierProvider(
         create: (_) => LoginModel(),
         child: Scaffold(
@@ -104,8 +109,21 @@ class HomePageState extends State<HomePage> {
                 ));
               }
 
-              return CustomScrollView(
-                slivers: slivers,
+              return UpgradeAlert(
+                upgrader: Upgrader(
+                    appcastConfig: cfg,
+                    countryCode: 'zh',
+                    durationUntilAlertAgain: Duration.zero,
+                    messages: ChineseMessages(),
+                    onUpdate: () {
+                      launchUrl(
+                          Uri.parse("https://matrix.bjbybbs.com/docs/landing"),
+                          mode: LaunchMode.externalApplication);
+                      return false;
+                    }),
+                child: CustomScrollView(
+                  slivers: slivers,
+                ),
               );
             },
           ),
@@ -135,5 +153,28 @@ class BaseDio {
           ignoreExpires: true);
       dio.interceptors.add(CookieManager(cookieJar));
     });
+  }
+}
+
+class ChineseMessages extends UpgraderMessages {
+  @override
+  String? message(UpgraderMessage messageKey) {
+    switch (messageKey) {
+      case UpgraderMessage.body:
+        return '应用程序 {{appName}} 有新的版本，最新版本是{{currentAppStoreVersion}}，当前版本是{{currentInstalledVersion}}';
+      case UpgraderMessage.buttonTitleIgnore:
+        return '忽略';
+      case UpgraderMessage.buttonTitleLater:
+        return '一会再说';
+      case UpgraderMessage.buttonTitleUpdate:
+        return '现在更新';
+      case UpgraderMessage.prompt:
+        return '要更新吗？';
+      case UpgraderMessage.releaseNotes:
+        return '更新日志';
+      case UpgraderMessage.title:
+        return '现在要更新吗？';
+    }
+    // Messages that are not provided above can still use the default values.
   }
 }
