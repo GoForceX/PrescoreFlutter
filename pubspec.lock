@@ -848,7 +848,7 @@ packages:
     source: hosted
     version: "4.2.1"
   url_launcher:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: url_launcher
       url: "https://pub.flutter-io.cn"
