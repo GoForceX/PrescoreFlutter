@@ -10,6 +10,7 @@ import 'package:pointycastle/asymmetric/api.dart';
 import 'package:prescore_flutter/main.dart';
 import 'package:prescore_flutter/util/rsa.dart';
 import 'package:prescore_flutter/util/struct.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class User {
   Session? session;
@@ -446,6 +447,12 @@ class User {
   }
 
   Future<Map<String, dynamic>> telemetryLogin() async {
+    SharedPreferences shared = await SharedPreferences.getInstance();
+    bool? allowed = shared.getBool("allowTelemetry");
+    if (allowed == null || !allowed) {
+      return {"state": false, "message": "不允许数据上传", "data": null};
+    }
+
     Dio client = BaseDio().dio;
 
     try {
@@ -480,6 +487,12 @@ class User {
   }
 
   Future<Map<String, dynamic>> uploadPaperData(Paper paper) async {
+    SharedPreferences shared = await SharedPreferences.getInstance();
+    bool? allowed = shared.getBool("allowTelemetry");
+    if (allowed == null || !allowed) {
+      return {"state": false, "message": "不允许数据上传", "data": null};
+    }
+
     Dio client = BaseDio().dio;
 
     try {

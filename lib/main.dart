@@ -12,6 +12,7 @@ import 'package:prescore_flutter/widget/main/main_header.dart';
 import 'package:prescore_flutter/widget/paper/paper_page.dart';
 import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:upgrader/upgrader.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -87,7 +88,12 @@ class HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     String appcastURL = 'https://matrix.bjbybbs.com/appcast.xml';
-    final cfg = AppcastConfiguration(url: appcastURL, supportedOS: ['android', 'windows']);
+    final cfg = AppcastConfiguration(
+        url: appcastURL, supportedOS: ['android', 'windows']);
+
+    SharedPreferences.getInstance().then((SharedPreferences shared) {
+      shared.setBool("allowTelemetry", false);
+    });
 
     return ChangeNotifierProvider(
         create: (_) => LoginModel(),
@@ -122,6 +128,7 @@ class HomePageState extends State<HomePage> {
                       return false;
                     }),
                 child: CustomScrollView(
+                  shrinkWrap: true,
                   slivers: slivers,
                 ),
               );

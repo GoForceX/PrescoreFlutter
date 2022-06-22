@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:prescore_flutter/main.dart';
 import 'package:prescore_flutter/model/login_model.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../util/login.dart';
 import '../fancy_button.dart';
@@ -29,6 +30,46 @@ class MySliverAppBar extends SliverPersistentHeaderDelegate {
   @override
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
+    SharedPreferences.getInstance().then((SharedPreferences shared) {
+      bool? allowed = shared.getBool("allowTelemetry");
+      allowed ??= false;
+      if (allowed) {
+        return Container();
+      } else {
+        showDialog<String>(
+          context: context,
+          builder: (BuildContext dialogContext) => AlertDialog(
+            title: const Text('授权向服务器上传数据'),
+            content: const Text(
+                '点击确定\n即为您自愿授权将已获取的分数自动同步到本软件服务器\n同意本软件在境外服务器存储您的成绩信息\n点击取消仍可使用本App基本功能。\n\n选项可在设置中进行修改。'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  SnackBar snackBar = SnackBar(
+                    content: const Text('拒绝之后小部分功能可能无法使用哦，在右上角设置中可以手动授权！'),
+                    backgroundColor: ThemeMode.system == ThemeMode.dark
+                        ? Colors.grey[900]
+                        : Colors.grey[200],
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                  Navigator.pop(dialogContext, '不要');
+                },
+                child: const Text('不要'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  shared.setBool("allowTelemetry", true);
+                  Provider.of<LoginModel>(context, listen: false).user.telemetryLogin();
+                  Navigator.pop(dialogContext, '同意');
+                },
+                child: const Text('同意'),
+              ),
+            ],
+          ),
+        );
+      }
+    });
+
     return Stack(
       clipBehavior: Clip.none,
       fit: StackFit.expand,
