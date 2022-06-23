@@ -81,6 +81,23 @@ class SettingsPage extends StatelessWidget {
               ),
             ],
           ),
+          SettingsSection(
+            title: const Text('关于'),
+            tiles: [
+              SettingsTile.navigation(
+                leading: const Icon(Icons.info),
+                title: const Text("当前版本"),
+                description: Text(BaseSingleton().packageInfo.version),
+              ),
+              SettingsTile.navigation(
+                leading: const Icon(Icons.web),
+                title: const Text("去网页看看"),
+                onPressed: (_) {
+                  launchUrl(Uri.parse("https://matrix.bjbybbs.com/docs/landing"));
+                },
+              ),
+            ],
+          ),
         ],
       ),
       drawer: const MainDrawer(),

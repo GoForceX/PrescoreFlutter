@@ -184,6 +184,7 @@ class BaseSingleton {
   final Dio dio = Dio();
   late final PersistCookieJar cookieJar;
   late final SharedPreferences sharedPreferences;
+  late final PackageInfo packageInfo;
 
   factory BaseSingleton() => _singleton;
 
@@ -203,6 +204,7 @@ class BaseSingleton {
     });
 
     SharedPreferences.getInstance().then((value) => sharedPreferences = value);
+    PackageInfo.fromPlatform().then((value) => packageInfo = value);
   }
 }
 
