@@ -31,18 +31,3 @@ jobs:
         with:
           name: Signed apk
           path: ${{steps.sign_apk.outputs.signedReleaseFile}}
-
-      - uses: r0adkll/sign-android-release@v1
-        id: sign_aab
-        with:
-          releaseDirectory: build/app/outputs/bundle/release
-          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
-          alias: ${{ secrets.ALIAS }}
-          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
-        env:
-          BUILD_TOOLS_VERSION: "30.0.2"
-
-      - uses: actions/upload-artifact@v2
-        with:
-          name: Signed app bundle
-          path: ${{steps.sign_aab.outputs.signedReleaseFile}}
