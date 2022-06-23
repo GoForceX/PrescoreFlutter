@@ -24,6 +24,7 @@ import 'model/login_model.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await BaseSingleton.singleton.init();
   await SentryFlutter.init(
     (options) {
       options.dsn =
@@ -86,6 +87,7 @@ class HomePageState extends State<HomePage> {
   bool isLoggedIn = false;
   bool prevLoginState = false;
   bool isUpgradeDialogShown = false;
+  bool isRequestDialogShown = false;
 
   void setLoggedIn(bool value) {
     setState(() => {isLoggedIn = value});
@@ -134,15 +136,19 @@ class HomePageState extends State<HomePage> {
   }
 
   Future<void> showRequestDialog(BuildContext context) async {
-    SharedPreferences shared = BaseSingleton().sharedPreferences;
+    SharedPreferences shared = BaseSingleton.singleton.sharedPreferences;
     bool? allowed = shared.getBool("allowTelemetry");
     bool? requested = shared.getBool("telemetryRequested");
     logger.d("allowed: $allowed, requested: $requested");
     allowed ??= false;
     requested ??= false;
-    if (!allowed & !requested) {
+    if (!allowed && !requested) {
       shared.setBool("telemetryRequested", true);
       logger.d("show request dialog");
+      if (isRequestDialogShown) {
+        return;
+      }
+      isRequestDialogShown = true;
       await showDialog<String>(
           context: context,
           builder: (BuildContext dialogContext) => AlertDialog(
@@ -166,9 +172,6 @@ class HomePageState extends State<HomePage> {
                   TextButton(
                     onPressed: () async {
                       shared.setBool("allowTelemetry", true);
-                      Provider.of<LoginModel>(context, listen: false)
-                          .user
-                          .telemetryLogin();
                       Navigator.pop(dialogContext, '同意');
                     },
                     child: const Text('同意'),
@@ -186,48 +189,47 @@ class HomePageState extends State<HomePage> {
           appBar: AppBar(
             title: const Text('出分啦'),
           ),
-          body: Consumer<LoginModel>(
-            builder: (context, model, child) {
-              List<Widget> slivers = [];
+          body: FutureBuilder(
+              future: Future.delayed(Duration.zero, () {
+                showUpgradeAlert(context);
+                showRequestDialog(context);
+              }),
+              builder: (BuildContext context, AsyncSnapshot snapshot) {
+                return Consumer<LoginModel>(builder: (context, model, child) {
+                  List<Widget> slivers = [];
 
-              slivers.add(const SliverHeader());
+                  slivers.add(const SliverHeader());
 
-              if (model.isLoggedIn && !prevLoginState) {
-                slivers.add(const Exams());
-              } else {
-                slivers.add(const SliverFillRemaining(
-                  hasScrollBody: false,
-                ));
-              }
+                  if (model.isLoggedIn && !prevLoginState) {
+                    slivers.add(const Exams());
+                  } else {
+                    slivers.add(const SliverFillRemaining(
+                      hasScrollBody: false,
+                    ));
+                  }
 
-              return FutureBuilder(
-                  future: Future.delayed(Duration.zero, () {
-                    showUpgradeAlert(context);
-                    showRequestDialog(context);
-                  }),
-                  builder: (BuildContext context, AsyncSnapshot snapshot) {
-                    return CustomScrollView(
-                      shrinkWrap: true,
-                      slivers: slivers,
-                    );
-                  });
-            },
-          ),
+                  return CustomScrollView(
+                    shrinkWrap: true,
+                    slivers: slivers,
+                  );
+                });
+              }),
           drawer: const MainDrawer(),
         ));
   }
 }
 
 class BaseSingleton {
-  static final BaseSingleton _singleton = BaseSingleton._internal();
+  BaseSingleton._();
+
+  static final BaseSingleton _singleton = BaseSingleton._();
   final Dio dio = Dio();
   late final PersistCookieJar cookieJar;
   late final SharedPreferences sharedPreferences;
   late final PackageInfo packageInfo;
+  static BaseSingleton get singleton => _singleton;
 
-  factory BaseSingleton() => _singleton;
-
-  BaseSingleton._internal() {
+  init () async {
     // private constructor that creates the singleton instance
     dio.options.responseType = ResponseType.plain;
     dio.options.headers["User-Agent"] =

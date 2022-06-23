@@ -43,7 +43,7 @@ class User {
         ),
         ignoreExpires: true);
      */
-    PersistCookieJar cookieJar = BaseSingleton().cookieJar;
+    PersistCookieJar cookieJar = BaseSingleton.singleton.cookieJar;
     cookieJar.delete(Uri.parse("https://www.zhixue.com/"));
     cookieJar.delete(Uri.parse("https://open.changyan.com/"));
   }
@@ -98,8 +98,8 @@ class User {
         ignoreExpires: true);
 
      */
-    PersistCookieJar cookieJar = BaseSingleton().cookieJar;
-    Dio client = BaseSingleton().dio;
+    PersistCookieJar cookieJar = BaseSingleton.singleton.cookieJar;
+    Dio client = BaseSingleton.singleton.dio;
 
     logger.d("st: $st");
     Response loginResponse = await client.post(
@@ -143,7 +143,7 @@ class User {
 
   Future<BasicInfo?> fetchBasicInfo(
       {bool force = false, Function? callback}) async {
-    Dio client = BaseSingleton().dio;
+    Dio client = BaseSingleton.singleton.dio;
     logger.d("fetchBasicInfo, callback: $callback");
 
     if (isBasicInfoLoaded && !force) {
@@ -180,7 +180,7 @@ class User {
   }
 
   Future<Map<String, dynamic>> fetchExams() async {
-    Dio client = BaseSingleton().dio;
+    Dio client = BaseSingleton.singleton.dio;
 
     if (session == null) {
       return {"state": false, "message": "未登录", "result": null};
@@ -214,7 +214,7 @@ class User {
   }
 
   Future<Map<String, dynamic>> fetchPaper(String examId) async {
-    Dio client = BaseSingleton().dio;
+    Dio client = BaseSingleton.singleton.dio;
 
     if (session == null) {
       return {"state": false, "message": "未登录", "result": null};
@@ -245,7 +245,7 @@ class User {
   }
 
   Future<Map<String, dynamic>> fetchPaperDiagnosis(String examId) async {
-    Dio client = BaseSingleton().dio;
+    Dio client = BaseSingleton.singleton.dio;
 
     if (session == null) {
       return {"state": false, "message": "未登录", "result": null};
@@ -274,7 +274,7 @@ class User {
 
   Future<Map<String, dynamic>> fetchPaperData(
       String examId, String paperId) async {
-    Dio client = BaseSingleton().dio;
+    Dio client = BaseSingleton.singleton.dio;
 
     if (session == null) {
       return {"state": false, "message": "未登录", "result": null};
@@ -357,7 +357,7 @@ class User {
 
      */
 
-    Dio client = BaseSingleton().dio;
+    Dio client = BaseSingleton.singleton.dio;
     Directory dataDir = await getApplicationDocumentsDirectory();
     String dataPath = dataDir.path;
     PersistCookieJar cookieJar = PersistCookieJar(
@@ -453,7 +453,7 @@ class User {
       return {"state": false, "message": "不允许数据上传", "data": null};
     }
 
-    Dio client = BaseSingleton().dio;
+    Dio client = BaseSingleton.singleton.dio;
 
     try {
       BasicInfo? bi = await fetchBasicInfo();
@@ -493,7 +493,7 @@ class User {
       return {"state": false, "message": "不允许数据上传", "data": null};
     }
 
-    Dio client = BaseSingleton().dio;
+    Dio client = BaseSingleton.singleton.dio;
 
     try {
       Response response = await client.post(
@@ -524,7 +524,7 @@ class User {
 
   Future<Map<String, dynamic>> fetchExamPredict(
       String examId, double score) async {
-    Dio client = BaseSingleton().dio;
+    Dio client = BaseSingleton.singleton.dio;
 
     try {
       logger.d("fetchExamPredict: start, $examId, $score");
@@ -545,7 +545,7 @@ class User {
 
   Future<Map<String, dynamic>> fetchPaperPredict(
       String paperId, double score) async {
-    Dio client = BaseSingleton().dio;
+    Dio client = BaseSingleton.singleton.dio;
 
     try {
       Response response = await client

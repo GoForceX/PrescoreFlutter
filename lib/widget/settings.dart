@@ -67,13 +67,13 @@ class _SettingsPageState extends State<SettingsPage> {
             tiles: [
               SettingsTile.switchTile(
                 onToggle: (value) {
-                  BaseSingleton()
+                  BaseSingleton.singleton
                       .sharedPreferences
                       .setBool('allowTelemetry', value);
                   setState(() {});
                 },
                 initialValue:
-                BaseSingleton().sharedPreferences.getBool('allowTelemetry'),
+                BaseSingleton.singleton.sharedPreferences.getBool('allowTelemetry'),
                 leading: const Icon(Icons.cloud_upload),
                 title: const Text('允许上传数据'),
                 description: const Text('向服务器上传考试数据'),
@@ -93,7 +93,7 @@ class _SettingsPageState extends State<SettingsPage> {
               SettingsTile.navigation(
                 leading: const Icon(Icons.info),
                 title: const Text("当前版本"),
-                description: Text(BaseSingleton().packageInfo.version),
+                description: Text(BaseSingleton.singleton.packageInfo.version),
               ),
               SettingsTile.navigation(
                 leading: const Icon(Icons.web),
