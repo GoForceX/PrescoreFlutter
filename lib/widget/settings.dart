@@ -1,12 +1,53 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:r_upgrade/r_upgrade.dart';
 import 'package:settings_ui/settings_ui.dart';
+import 'package:upgrader/upgrader.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:version/version.dart';
 
 import '../main.dart';
 import 'drawer.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({Key? key}) : super(key: key);
+
+  Future<void> showUpgradeAlert(BuildContext context) async {
+    String appcastURL = 'https://matrix.bjbybbs.com/appcast.xml';
+    final appcast = Appcast();
+    await appcast.parseAppcastItemsFromUri(appcastURL);
+    AppcastItem? item = appcast.bestItem();
+    if (item != null) {
+      PackageInfo packageInfo = await PackageInfo.fromPlatform();
+      if (Version.parse(packageInfo.version) < Version.parse(item.versionString)) {
+        logger.i("got update: ${item.fileURL!}");
+        showDialog<String>(
+          context: context,
+          builder: (BuildContext dialogContext) => AlertDialog(
+            title: const Text('现在要更新吗？'),
+            content: Text(
+                '获取到最新版本${item.versionString}，然而当前版本是${packageInfo.version}\n\n你需要更新吗？\n\n更新日志：\n${item.itemDescription}'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(dialogContext, '但是我拒绝');
+                },
+                child: const Text('但是我拒绝'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  RUpgrade.upgrade(
+                      item.fileURL!, fileName: 'app-release.apk', isAutoRequestInstall: true);
+                  Navigator.pop(dialogContext, '当然是更新啦');
+                },
+                child: const Text('当然是更新啦'),
+              ),
+            ],
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,9 +76,7 @@ class SettingsPage extends StatelessWidget {
                 leading: const Icon(Icons.update),
                 title: const Text('检查更新'),
                 onPressed: (BuildContext context) {
-                  launchUrl(
-                      Uri.parse("https://matrix.bjbybbs.com/docs/landing"),
-                      mode: LaunchMode.externalApplication);
+                  showUpgradeAlert(context);
                 },
               ),
             ],

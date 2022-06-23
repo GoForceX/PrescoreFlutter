@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:prescore_flutter/widget/drawer.dart';
 import 'package:prescore_flutter/widget/exam/exam.dart';
@@ -17,6 +18,8 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:upgrader/upgrader.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:version/version.dart';
+import 'package:r_upgrade/r_upgrade.dart';
 
 import 'model/login_model.dart';
 
@@ -88,11 +91,49 @@ class HomePageState extends State<HomePage> {
     setState(() => {isLoggedIn = value});
   }
 
+  Future<void> showUpgradeAlert() async {
+    String appcastURL = 'https://matrix.bjbybbs.com/appcast.xml';
+    final appcast = Appcast();
+    await appcast.parseAppcastItemsFromUri(appcastURL);
+    AppcastItem? item = appcast.bestItem();
+    if (item != null) {
+      PackageInfo packageInfo = await PackageInfo.fromPlatform();
+      if (Version.parse(packageInfo.version) < Version.parse(item.versionString)) {
+        logger.i("got update: ${item.fileURL!}");
+        showDialog<String>(
+          context: context,
+          builder: (BuildContext dialogContext) => AlertDialog(
+            title: const Text('现在要更新吗？'),
+            content: Text(
+                '获取到最新版本${item.versionString}，然而当前版本是${packageInfo.version}\n\n你需要更新吗？\n\n更新日志：\n${item.itemDescription}'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(dialogContext, '但是我拒绝');
+                },
+                child: const Text('但是我拒绝'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  RUpgrade.upgrade(
+                      item.fileURL!, fileName: 'app-release.apk', isAutoRequestInstall: true);
+                  Navigator.pop(dialogContext, '当然是更新啦');
+                },
+                child: const Text('当然是更新啦'),
+              ),
+            ],
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     String appcastURL = 'https://matrix.bjbybbs.com/appcast.xml';
     final cfg = AppcastConfiguration(
         url: appcastURL, supportedOS: ['android', 'windows']);
+    showUpgradeAlert();
 
     return ChangeNotifierProvider(
         create: (_) => LoginModel(),

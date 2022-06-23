@@ -493,7 +493,7 @@ packages:
     source: hosted
     version: "2.1.0"
   package_info_plus:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: package_info_plus
       url: "https://pub.flutter-io.cn"
@@ -667,6 +667,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.2.0"
+  r_upgrade:
+    dependency: "direct main"
+    description:
+      name: r_upgrade
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.3.8+2"
   sentry:
     dependency: transitive
     description:
@@ -925,7 +932,7 @@ packages:
     source: hosted
     version: "2.1.2"
   version:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: version
       url: "https://pub.flutter-io.cn"
