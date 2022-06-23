@@ -4,12 +4,14 @@ import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:prescore_flutter/widget/drawer.dart';
 import 'package:prescore_flutter/widget/exam/exam.dart';
 import 'package:prescore_flutter/main.gr.dart';
 import 'package:auto_route/annotations.dart';
 import 'package:prescore_flutter/widget/main/exams.dart';
 import 'package:prescore_flutter/widget/main/main_header.dart';
 import 'package:prescore_flutter/widget/paper/paper_page.dart';
+import 'package:prescore_flutter/widget/settings.dart';
 import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -38,6 +40,7 @@ Future<void> main() async {
     AutoRoute(page: HomePage, initial: true),
     AutoRoute(page: ExamPage),
     AutoRoute(page: PaperPage),
+    AutoRoute(page: SettingsPage),
   ],
 )
 class $AppRouter {}
@@ -91,10 +94,6 @@ class HomePageState extends State<HomePage> {
     final cfg = AppcastConfiguration(
         url: appcastURL, supportedOS: ['android', 'windows']);
 
-    SharedPreferences.getInstance().then((SharedPreferences shared) {
-      shared.setBool("allowTelemetry", false);
-    });
-
     return ChangeNotifierProvider(
         create: (_) => LoginModel(),
         child: Scaffold(
@@ -134,19 +133,20 @@ class HomePageState extends State<HomePage> {
               );
             },
           ),
-          // drawer: const MainDrawer(),
+          drawer: const MainDrawer(),
         ));
   }
 }
 
-class BaseDio {
-  static final BaseDio _singleton = BaseDio._internal();
+class BaseSingleton {
+  static final BaseSingleton _singleton = BaseSingleton._internal();
   final Dio dio = Dio();
   late final PersistCookieJar cookieJar;
+  late final SharedPreferences sharedPreferences;
 
-  factory BaseDio() => _singleton;
+  factory BaseSingleton() => _singleton;
 
-  BaseDio._internal() {
+  BaseSingleton._internal() {
     // private constructor that creates the singleton instance
     dio.options.responseType = ResponseType.plain;
     dio.options.headers["User-Agent"] =
@@ -160,6 +160,8 @@ class BaseDio {
           ignoreExpires: true);
       dio.interceptors.add(CookieManager(cookieJar));
     });
+
+    SharedPreferences.getInstance().then((value) => sharedPreferences = value);
   }
 }
 

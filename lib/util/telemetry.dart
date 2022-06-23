@@ -8,7 +8,7 @@ import '../main.dart';
 class Telemetry {
   Future<Map<String, dynamic>> login(
       Session session, BasicInfo basicInfo) async {
-    Dio client = BaseDio().dio;
+    Dio client = BaseSingleton().dio;
 
     try {
       Response response = await client.post(
@@ -29,7 +29,7 @@ class Telemetry {
 
   Future<Map<String, dynamic>> uploadPaperData(
       Paper paper, Session session, BasicInfo basicInfo) async {
-    Dio client = BaseDio().dio;
+    Dio client = BaseSingleton().dio;
 
     try {
       Response response = await client.post(
@@ -60,7 +60,7 @@ class Telemetry {
 
   Future<Map<String, dynamic>> fetchExamPredict(
       String examId, double score) async {
-    Dio client = BaseDio().dio;
+    Dio client = BaseSingleton().dio;
 
     try {
       Response response = await client
@@ -79,7 +79,7 @@ class Telemetry {
 
   Future<Map<String, dynamic>> fetchPaperPredict(
       String paperId, double score) async {
-    Dio client = BaseDio().dio;
+    Dio client = BaseSingleton().dio;
 
     try {
       Response response = await client
