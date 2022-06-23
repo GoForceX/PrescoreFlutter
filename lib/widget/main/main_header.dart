@@ -30,7 +30,8 @@ class MySliverAppBar extends SliverPersistentHeaderDelegate {
   @override
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
-    SharedPreferences.getInstance().then((SharedPreferences shared) {
+    Future.delayed(Duration.zero, () {
+      SharedPreferences shared = BaseSingleton().sharedPreferences;
       bool? allowed = shared.getBool("allowTelemetry");
       allowed ??= false;
       if (allowed) {
@@ -59,7 +60,9 @@ class MySliverAppBar extends SliverPersistentHeaderDelegate {
               TextButton(
                 onPressed: () async {
                   shared.setBool("allowTelemetry", true);
-                  Provider.of<LoginModel>(context, listen: false).user.telemetryLogin();
+                  Provider.of<LoginModel>(context, listen: false)
+                      .user
+                      .telemetryLogin();
                   Navigator.pop(dialogContext, '同意');
                 },
                 child: const Text('同意'),
@@ -239,8 +242,7 @@ class _FallbackAppbarWidgetState extends State<FallbackAppbarWidget> {
   void callback() {
     logger.d("get callback");
     Provider.of<LoginModel>(context, listen: false).setLoggedIn(true);
-    Provider.of<LoginModel>(context, listen: false)
-        .user.telemetryLogin();
+    Provider.of<LoginModel>(context, listen: false).user.telemetryLogin();
   }
 
   @override
@@ -324,7 +326,8 @@ class _FallbackAppbarWidgetState extends State<FallbackAppbarWidget> {
                                     .setLoggedIn(true);
                                 logger.d(user.session?.xToken);
                                 Provider.of<LoginModel>(context, listen: false)
-                                    .user.telemetryLogin();
+                                    .user
+                                    .telemetryLogin();
                               } else {
                                 SnackBar snackBar = SnackBar(
                                   content: Text(
