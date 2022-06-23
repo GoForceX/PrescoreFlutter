@@ -17,7 +17,6 @@ import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:upgrader/upgrader.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:version/version.dart';
 import 'package:r_upgrade/r_upgrade.dart';
 
@@ -98,7 +97,8 @@ class HomePageState extends State<HomePage> {
     AppcastItem? item = appcast.bestItem();
     if (item != null) {
       PackageInfo packageInfo = await PackageInfo.fromPlatform();
-      if (Version.parse(packageInfo.version) < Version.parse(item.versionString)) {
+      if (Version.parse(packageInfo.version) <
+          Version.parse(item.versionString)) {
         logger.i("got update: ${item.fileURL!}");
         showDialog<String>(
           context: context,
@@ -115,8 +115,8 @@ class HomePageState extends State<HomePage> {
               ),
               TextButton(
                 onPressed: () async {
-                  RUpgrade.upgrade(
-                      item.fileURL!, fileName: 'app-release.apk', isAutoRequestInstall: true);
+                  RUpgrade.upgrade(item.fileURL!,
+                      fileName: 'app-release.apk', isAutoRequestInstall: true);
                   Navigator.pop(dialogContext, '当然是更新啦');
                 },
                 child: const Text('当然是更新啦'),
@@ -130,9 +130,6 @@ class HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    String appcastURL = 'https://matrix.bjbybbs.com/appcast.xml';
-    final cfg = AppcastConfiguration(
-        url: appcastURL, supportedOS: ['android', 'windows']);
     showUpgradeAlert();
 
     return ChangeNotifierProvider(
@@ -155,22 +152,9 @@ class HomePageState extends State<HomePage> {
                 ));
               }
 
-              return UpgradeAlert(
-                upgrader: Upgrader(
-                    appcastConfig: cfg,
-                    countryCode: 'zh',
-                    durationUntilAlertAgain: Duration.zero,
-                    messages: ChineseMessages(),
-                    onUpdate: () {
-                      launchUrl(
-                          Uri.parse("https://matrix.bjbybbs.com/docs/landing"),
-                          mode: LaunchMode.externalApplication);
-                      return false;
-                    }),
-                child: CustomScrollView(
-                  shrinkWrap: true,
-                  slivers: slivers,
-                ),
+              return CustomScrollView(
+                shrinkWrap: true,
+                slivers: slivers,
               );
             },
           ),
@@ -205,28 +189,5 @@ class BaseSingleton {
 
     SharedPreferences.getInstance().then((value) => sharedPreferences = value);
     PackageInfo.fromPlatform().then((value) => packageInfo = value);
-  }
-}
-
-class ChineseMessages extends UpgraderMessages {
-  @override
-  String? message(UpgraderMessage messageKey) {
-    switch (messageKey) {
-      case UpgraderMessage.body:
-        return '应用程序 {{appName}} 有新的版本，最新版本是{{currentAppStoreVersion}}，当前版本是{{currentInstalledVersion}}';
-      case UpgraderMessage.buttonTitleIgnore:
-        return '忽略';
-      case UpgraderMessage.buttonTitleLater:
-        return '一会再说';
-      case UpgraderMessage.buttonTitleUpdate:
-        return '现在更新';
-      case UpgraderMessage.prompt:
-        return '要更新吗？';
-      case UpgraderMessage.releaseNotes:
-        return '更新日志';
-      case UpgraderMessage.title:
-        return '现在要更新吗？';
-    }
-    // Messages that are not provided above can still use the default values.
   }
 }
