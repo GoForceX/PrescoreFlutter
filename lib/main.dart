@@ -65,6 +65,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (BaseSingleton.singleton.sharedPreferences.getInt("classCount") == null) {
+      BaseSingleton.singleton.sharedPreferences.setInt("classCount", 45);
+    }
+
     return MaterialApp.router(
         routeInformationParser: _appRouter.defaultRouteParser(),
         routerDelegate: _appRouter.delegate(),
