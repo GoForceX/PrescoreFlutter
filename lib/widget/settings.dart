@@ -100,7 +100,7 @@ class _SettingsPageState extends State<SettingsPage> {
             title: const Text('基本设置'),
             tiles: [
               SettingsTile.navigation(
-                leading: const Icon(Icons.update),
+                leading: const Icon(Icons.numbers_rounded),
                 title: const Text('班级人数'),
                 description: Text(
                     "${BaseSingleton.singleton.sharedPreferences.getInt("classCount") ?? 45}"),
@@ -121,13 +121,6 @@ class _SettingsPageState extends State<SettingsPage> {
                 description: const Text('向服务器上传考试数据'),
               ),
               SettingsTile.navigation(
-                leading: const Icon(Icons.update),
-                title: const Text('检查更新'),
-                onPressed: (BuildContext context) {
-                  showUpgradeAlert(context);
-                },
-              ),
-              SettingsTile(
                 leading: const Icon(Icons.update),
                 title: const Text('检查更新'),
                 onPressed: (BuildContext context) {
