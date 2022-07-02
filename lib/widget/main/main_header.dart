@@ -194,6 +194,7 @@ class FallbackAppbarWidget extends StatefulWidget {
 class _FallbackAppbarWidgetState extends State<FallbackAppbarWidget> {
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
+  bool _isObscured = true;
 
   void callback() {
     logger.d("get callback");
@@ -238,11 +239,19 @@ class _FallbackAppbarWidgetState extends State<FallbackAppbarWidget> {
                     )),
                     Expanded(
                         child: TextField(
-                      obscureText: true,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        labelText: '密码',
-                      ),
+                      obscureText: _isObscured,
+                      decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: '密码',
+                          suffixIcon: IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  _isObscured = !_isObscured;
+                                });
+                              },
+                              icon: Icon(_isObscured
+                                  ? Icons.visibility_off
+                                  : Icons.visibility))),
                       controller: passwordController,
                     )),
                   ],
