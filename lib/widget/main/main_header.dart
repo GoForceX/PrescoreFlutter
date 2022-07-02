@@ -241,7 +241,7 @@ class _FallbackAppbarWidgetState extends State<FallbackAppbarWidget> {
                         child: TextField(
                       obscureText: _isObscured,
                       decoration: InputDecoration(
-                          border: OutlineInputBorder(),
+                          border: const OutlineInputBorder(),
                           labelText: '密码',
                           suffixIcon: IconButton(
                               onPressed: () {
