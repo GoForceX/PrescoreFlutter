@@ -1,16 +1,25 @@
-# prescore_flutter
+# 出分啦！
 
-Wow
+**出分啦！** 是一个为同学查询智学网成绩提供帮助的小工具。
 
-## Getting Started
+主页：[首页](https://matrix.bjbybbs.com)
 
-This project is a starting point for a Flutter application.
+## 项目说明
 
-A few resources to get you started if this is your first Flutter project:
+- 由于某些学校在智学网系统中屏蔽了**成绩和排名的查看**，遂设计了本 App.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- 不保证可以查询到对应的成绩。
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- 本项目后端服务器不会存储用户的密码等信息。
+
+## 写在最后
+
+如果你找到了这里，那么感谢你对本 App 的支持。
+
+本人为 Flutter 初学者，因此可能会有一些 bug ，请遇到 bug 的朋友们告诉我。
+
+若有问题，可以提 Issue ，看到了肯定会回复的。
+
+由于本人学业繁忙，App 更新速度可能无法保障。
+
+最后的最后，再次感谢大家的支持~
