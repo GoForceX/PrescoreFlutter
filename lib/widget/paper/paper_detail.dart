@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:prescore_flutter/util/struct.dart';
 import 'package:prescore_flutter/widget/paper/question_card.dart';
 import 'package:provider/provider.dart';
 
@@ -41,14 +42,57 @@ class _PaperDetailState extends State<PaperDetail> {
           if (snapshot.hasData) {
             if (snapshot.data["state"]) {
               List<Widget> questionCards = [];
+              List<Widget> questionIndicators = [];
 
               snapshot.data["result"].questions.forEach((element) {
-                questionCards.add(
-                    QuestionCard(question: element));
+                (element as Question);
+                questionCards.add(QuestionCard(question: element));
+
+                Color indicatorColor = Colors.grey;
+                if ((element).userScore /
+                        (element).fullScore ==
+                    1) {
+                  indicatorColor = Colors.lightGreen;
+                } else if ((element).userScore /
+                        (element).fullScore >
+                    0) {
+                  indicatorColor = Colors.yellowAccent;
+                } else {
+                  indicatorColor = Colors.redAccent;
+                }
+
+                questionIndicators.add(
+                  Container(
+                    margin: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: indicatorColor,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Center(
+                      child: FittedBox(
+                        child: Text(
+                          element.questionId,
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 24,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
               });
 
-              return ListView(
-                children: questionCards,
+              return CustomScrollView(
+                slivers: [
+                  SliverGrid.extent(
+                    maxCrossAxisExtent: 72,
+                    children: questionIndicators,
+                  ),
+                  SliverList(
+                    delegate: SliverChildListDelegate(questionCards),
+                  ),
+                ],
               );
             } else {
               return Container();
