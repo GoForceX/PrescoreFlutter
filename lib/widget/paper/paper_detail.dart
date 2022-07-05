@@ -46,41 +46,39 @@ class _PaperDetailState extends State<PaperDetail> {
 
               snapshot.data["result"].questions.forEach((element) {
                 (element as Question);
-                questionCards.add(QuestionCard(question: element));
+                if (element.isSelected) {
+                  questionCards.add(QuestionCard(question: element));
 
-                Color indicatorColor = Colors.grey;
-                if ((element).userScore /
-                        (element).fullScore ==
-                    1) {
-                  indicatorColor = Colors.lightGreen;
-                } else if ((element).userScore /
-                        (element).fullScore >
-                    0) {
-                  indicatorColor = Colors.yellowAccent;
-                } else {
-                  indicatorColor = Colors.redAccent;
-                }
+                  Color indicatorColor = Colors.grey;
+                  if ((element).userScore / (element).fullScore == 1) {
+                    indicatorColor = Colors.lightGreen;
+                  } else if ((element).userScore / (element).fullScore > 0) {
+                    indicatorColor = Colors.yellowAccent;
+                  } else {
+                    indicatorColor = Colors.redAccent;
+                  }
 
-                questionIndicators.add(
-                  Container(
-                    margin: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: indicatorColor,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Center(
-                      child: FittedBox(
-                        child: Text(
-                          element.questionId,
-                          style: const TextStyle(
-                            color: Colors.black,
-                            fontSize: 24,
+                  questionIndicators.add(
+                    Container(
+                      margin: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: indicatorColor,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Center(
+                        child: FittedBox(
+                          child: Text(
+                            element.questionId,
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontSize: 24,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                );
+                  );
+                }
               });
 
               return CustomScrollView(

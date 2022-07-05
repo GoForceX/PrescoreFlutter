@@ -118,7 +118,7 @@ class User {
     logger.d("loginResponse: ${loginResponse.headers}");
 
     List<Cookie> cookies =
-      await cookieJar.loadForRequest(Uri.parse("https://www.zhixue.com/"));
+        await cookieJar.loadForRequest(Uri.parse("https://www.zhixue.com/"));
     logger.d("cookies: $cookies");
     for (var element in cookies) {
       if (element.name == "tlsysSessionId") {
@@ -308,6 +308,9 @@ class User {
         questionId: element["dispTitle"],
         fullScore: element["standardScore"],
         userScore: element["score"],
+        isSelected: (element as Map<String, dynamic>).containsKey("isSelected")
+            ? element["isSelected"]
+            : true,
       ));
     }
     logger.d("paperData: success, $sheetImages");
@@ -461,16 +464,15 @@ class User {
         'username': bi?.id,
         'password': session?.sessionId,
       }}");
-      Response response = await client.post(
-        'https://matrix.bjbybbs.com/api/token',
-        data: {
-          'username': bi?.id,
-          'password': session?.sessionId,
-        },
-        options: Options(
-          contentType: Headers.formUrlEncodedContentType,
-        )
-      );
+      Response response =
+          await client.post('https://matrix.bjbybbs.com/api/token',
+              data: {
+                'username': bi?.id,
+                'password': session?.sessionId,
+              },
+              options: Options(
+                contentType: Headers.formUrlEncodedContentType,
+              ));
       logger.d('serverLogin response: ${response.data}');
       Map<String, dynamic> parsed = jsonDecode(response.data);
       session?.serverToken = parsed['access_token'];

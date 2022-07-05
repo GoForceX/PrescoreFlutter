@@ -93,16 +93,18 @@ class Question {
   String questionId;
   double userScore;
   double fullScore;
+  bool isSelected;
 
   Question({
     required this.questionId,
     required this.userScore,
     required this.fullScore,
+    required this.isSelected,
   });
 
   @override
   String toString() {
-    return 'Question{questionId: $questionId, userScore: $userScore, fullScore: $fullScore}';
+    return 'Question{questionId: $questionId, userScore: $userScore, fullScore: $fullScore, isSelected: $isSelected}';
   }
 }
 
