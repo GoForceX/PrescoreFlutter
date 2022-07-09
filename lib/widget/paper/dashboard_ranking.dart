@@ -18,7 +18,6 @@ class DashboardRanking extends StatelessWidget {
   Widget build(BuildContext context) {
     int classCount =
         BaseSingleton.singleton.sharedPreferences.getInt("classCount") ?? 45;
-    diagnoses.sort((a, b) => a.diagnosticScore.compareTo(b.diagnosticScore));
 
     if (diagnoses.length >= 3) {
       Container chartCard = Container(

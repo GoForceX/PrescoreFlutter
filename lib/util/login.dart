@@ -268,6 +268,7 @@ class User {
           subjectName: element["subjectName"],
           diagnosticScore: element["myRank"]));
     });
+    diags.sort((a, b) => a.diagnosticScore.compareTo(b.diagnosticScore));
     logger.d("diag: success, $diags");
     return {"state": true, "message": "", "result": diags};
   }
