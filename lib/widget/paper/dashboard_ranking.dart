@@ -95,10 +95,7 @@ class DashboardRanking extends StatelessWidget {
                             int rodIndex) {
                           return BarTooltipItem(
                             rodData.toY.round().toString(),
-                            TextStyle(
-                              color: ThemeMode.system == ThemeMode.dark
-                                  ? Colors.white
-                                  : Colors.black,
+                            const TextStyle(
                               fontWeight: FontWeight.bold,
                             ),
                           );
