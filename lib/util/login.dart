@@ -443,6 +443,12 @@ class User {
       return {"status": false, "message": "登录失败"};
     }
 
+    try {
+      await telemetryLogin();
+    } catch (e) {
+      logger.e("login: telemetryLogin error: $e");
+    }
+
     if (callback != null) {
       callback();
     }
