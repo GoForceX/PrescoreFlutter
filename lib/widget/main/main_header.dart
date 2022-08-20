@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:prescore_flutter/main.dart';
 import 'package:prescore_flutter/model/login_model.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../util/login.dart';
 import '../fancy_button.dart';
@@ -194,6 +195,7 @@ class FallbackAppbarWidget extends StatefulWidget {
 class _FallbackAppbarWidgetState extends State<FallbackAppbarWidget> {
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
+
   bool _isObscured = true;
 
   void callback() {
@@ -204,6 +206,17 @@ class _FallbackAppbarWidgetState extends State<FallbackAppbarWidget> {
 
   @override
   Widget build(BuildContext context) {
+    SharedPreferences sharedPrefs = BaseSingleton.singleton.sharedPreferences;
+    String? prefUsername = sharedPrefs.getString('username');
+    String? prefPassword = sharedPrefs.getString('password');
+
+    if (prefUsername != null) {
+      usernameController.text = prefUsername;
+    }
+    if (prefPassword != null) {
+      passwordController.text = prefPassword;
+    }
+
     logger.d("try login");
     if (!Provider.of<LoginModel>(context, listen: false).isLoggedOff) {
       Provider.of<LoginModel>(context).user.login(
@@ -280,6 +293,10 @@ class _FallbackAppbarWidgetState extends State<FallbackAppbarWidget> {
                                 .setLoading(true);
                             final username = usernameController.text;
                             final password = passwordController.text;
+
+                            sharedPrefs.setString("username", username);
+                            sharedPrefs.setString("password", password);
+
                             User user = User();
                             Provider.of<LoginModel>(context, listen: false)
                                 .setUser(user);
