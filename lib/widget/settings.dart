@@ -139,7 +139,15 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               SettingsTile.navigation(
                 leading: const Icon(Icons.web),
-                title: const Text("去网页看看"),
+                title: const Text("去论坛看看"),
+                onPressed: (_) {
+                  launchUrl(
+                      Uri.parse("https://bjbybbs.com/t/Revealer"));
+                },
+              ),
+              SettingsTile.navigation(
+                leading: const Icon(Icons.web),
+                title: const Text("去官网看看"),
                 onPressed: (_) {
                   launchUrl(
                       Uri.parse("https://matrix.bjbybbs.com/docs/landing"));
