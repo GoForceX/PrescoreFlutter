@@ -141,8 +141,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 leading: const Icon(Icons.web),
                 title: const Text("去论坛看看"),
                 onPressed: (_) {
-                  launchUrl(
-                      Uri.parse("https://bjbybbs.com/t/Revealer"));
+                  launchUrl(Uri.parse("https://bjbybbs.com/t/Revealer"));
                 },
               ),
               SettingsTile.navigation(
