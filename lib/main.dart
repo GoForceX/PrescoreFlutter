@@ -17,6 +17,7 @@ import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:upgrader/upgrader.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:version/version.dart';
 import 'package:r_upgrade/r_upgrade.dart';
 
@@ -65,7 +66,8 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (BaseSingleton.singleton.sharedPreferences.getInt("classCount") == null) {
+    if (BaseSingleton.singleton.sharedPreferences.getInt("classCount") ==
+        null) {
       BaseSingleton.singleton.sharedPreferences.setInt("classCount", 45);
     }
 
@@ -185,6 +187,10 @@ class HomePageState extends State<HomePage> {
     }
   }
 
+  void onNavigatingForum() {
+    launchUrl(Uri.parse("https://bjbybbs.com/t/Revealer"));
+  }
+
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
@@ -192,6 +198,11 @@ class HomePageState extends State<HomePage> {
         child: Scaffold(
           appBar: AppBar(
             title: const Text('出分啦'),
+            actions: [
+              IconButton(
+                  onPressed: onNavigatingForum,
+                  icon: const Icon(Icons.insert_comment))
+            ],
           ),
           body: FutureBuilder(
               future: Future.delayed(Duration.zero, () {
@@ -233,7 +244,7 @@ class BaseSingleton {
   late final PackageInfo packageInfo;
   static BaseSingleton get singleton => _singleton;
 
-  init () async {
+  init() async {
     // private constructor that creates the singleton instance
     dio.options.responseType = ResponseType.plain;
     dio.options.headers["User-Agent"] =
