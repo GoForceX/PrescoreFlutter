@@ -591,4 +591,25 @@ class User {
       return {"state": false, "message": e.toString(), "data": null};
     }
   }
+
+  Future<Map<String, dynamic>> fetchPaperScoreInfo(
+      String paperId) async {
+    Dio client = BaseSingleton.singleton.dio;
+
+    try {
+      logger.d("fetchPaperScoreInfo: start, $paperId");
+      Response response = await client
+          .get('https://matrix.bjbybbs.com/api/paper/score_info/$paperId');
+      Map<String, dynamic> result = jsonDecode(response.data);
+      logger.d("fetchPaperScoreInfo: end, $result");
+      if (result["code"] == 0) {
+        return {"state": true, "message": "成功哒！", "result": result["data"]};
+      } else {
+        return {"state": false, "message": result["code"], "data": null};
+      }
+    } catch (e) {
+      logger.e(e);
+      return {"state": false, "message": e.toString(), "data": null};
+    }
+  }
 }

@@ -114,6 +114,32 @@ class DetailCard extends StatelessWidget {
                 }
               },
             ),
+            const SizedBox(
+              height: 8,
+            ),
+            FutureBuilder(
+              future: Provider.of<ExamModel>(context, listen: false)
+                  .user
+                  .fetchPaperScoreInfo(paper.paperId),
+              builder: (BuildContext context, AsyncSnapshot snapshot) {
+                logger.d("DetailScoreInfo: ${snapshot.data}");
+                if (snapshot.hasData) {
+                  if (snapshot.data["state"]) {
+                    Widget scoreInfo = DetailScoreInfo(
+                        maximum: snapshot.data["result"]["max"],
+                        minimum: snapshot.data["result"]["min"],
+                        avg: snapshot.data["result"]["avg"],
+                        med: snapshot.data["result"]["med"]);
+                    return scoreInfo;
+                  } else {
+                    return Container();
+                  }
+                } else {
+                  return const DetailScoreInfo(
+                      maximum: -1, minimum: -1, avg: -1, med: -1);
+                }
+              },
+            ),
           ],
         ));
 
@@ -160,7 +186,7 @@ class DetailPredict extends StatelessWidget {
                 ],
               ),
               Text(
-                percentage != -1 ?(percentage * 100).toStringAsFixed(2) : "-",
+                percentage != -1 ? (percentage * 100).toStringAsFixed(2) : "-",
                 style: const TextStyle(fontSize: 48),
               ),
               const SizedBox(
@@ -181,5 +207,100 @@ class DetailPredict extends StatelessWidget {
             ],
           ),
         ));
+  }
+}
+
+class DetailScoreInfo extends StatelessWidget {
+  final double minimum;
+  final double maximum;
+  final double avg;
+  final double med;
+  const DetailScoreInfo(
+      {Key? key,
+      required this.minimum,
+      required this.maximum,
+      required this.avg,
+      required this.med})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Flexible(
+                child: FittedBox(
+              child: Column(
+                children: [
+                  const Text(
+                    "最低分",
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  Text(
+                    minimum != -1 ? minimum.toStringAsFixed(2) : "-",
+                    style: const TextStyle(fontSize: 32),
+                  ),
+                ],
+              ),
+            )),
+            Flexible(
+                child: FittedBox(
+              child: Column(
+                children: [
+                  const Text(
+                    "最高分",
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  Text(
+                    maximum != -1 ? maximum.toStringAsFixed(2) : "-",
+                    style: const TextStyle(fontSize: 32),
+                  ),
+                ],
+              ),
+            )),
+          ],
+        ),
+        const SizedBox(
+          height: 16,
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Flexible(
+                child: FittedBox(
+              child: Column(
+                children: [
+                  const Text(
+                    "平均分",
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  Text(
+                    avg != -1 ? avg.toStringAsFixed(2) : "-",
+                    style: const TextStyle(fontSize: 32),
+                  ),
+                ],
+              ),
+            )),
+            Flexible(
+                child: FittedBox(
+              child: Column(
+                children: [
+                  const Text(
+                    "中位数",
+                    style: TextStyle(fontSize: 16),
+                  ),
+                  Text(
+                    med != -1 ? med.toStringAsFixed(2) : "-",
+                    style: const TextStyle(fontSize: 32),
+                  ),
+                ],
+              ),
+            )),
+          ],
+        )
+      ],
+    );
   }
 }
