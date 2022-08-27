@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:prescore_flutter/widget/paper/dashboard_score_info.dart';
 import 'package:provider/provider.dart';
 
 import '../../main.dart';
@@ -135,6 +136,35 @@ class _DashboardCardState extends State<DashboardCard> {
       } else {
         return Container();
       }
+    }));
+
+    children.add(Consumer(builder:
+        (BuildContext consumerContext, ExamModel examModel, Widget? child) {
+      return FutureBuilder(
+        future: Provider.of<ExamModel>(context, listen: false)
+            .user
+            .fetchExamScoreInfo(widget.examId),
+        builder: (BuildContext context, AsyncSnapshot snapshot) {
+          logger.d("DashboardScoreInfo: ${snapshot.data}");
+          if (snapshot.hasData) {
+            if (snapshot.data["state"]) {
+              Widget scoreInfo = DashboardScoreInfo(
+                maximum: snapshot.data["result"]["max"],
+                minimum: snapshot.data["result"]["min"],
+                avg: snapshot.data["result"]["avg"],
+                med: snapshot.data["result"]["med"],
+              );
+              return scoreInfo;
+            } else {
+              return Container();
+            }
+          } else {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+        },
+      );
     }));
 
     if (Provider.of<ExamModel>(context, listen: false).isDiagLoaded) {
