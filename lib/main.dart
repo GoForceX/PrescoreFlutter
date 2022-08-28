@@ -75,8 +75,15 @@ class MyApp extends StatelessWidget {
         routeInformationParser: _appRouter.defaultRouteParser(),
         routerDelegate: _appRouter.delegate(),
         title: '出分啦',
-        theme: ThemeData(useMaterial3: true),
-        darkTheme: ThemeData.dark().copyWith(useMaterial3: true),
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(
+              seedColor: Colors.lightBlueAccent, brightness: Brightness.light),
+          useMaterial3: true,
+        ),
+        darkTheme: ThemeData.dark().copyWith(
+            colorScheme: ColorScheme.fromSeed(
+                seedColor: Colors.lightBlueAccent, brightness: Brightness.dark),
+            useMaterial3: true),
         themeMode: ThemeMode.system);
   }
 }
