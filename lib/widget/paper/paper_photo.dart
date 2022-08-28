@@ -106,6 +106,8 @@ class _PaperPhotoWidgetState extends State<PaperPhotoWidget> {
                               if (!storageStatus.isGranted) {
                                 await Permission.storage.request();
                               }
+
+                              storageStatus = await Permission.storage.status;
                               if (storageStatus.isGranted) {
                                 Dio dio = BaseSingleton.singleton.dio;
                                 dio
@@ -144,12 +146,11 @@ class _PaperPhotoWidgetState extends State<PaperPhotoWidget> {
                                 });
                               } else {
                                 SnackBar snackBar = SnackBar(
-                                  content: Text(
-                                      '呜呜呜，失败了……\n失败原因：无保存权限……'),
+                                  content: Text('呜呜呜，失败了……\n失败原因：无保存权限……'),
                                   backgroundColor:
-                                  ThemeMode.system == ThemeMode.dark
-                                      ? Colors.grey[900]
-                                      : Colors.grey[200],
+                                      ThemeMode.system == ThemeMode.dark
+                                          ? Colors.grey[900]
+                                          : Colors.grey[200],
                                 );
                                 ScaffoldMessenger.of(context)
                                     .showSnackBar(snackBar);
