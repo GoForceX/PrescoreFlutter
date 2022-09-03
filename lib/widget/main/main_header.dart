@@ -210,18 +210,18 @@ class _FallbackAppbarWidgetState extends State<FallbackAppbarWidget> {
     String? prefUsername = sharedPrefs.getString('username');
     String? prefPassword = sharedPrefs.getString('password');
 
-    if (prefUsername != null) {
-      usernameController.text = prefUsername;
-    }
-    if (prefPassword != null) {
-      passwordController.text = prefPassword;
-    }
-
     logger.d("try login");
     if (!Provider.of<LoginModel>(context, listen: false).isLoggedOff) {
       Provider.of<LoginModel>(context).user.login(
           usernameController.text, passwordController.text,
           force: false, ignoreLoading: false, callback: callback);
+    }
+
+    if (prefUsername != null) {
+      usernameController.text = prefUsername;
+    }
+    if (prefPassword != null) {
+      passwordController.text = prefPassword;
     }
 
     return Consumer<LoginModel>(
