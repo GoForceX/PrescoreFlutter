@@ -60,6 +60,7 @@ dependencies:
   r_upgrade: ^0.3.8+2
   image_gallery_saver: ^1.7.1
   permission_handler: ^10.0.0
+  flutter_svg: ^1.1.4
 
 dev_dependencies:
   flutter_test:
