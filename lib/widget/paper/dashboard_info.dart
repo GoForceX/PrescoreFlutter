@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
+
+import 'dart:math' as math;
 
 class DashboardInfo extends StatelessWidget {
   final double userScore;
@@ -65,18 +68,82 @@ class DashboardInfo extends StatelessWidget {
                   ),
                 )),
             const SizedBox(
-              height: 16,
+              height: 8,
             ),
-            LinearPercentIndicator(
-              lineHeight: 8.0,
-              percent: userScore / fullScore,
-              backgroundColor: Colors.grey,
-              linearGradient: const LinearGradient(
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-                colors: [Colors.lightBlueAccent, Colors.lightBlue, Colors.blue],
+            Align(
+              alignment: Alignment(userScore / fullScore * 2 - 1, 0),
+              child: Column(
+                children: [
+                  Transform.rotate(
+                    angle: (userScore / fullScore < 0.6) ? -math.pi / 5 : 0,
+                    child: SvgPicture.asset(
+                      "assets/running_person.svg",
+                      height: 32,
+                      color: Colors.lightBlueAccent,
+                    ),
+                  ),
+                  SvgPicture.asset(
+                    "assets/triangle_down_fill.svg",
+                    height: 8,
+                    color: Colors.lightBlueAccent,
+                  ),
+                ],
               ),
-              barRadius: const Radius.circular(4),
+            ),
+            SizedBox(
+              height: 20,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  LinearPercentIndicator(
+                    lineHeight: 8.0,
+                    percent: userScore / fullScore,
+                    backgroundColor: Colors.grey,
+                    linearGradient: const LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: [
+                        Colors.lightBlueAccent,
+                        Colors.lightBlue,
+                        Colors.blue
+                      ],
+                    ),
+                    barRadius: const Radius.circular(4),
+                  ),
+                  const Align(
+                    alignment: Alignment(0.7, 0),
+                    child: VerticalDivider(
+                      width: 4,
+                      thickness: 4,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  const Align(
+                    alignment: Alignment(0.4, 0),
+                    child: VerticalDivider(
+                      width: 4,
+                      thickness: 4,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  const Align(
+                    alignment: Alignment(0.2, 0),
+                    child: VerticalDivider(
+                      width: 4,
+                      thickness: 4,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  const Align(
+                    alignment: Alignment(-0.2, 0),
+                    child: VerticalDivider(
+                      width: 4,
+                      thickness: 4,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ));
