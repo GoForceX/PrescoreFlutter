@@ -504,6 +504,17 @@ class User {
 
     Dio client = BaseSingleton.singleton.dio;
 
+    logger.d("uploadPaperData: start, data: ${{
+      "user_id": basicInfo?.id,
+      "exam_id": paper.examId,
+      "paper_id": paper.paperId,
+      "subject_id": paper.subjectId,
+      "subject_name": paper.name,
+      "standard_score": paper.fullScore,
+      "user_score": paper.userScore,
+      "diagnostic_score": paper.diagnosticScore,
+    }}");
+
     try {
       Response response = await client.post(
         'https://matrix.bjbybbs.com/api/exam/submit',
@@ -524,6 +535,7 @@ class User {
           contentType: Headers.jsonContentType,
         ),
       );
+      logger.d("uploadPaperData: response: ${response.data}");
       return {"state": true, "message": "成功哒！", "result": response.data};
     } catch (e) {
       logger.e(e);
