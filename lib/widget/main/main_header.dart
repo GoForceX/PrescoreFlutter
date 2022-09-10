@@ -206,7 +206,7 @@ class _FallbackAppbarWidgetState extends State<FallbackAppbarWidget> {
 
   @override
   Widget build(BuildContext context) {
-    SharedPreferences sharedPrefs = BaseSingleton.singleton.sharedPreferences;
+    SharedPreferences? sharedPrefs = BaseSingleton.singleton.sharedPreferences;
     String? prefUsername = sharedPrefs.getString('username');
     String? prefPassword = sharedPrefs.getString('password');
 

@@ -5,7 +5,6 @@ import 'package:dio/dio.dart';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:encrypt/encrypt.dart';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:pointycastle/asymmetric/api.dart';
 import 'package:prescore_flutter/main.dart';
 import 'package:prescore_flutter/util/rsa.dart';
@@ -43,7 +42,7 @@ class User {
         ),
         ignoreExpires: true);
      */
-    PersistCookieJar cookieJar = BaseSingleton.singleton.cookieJar;
+    CookieJar cookieJar = BaseSingleton.singleton.cookieJar;
     cookieJar.delete(Uri.parse("https://www.zhixue.com/"));
     cookieJar.delete(Uri.parse("https://open.changyan.com/"));
   }
@@ -98,7 +97,7 @@ class User {
         ignoreExpires: true);
 
      */
-    PersistCookieJar cookieJar = BaseSingleton.singleton.cookieJar;
+    CookieJar cookieJar = BaseSingleton.singleton.cookieJar;
     Dio client = BaseSingleton.singleton.dio;
 
     logger.d("st: $st");
@@ -365,22 +364,6 @@ class User {
      */
 
     Dio client = BaseSingleton.singleton.dio;
-    Directory dataDir = await getApplicationDocumentsDirectory();
-    String dataPath = dataDir.path;
-    PersistCookieJar cookieJar = PersistCookieJar(
-        storage: FileStorage(
-          dataPath,
-        ),
-        ignoreExpires: true);
-    /*
-      ..httpClientAdapter = Http2Adapter(
-        ConnectionManager(
-          idleTimeout: 10000,
-          // Ignore bad certificate
-          onClientCreate: (_, config) => config.onBadCertificate = (_) => true,
-        ),
-      );
-       */
 
     Response preload = await client.get(
         "https://open.changyan.com/sso/login?sso_from=zhixuesso&service=https%3A%2F%2Fwww.zhixue.com:443%2Fssoservice.jsp",
@@ -424,7 +407,6 @@ class User {
         });
     String body = response.data;
     body = body.trim();
-    logger.d("cookies: ${cookieJar.domainCookies}");
     logger.d("loginBody: $body");
     body = body.replaceAll('\\', '').replaceAll('\'', '');
     body = body.replaceAll('(', '').replaceAll(')', '');

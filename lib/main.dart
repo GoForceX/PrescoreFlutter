@@ -1,6 +1,7 @@
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -147,7 +148,7 @@ class HomePageState extends State<HomePage> {
   }
 
   Future<void> showRequestDialog(BuildContext context) async {
-    SharedPreferences shared = BaseSingleton.singleton.sharedPreferences;
+    SharedPreferences? shared = BaseSingleton.singleton.sharedPreferences;
     bool? allowed = shared.getBool("allowTelemetry");
     bool? requested = shared.getBool("telemetryRequested");
     logger.d("allowed: $allowed, requested: $requested");
@@ -244,7 +245,7 @@ class BaseSingleton {
 
   static final BaseSingleton _singleton = BaseSingleton._();
   final Dio dio = Dio();
-  late final PersistCookieJar cookieJar;
+  late final CookieJar cookieJar;
   late final SharedPreferences sharedPreferences;
   late final PackageInfo packageInfo;
   static BaseSingleton get singleton => _singleton;
@@ -254,15 +255,20 @@ class BaseSingleton {
     dio.options.responseType = ResponseType.plain;
     dio.options.headers["User-Agent"] =
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.124 Safari/537.36 Edg/102.0.1245.41";
-    getApplicationSupportDirectory().then((value) {
-      String dataPath = value.path;
-      cookieJar = PersistCookieJar(
-          storage: FileStorage(
-            dataPath,
-          ),
-          ignoreExpires: true);
+    if (kIsWeb) {
+      cookieJar = CookieJar();
       dio.interceptors.add(CookieManager(cookieJar));
-    });
+    } else {
+      getApplicationSupportDirectory().then((value) {
+        String dataPath = value.path;
+        cookieJar = PersistCookieJar(
+            storage: FileStorage(
+              dataPath,
+            ),
+            ignoreExpires: true);
+        dio.interceptors.add(CookieManager(cookieJar));
+      });
+    }
 
     SharedPreferences.getInstance().then((value) => sharedPreferences = value);
     PackageInfo.fromPlatform().then((value) => packageInfo = value);

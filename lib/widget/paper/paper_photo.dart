@@ -145,15 +145,17 @@ class _PaperPhotoWidgetState extends State<PaperPhotoWidget> {
                                   }
                                 });
                               } else {
-                                SnackBar snackBar = SnackBar(
-                                  content: Text('呜呜呜，失败了……\n失败原因：无保存权限……'),
-                                  backgroundColor:
-                                      ThemeMode.system == ThemeMode.dark
-                                          ? Colors.grey[900]
-                                          : Colors.grey[200],
-                                );
-                                ScaffoldMessenger.of(context)
-                                    .showSnackBar(snackBar);
+                                if (mounted) {
+                                  SnackBar snackBar = SnackBar(
+                                    content: const Text('呜呜呜，失败了……\n失败原因：无保存权限……'),
+                                    backgroundColor:
+                                    ThemeMode.system == ThemeMode.dark
+                                        ? Colors.grey[900]
+                                        : Colors.grey[200],
+                                  );
+                                  ScaffoldMessenger.of(context)
+                                      .showSnackBar(snackBar);
+                                }
                               }
                             } else {
                               SnackBar snackBar = SnackBar(
