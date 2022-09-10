@@ -272,7 +272,9 @@ class User {
     });
     diags.sort((a, b) => a.diagnosticScore.compareTo(b.diagnosticScore));
     logger.d("diag: success, $diags");
-    return {"state": true, "message": "", "result": diags};
+    String tips = diagJson["result"]["tips"] ?? "";
+    String subTips = diagJson["result"]["subTips"] ?? "";
+    return {"state": true, "message": "", "result": {"diags": diags, "tips": tips, "subTips": subTips}};
   }
 
   Future<Map<String, dynamic>> fetchPaperData(

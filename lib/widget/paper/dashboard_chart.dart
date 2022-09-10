@@ -5,7 +5,14 @@ import '../../util/struct.dart';
 
 class DashboardChart extends StatelessWidget {
   final List<PaperDiagnosis> diagnoses;
-  const DashboardChart({Key? key, required this.diagnoses}) : super(key: key);
+  final String tips;
+  final String subTips;
+  const DashboardChart(
+      {Key? key,
+      required this.diagnoses,
+      required this.tips,
+      required this.subTips})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -23,20 +30,32 @@ class DashboardChart extends StatelessWidget {
                   RadarChartData(
                     dataSets: [
                       RadarDataSet(
-                        entryRadius: 3,
+                        fillColor: Colors.blueAccent.withOpacity(0.45), // Set the color inside the data
+                        borderColor: Colors.blue,
+                        entryRadius: 0,
+                        borderWidth: 2,
                         dataEntries: diagnoses
                             .map((e) => RadarEntry(value: e.diagnosticScore))
                             .toList(),
                       ),
                       RadarDataSet(
                         entryRadius: 0,
+                        borderWidth: 2,
                         dataEntries: List.filled(
-                            diagnoses.length, const RadarEntry(value: 100)),
+                            diagnoses.length, const RadarEntry(value: 125)),
+                        fillColor: Colors.transparent,
+                        borderColor: Colors.transparent,
+                      ),
+                      RadarDataSet(
+                        entryRadius: 0,
+                        borderWidth: 2,
+                        dataEntries: List.filled(
+                            diagnoses.length, const RadarEntry(value: 0)),
                         fillColor: Colors.transparent,
                         borderColor: Colors.transparent,
                       )
                     ],
-                    tickCount: 3,
+                    tickCount: 5,
                     radarBorderData: const BorderSide(
                       color: Colors.black,
                       width: 1,
@@ -49,17 +68,20 @@ class DashboardChart extends StatelessWidget {
                       color: Colors.black,
                       width: 1,
                     ),
-                    radarShape: RadarShape.polygon,
+                    titlePositionPercentageOffset: 0.1,
+                    radarBackgroundColor: Colors.transparent,
+                    radarShape: RadarShape.circle,
                     getTitle: (index, angle) {
                       return RadarChartTitle(
-                          text: diagnoses[index].subjectName);
+                          text: diagnoses[index % 3].subjectName);
                     },
                   ),
                   swapAnimationDuration: const Duration(milliseconds: 150),
                   swapAnimationCurve: Curves.linear,
                 ),
               ),
-              const Text("这么巨！", style: TextStyle(fontSize: 16)),
+              Text(tips, style: const TextStyle(fontSize: 16)),
+              Text(subTips, style: const TextStyle(fontSize: 12)),
             ],
           ));
 

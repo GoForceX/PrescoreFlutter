@@ -169,7 +169,10 @@ class _DashboardCardState extends State<DashboardCard> {
 
     if (Provider.of<ExamModel>(context, listen: false).isDiagLoaded) {
       Widget chart = DashboardChart(
-          diagnoses: Provider.of<ExamModel>(context, listen: false).diagnoses);
+        diagnoses: Provider.of<ExamModel>(context, listen: false).diagnoses,
+        tips: Provider.of<ExamModel>(context, listen: false).tips,
+        subTips: Provider.of<ExamModel>(context, listen: false).subTips,
+      );
       children.add(chart);
 
       Widget ranking = DashboardRanking(
@@ -185,7 +188,11 @@ class _DashboardCardState extends State<DashboardCard> {
             if (snapshot.data["state"]) {
               Future.delayed(Duration.zero, () {
                 Provider.of<ExamModel>(context, listen: false)
-                    .setDiagnoses(snapshot.data["result"]);
+                    .setDiagnoses(snapshot.data["result"]["diags"]);
+                Provider.of<ExamModel>(context, listen: false)
+                    .setTips(snapshot.data["result"]["tips"]);
+                Provider.of<ExamModel>(context, listen: false)
+                    .setSubTips(snapshot.data["result"]["subTips"]);
                 Provider.of<ExamModel>(context, listen: false)
                     .setDiagFetched(true);
                 Provider.of<ExamModel>(context, listen: false)
@@ -193,8 +200,11 @@ class _DashboardCardState extends State<DashboardCard> {
               });
               return Column(
                 children: [
-                  DashboardChart(diagnoses: snapshot.data["result"]),
-                  DashboardRanking(diagnoses: snapshot.data["result"])
+                  DashboardChart(
+                      diagnoses: snapshot.data["result"]["diags"],
+                      tips: snapshot.data["result"]["tips"],
+                      subTips: snapshot.data["result"]["subTips"]),
+                  DashboardRanking(diagnoses: snapshot.data["result"]["diags"])
                 ],
               );
             } else {

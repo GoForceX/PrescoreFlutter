@@ -9,6 +9,8 @@ class ExamModel extends ChangeNotifier {
   bool isDiagFetched = false;
   bool isDiagLoaded = false;
   List<PaperDiagnosis> diagnoses = [];
+  String tips = "";
+  String subTips = "";
 
   bool isPaperLoaded = false;
   List<Paper> papers = [];
@@ -30,6 +32,16 @@ class ExamModel extends ChangeNotifier {
 
   void setDiagnoses(List<PaperDiagnosis> value) {
     diagnoses = value;
+    notifyListeners();
+  }
+
+  void setTips(String value) {
+    tips = value;
+    notifyListeners();
+  }
+
+  void setSubTips(String value) {
+    subTips = value;
     notifyListeners();
   }
 
