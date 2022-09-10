@@ -73,7 +73,7 @@ class DashboardChart extends StatelessWidget {
                     radarShape: RadarShape.circle,
                     getTitle: (index, angle) {
                       return RadarChartTitle(
-                          text: diagnoses[index % 3].subjectName);
+                          text: diagnoses[index].subjectName);
                     },
                   ),
                   swapAnimationDuration: const Duration(milliseconds: 150),
