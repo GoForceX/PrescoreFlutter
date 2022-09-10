@@ -162,14 +162,17 @@ class User {
       logger.d("basicInfo: failed");
       return null;
     }
+    String? avatar = json["result"]["avatar"];
+    avatar ??= "";
     BasicInfo basicInfo = BasicInfo(
       json["result"]["id"],
       json["result"]["loginName"],
       json["result"]["name"],
       json["result"]["role"],
-      json["result"]["avatar"],
+      avatar,
     );
     this.basicInfo = basicInfo;
+    logger.d("basicInfo: $basicInfo");
     isBasicInfoLoaded = true;
     if (callback != null) {
       logger.d("callback");
@@ -583,8 +586,7 @@ class User {
     }
   }
 
-  Future<Map<String, dynamic>> fetchExamScoreInfo(
-      String examId) async {
+  Future<Map<String, dynamic>> fetchExamScoreInfo(String examId) async {
     Dio client = BaseSingleton.singleton.dio;
 
     try {
@@ -604,8 +606,7 @@ class User {
     }
   }
 
-  Future<Map<String, dynamic>> fetchPaperScoreInfo(
-      String paperId) async {
+  Future<Map<String, dynamic>> fetchPaperScoreInfo(String paperId) async {
     Dio client = BaseSingleton.singleton.dio;
 
     try {
