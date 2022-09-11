@@ -87,7 +87,13 @@ class PaperPhotoWidget extends StatefulWidget {
 class _PaperPhotoWidgetState extends State<PaperPhotoWidget> {
   @override
   Widget build(BuildContext context) {
-    GlobalKey globalKey = GlobalKey();
+    Uint8List memoryImage = Uint8List(0);
+    Dio dio = BaseSingleton.singleton.dio;
+    dio
+        .get(widget.url, options: Options(responseType: ResponseType.bytes))
+        .then((value) async {
+      memoryImage = Uint8List.fromList(value.data);
+    });
     return GestureDetector(
         onTap: () {
           Navigator.push(
@@ -109,49 +115,43 @@ class _PaperPhotoWidgetState extends State<PaperPhotoWidget> {
 
                               storageStatus = await Permission.storage.status;
                               if (storageStatus.isGranted) {
-                                Dio dio = BaseSingleton.singleton.dio;
-                                dio
-                                    .get(widget.url,
-                                        options: Options(
-                                            responseType: ResponseType.bytes))
-                                    .then((value) async {
-                                  final result = await ImageGallerySaver.saveImage(
-                                      Uint8List.fromList(value.data),
-                                      name:
-                                          "prescore_${(DateTime.now().millisecondsSinceEpoch / 100).round()}");
-                                  if (mounted) {
-                                    if (result["isSuccess"]) {
-                                      SnackBar snackBar = SnackBar(
-                                        content: const Text('保存大成功！'),
-                                        backgroundColor:
-                                            ThemeMode.system == ThemeMode.dark
-                                                ? Colors.grey[900]
-                                                : Colors.grey[200],
-                                      );
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(snackBar);
-                                    } else {
-                                      SnackBar snackBar = SnackBar(
-                                        content: Text(
-                                            '呜呜呜，失败了……\n失败原因：${result["errorMessage"]}'),
-                                        backgroundColor:
-                                            ThemeMode.system == ThemeMode.dark
-                                                ? Colors.grey[900]
-                                                : Colors.grey[200],
-                                      );
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(snackBar);
-                                    }
+                                final result = await ImageGallerySaver.saveImage(
+                                    memoryImage,
+                                    name:
+                                        "prescore_${(DateTime.now().millisecondsSinceEpoch / 100).round()}");
+                                if (mounted) {
+                                  if (result["isSuccess"]) {
+                                    SnackBar snackBar = SnackBar(
+                                      content: const Text('保存大成功！'),
+                                      backgroundColor:
+                                          ThemeMode.system == ThemeMode.dark
+                                              ? Colors.grey[900]
+                                              : Colors.grey[200],
+                                    );
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(snackBar);
+                                  } else {
+                                    SnackBar snackBar = SnackBar(
+                                      content: Text(
+                                          '呜呜呜，失败了……\n失败原因：${result["errorMessage"]}'),
+                                      backgroundColor:
+                                          ThemeMode.system == ThemeMode.dark
+                                              ? Colors.grey[900]
+                                              : Colors.grey[200],
+                                    );
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(snackBar);
                                   }
-                                });
+                                }
                               } else {
                                 if (mounted) {
                                   SnackBar snackBar = SnackBar(
-                                    content: const Text('呜呜呜，失败了……\n失败原因：无保存权限……'),
+                                    content:
+                                        const Text('呜呜呜，失败了……\n失败原因：无保存权限……'),
                                     backgroundColor:
-                                    ThemeMode.system == ThemeMode.dark
-                                        ? Colors.grey[900]
-                                        : Colors.grey[200],
+                                        ThemeMode.system == ThemeMode.dark
+                                            ? Colors.grey[900]
+                                            : Colors.grey[200],
                                   );
                                   ScaffoldMessenger.of(context)
                                       .showSnackBar(snackBar);
@@ -173,8 +173,8 @@ class _PaperPhotoWidgetState extends State<PaperPhotoWidget> {
                           child: const Icon(Icons.save_alt_rounded),
                         ),
                         body: PhotoView(
-                          imageProvider: NetworkImage(
-                            widget.url,
+                          imageProvider: MemoryImage(
+                            memoryImage,
                           ),
                           heroAttributes:
                               PhotoViewHeroAttributes(tag: widget.tag),
@@ -186,9 +186,8 @@ class _PaperPhotoWidgetState extends State<PaperPhotoWidget> {
         child: Hero(
           tag: widget.tag,
           child: RepaintBoundary(
-            key: globalKey,
-            child: Image.network(
-              widget.url,
+            child: Image.memory(
+              memoryImage,
               width: 350.0,
             ),
           ),
