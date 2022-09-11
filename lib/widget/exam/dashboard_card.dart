@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:prescore_flutter/widget/paper/dashboard_score_info.dart';
+import 'package:prescore_flutter/widget/exam/dashboard_score_info.dart';
 import 'package:provider/provider.dart';
 
 import '../../main.dart';
 import '../../model/exam_model.dart';
 import '../../util/struct.dart';
-import '../paper/dashboard_chart.dart';
-import '../paper/dashboard_info.dart';
-import '../paper/dashboard_predict.dart';
-import '../paper/dashboard_ranking.dart';
+import 'dashboard_chart.dart';
+import 'dashboard_info.dart';
+import 'dashboard_predict.dart';
+import 'dashboard_ranking.dart';
 
 class DashboardCard extends StatefulWidget {
   final String examId;
