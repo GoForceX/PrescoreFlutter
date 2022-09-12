@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 class Session {
   String st;
   String sessionId;
@@ -111,18 +113,54 @@ class Question {
   double userScore;
   double fullScore;
   bool isSelected;
+  String? selectedAnswer;
 
   Question({
     required this.questionId,
     required this.userScore,
     required this.fullScore,
     required this.isSelected,
+    this.selectedAnswer,
   });
 
   @override
   String toString() {
-    return 'Question{questionId: $questionId, userScore: $userScore, fullScore: $fullScore, isSelected: $isSelected}';
+    return 'Question{questionId: $questionId, userScore: $userScore, fullScore: $fullScore, isSelected: $isSelected, selectedAnswer: $selectedAnswer}';
   }
+}
+
+enum MarkerType {
+  singleChoice,
+  multipleChoice,
+  shortAnswer,
+  sectionEnd,
+  svgPicture,
+}
+
+class Marker {
+  MarkerType type;
+  int sheetId;
+  double top;
+  double left;
+  double topOffset;
+  double leftOffset;
+  double height;
+  double width;
+  Color color;
+  String message;
+
+  Marker({
+    required this.type,
+    required this.sheetId,
+    required this.top,
+    required this.left,
+    required this.topOffset,
+    required this.leftOffset,
+    required this.height,
+    required this.width,
+    required this.color,
+    required this.message,
+  });
 }
 
 class PaperData {
@@ -130,17 +168,19 @@ class PaperData {
   String paperId;
   List<String> sheetImages;
   List<Question> questions;
+  List<Marker> markers;
 
   PaperData({
     required this.examId,
     required this.paperId,
     required this.sheetImages,
     required this.questions,
+    required this.markers,
   });
 
   @override
   String toString() {
-    return 'PaperData{examId: $examId, paperId: $paperId, sheetImages: $sheetImages, questions: $questions}';
+    return 'PaperData{examId: $examId, paperId: $paperId, sheetImages: $sheetImages, questions: $questions, markers: $markers}';
   }
 }
 

@@ -1,16 +1,19 @@
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:photo_view/photo_view.dart';
+import 'package:prescore_flutter/assets/draw_icons.dart';
 import 'package:prescore_flutter/main.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:io';
 
 import '../../model/paper_model.dart';
+import '../../util/struct.dart';
 
 class PaperPhoto extends StatefulWidget {
   final String examId;
@@ -27,15 +30,30 @@ class _PaperPhotoState extends State<PaperPhoto> {
   Widget build(BuildContext context) {
     Widget main = Container();
 
+    logger.d("exam id: ${widget.examId}");
+
     if (Provider.of<PaperModel>(context, listen: false).isDataLoaded) {
       List<Widget> photos = [];
 
-      Provider.of<PaperModel>(context, listen: false)
-          .paperData
-          ?.sheetImages
-          .forEach((element) {
-        photos.add(PaperPhotoWidget(url: element, tag: const Uuid().v4()));
-      });
+      List<Marker>? markers =
+          Provider.of<PaperModel>(context, listen: false).paperData?.markers;
+      markers ??= [];
+      for (var i = 0;
+          i <
+              Provider.of<PaperModel>(context, listen: false)
+                  .paperData!
+                  .sheetImages
+                  .length;
+          i++) {
+        photos.add(PaperPhotoWidget(
+          sheetId: i,
+          url: Provider.of<PaperModel>(context, listen: false)
+              .paperData!
+              .sheetImages[i],
+          tag: const Uuid().v4(),
+          markers: markers,
+        ));
+      }
 
       return ListView(
         children: photos,
@@ -50,10 +68,16 @@ class _PaperPhotoState extends State<PaperPhoto> {
             if (snapshot.data.state) {
               List<Widget> photos = [];
 
-              snapshot.data.result.sheetImages.forEach((element) {
-                photos.add(
-                    PaperPhotoWidget(url: element, tag: const Uuid().v4()));
-              });
+              for (var i = 0;
+                  i < snapshot.data.result.sheetImages.length;
+                  i++) {
+                photos.add(PaperPhotoWidget(
+                  sheetId: i,
+                  url: snapshot.data.result.sheetImages[i],
+                  tag: const Uuid().v4(),
+                  markers: snapshot.data.result.markers,
+                ));
+              }
 
               return ListView(
                 children: photos,
@@ -75,9 +99,16 @@ class _PaperPhotoState extends State<PaperPhoto> {
 }
 
 class PaperPhotoWidget extends StatefulWidget {
+  final int sheetId;
   final String url;
   final String tag;
-  const PaperPhotoWidget({Key? key, required this.url, required this.tag})
+  final List<Marker> markers;
+  const PaperPhotoWidget(
+      {Key? key,
+      required this.sheetId,
+      required this.url,
+      required this.tag,
+      required this.markers})
       : super(key: key);
 
   @override
@@ -85,40 +116,151 @@ class PaperPhotoWidget extends StatefulWidget {
 }
 
 class _PaperPhotoWidgetState extends State<PaperPhotoWidget> {
+  Future<Uint8List?> markerPainter(
+      List<Marker> markers, Uint8List originalImage) async {
+    var pictureRecorder = ui.PictureRecorder();
+    var canvas = Canvas(pictureRecorder);
+
+    Paint linePaint = Paint();
+
+    ui.Codec codec = await ui.instantiateImageCodec(originalImage);
+    ui.FrameInfo frameInfo = await codec.getNextFrame();
+
+    canvas.drawImage(frameInfo.image, const Offset(0, 0), linePaint);
+
+    double widthRate = 420 / frameInfo.image.width;
+    double heightRate = 297 / frameInfo.image.height;
+
+    for (var marker in markers) {
+      if (marker.sheetId == widget.sheetId) {
+        switch (marker.type) {
+          case MarkerType.singleChoice:
+            linePaint.color = marker.color;
+            linePaint.strokeWidth = 5;
+            linePaint.style = PaintingStyle.fill;
+
+            canvas.drawRect(
+                Rect.fromLTWH(
+                    marker.left / widthRate + marker.leftOffset,
+                    marker.top / heightRate + marker.topOffset,
+                    marker.width,
+                    marker.height),
+                linePaint);
+            break;
+          case MarkerType.multipleChoice:
+            break;
+          case MarkerType.shortAnswer:
+            break;
+          case MarkerType.sectionEnd:
+            ui.ParagraphBuilder pb = ui.ParagraphBuilder(ui.ParagraphStyle(
+                textAlign: TextAlign.left,
+                fontWeight: FontWeight.w800,
+                fontStyle: FontStyle.normal,
+                fontSize: 64.0));
+            pb.pushStyle(ui.TextStyle(color: marker.color));
+            pb.addText(marker.message);
+            ui.ParagraphConstraints pc =
+                const ui.ParagraphConstraints(width: 200);
+            ui.Paragraph paragraph = pb.build()..layout(pc);
+            canvas.drawParagraph(
+                paragraph,
+                Offset(marker.left / widthRate + marker.leftOffset,
+                    marker.top / heightRate + marker.topOffset));
+            break;
+          case MarkerType.svgPicture:
+            logger.d("svg: ${marker.type}, ${marker.message}");
+            switch (marker.message) {
+              case "wrong":
+                drawWrong(
+                    canvas,
+                    50,
+                    50,
+                    marker.top / heightRate + marker.topOffset,
+                    marker.left / widthRate + marker.leftOffset,
+                    marker.color);
+                break;
+              case "half":
+                drawHalfCorrect(
+                    canvas,
+                    50,
+                    50,
+                    marker.top / heightRate + marker.topOffset,
+                    marker.left / widthRate + marker.leftOffset,
+                    marker.color);
+                break;
+              case "correct":
+                drawCorrect(
+                    canvas,
+                    50,
+                    50,
+                    marker.top / heightRate + marker.topOffset,
+                    marker.left / widthRate + marker.leftOffset,
+                    marker.color);
+                break;
+            }
+            break;
+        }
+      }
+    }
+
+    var picture = await pictureRecorder
+        .endRecording()
+        .toImage(frameInfo.image.width, frameInfo.image.height);
+    var pngImageBytes =
+        await picture.toByteData(format: ui.ImageByteFormat.png);
+    Uint8List? pngBytes = pngImageBytes?.buffer.asUint8List();
+
+    return pngBytes;
+  }
+
   @override
   Widget build(BuildContext context) {
     Uint8List? memoryImage;
     Dio dio = BaseSingleton.singleton.dio;
+    logger.d(widget.url);
     return FutureBuilder(
         future: dio.get(widget.url,
             options: Options(responseType: ResponseType.bytes)),
         builder: (BuildContext context, AsyncSnapshot snapshot) {
           if (snapshot.hasData) {
             memoryImage = Uint8List.fromList(snapshot.data.data);
-            return GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (subContext) => GestureDetector(
-                            onTap: () {
-                              Navigator.pop(subContext);
-                            },
-                            child: PaperPhotoEnlarged(
-                              memoryImage: memoryImage!,
-                              tag: widget.tag,
-                            ))),
-                  );
-                },
-                child: Hero(
-                  tag: widget.tag,
-                  child: RepaintBoundary(
-                    child: Image.memory(
-                      memoryImage!,
-                      width: 350.0,
-                    ),
-                  ),
-                ));
+
+            return FutureBuilder(
+                future: markerPainter(widget.markers, memoryImage!),
+                builder: (BuildContext context, AsyncSnapshot snapshot) {
+                  if (snapshot.hasData) {
+                    memoryImage = snapshot.data;
+
+                    return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (subContext) => GestureDetector(
+                                    onTap: () {
+                                      Navigator.pop(subContext);
+                                    },
+                                    child: PaperPhotoEnlarged(
+                                      memoryImage: memoryImage!,
+                                      tag: widget.tag,
+                                    ))),
+                          );
+                        },
+                        child: Hero(
+                          tag: widget.tag,
+                          child: RepaintBoundary(
+                            child: Image.memory(
+                              memoryImage!,
+                              width: 350.0,
+                            ),
+                          ),
+                        ));
+                  } else {
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  }
+                });
           } else {
             return const Center(
               child: CircularProgressIndicator(),

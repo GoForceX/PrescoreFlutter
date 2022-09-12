@@ -477,6 +477,7 @@ class User {
       sheetImages.add(element);
     }
     List<Question> questions = [];
+    List<Marker> markers = [];
     String sheetQuestions = json["result"]["sheetDatas"];
     logger.d("sheetQuestions: $sheetQuestions");
     List<dynamic> sheetQuestionsDynamic =
@@ -484,6 +485,10 @@ class User {
             ["answerRecordDetails"];
     logger.d("sheetQuestionsDynamic: $sheetQuestionsDynamic");
     for (var element in sheetQuestionsDynamic) {
+      String? selectedAnswer;
+      if (element["answerType"] == "s01Text") {
+        selectedAnswer = element["answer"];
+      }
       questions.add(Question(
         questionId: element["dispTitle"],
         fullScore: element["standardScore"],
@@ -491,17 +496,137 @@ class User {
         isSelected: (element as Map<String, dynamic>).containsKey("isSelected")
             ? element["isSelected"]
             : true,
+        selectedAnswer: selectedAnswer,
       ));
     }
+
+    List sheetMarkersSheets =
+        jsonDecode(sheetQuestions)["answerSheetLocationDTO"]["pageSheets"];
+
+    logger.d("sheetMarkersSheets, start: $sheetMarkersSheets");
+    try {
+      Result parseResult = parseMarkers(sheetMarkersSheets, questions);
+      if (parseResult.state) {
+        markers = parseResult.result;
+      }
+    } on Exception catch (e) {
+      logger.e("parseMarkers: $e");
+    }
+
     logger.d("paperData: success, $sheetImages");
     PaperData paperData = PaperData(
-        examId: examId,
-        paperId: paperId,
-        sheetImages: sheetImages,
-        questions: questions);
+      examId: examId,
+      paperId: paperId,
+      sheetImages: sheetImages,
+      questions: questions,
+      markers: markers,
+    );
 
     logger.d("paperData: success, ${json["result"]["sheetImages"]}");
     return Result(state: true, message: "", result: paperData);
+  }
+
+  Result<List<Marker>> parseMarkers(
+      List sheetMarkersSheets, List<Question> questions) {
+    logger.d("parseMarkers: $sheetMarkersSheets");
+    List<Marker> markers = [];
+    for (var sheetId = 0; sheetId < sheetMarkersSheets.length; sheetId++) {
+      Map sheet = sheetMarkersSheets[sheetId];
+      for (var section in sheet["sections"]) {
+        if (section["enabled"]) {
+          double fullScore = 0;
+          double userScore = 0;
+          if (section["type"] == "SingleChoice") {
+            for (var branch in section["contents"]["branch"]) {
+              List choices = branch["chooses"];
+              List numList = branch["numList"];
+              double top = branch["position"]["top"].toDouble();
+              double left = branch["position"]["left"].toDouble();
+              double topOffset = (branch["firstOption"]["top"] + 3).toDouble();
+              double leftOffset =
+                  (branch["firstOption"]["left"] + 3).toDouble();
+              double width = branch["firstOption"]["width"].toDouble();
+              double height = branch["firstOption"]["height"].toDouble();
+              double colOffset = (branch["colOffset"] + 2).toDouble();
+              double rowOffset = (branch["rowOffset"] + 2).toDouble();
+              logger.d("branch parse, start");
+              for (var i = 0; i < numList.length; i++) {
+                int qid = numList[i];
+                Question question = questions.firstWhere(
+                    (element) => element.questionId == qid.toString());
+                if (question.selectedAnswer != null) {
+                  fullScore += question.fullScore;
+                  userScore += question.userScore;
+                  int ix = choices.indexOf(question.selectedAnswer!);
+                  if (ix != -1) {
+                    markers.add(Marker(
+                      type: MarkerType.singleChoice,
+                      sheetId: sheetId,
+                      top: top,
+                      left: left,
+                      topOffset: topOffset + rowOffset * i,
+                      leftOffset: leftOffset + colOffset * ix,
+                      width: width,
+                      height: height,
+                      color: question.userScore == question.fullScore
+                          ? Colors.green.withOpacity(0.5)
+                          : Colors.red.withOpacity(0.5),
+                      message: "",
+                    ));
+                  }
+                }
+              }
+            }
+          } else if (section["type"] == "AnswerQuestion") {
+            for (var branch in section["contents"]["branch"]) {
+              List numList = branch["numList"];
+              for (var i = 0; i < numList.length; i++) {
+                int qid = numList[i];
+                Question question = questions.firstWhere(
+                    (element) => element.questionId == qid.toString());
+                fullScore += question.fullScore;
+                userScore += question.userScore;
+              }
+            }
+          }
+          double top = section["contents"]["position"]["top"].toDouble();
+          double left = section["contents"]["position"]["left"].toDouble();
+          double width = section["contents"]["position"]["width"].toDouble();
+          double height = section["contents"]["position"]["height"].toDouble();
+          markers.add(Marker(
+            type: MarkerType.sectionEnd,
+            sheetId: sheetId,
+            top: top,
+            left: left + width,
+            topOffset: 0,
+            leftOffset: -60,
+            width: 0,
+            height: 0,
+            color: Colors.red.shade700,
+            message: "-${fullScore - userScore}",
+          ));
+          if (section["type"] != "SingleChoice") {
+            logger.d("section parse, start, $userScore, $fullScore");
+            markers.add(Marker(
+                type: MarkerType.svgPicture,
+                sheetId: sheetId,
+                top: top + height,
+                left: left + width,
+                topOffset: -40,
+                leftOffset: -60,
+                width: 0,
+                height: 0,
+                color: Colors.red.shade700,
+                message: userScore == 0.0
+                    ? "wrong"
+                    : userScore < fullScore
+                        ? "half"
+                        : "correct"));
+          }
+        }
+      }
+    }
+    return Result(state: true, message: "", result: markers);
   }
 
   Future<Result<String>> uploadPaperData(Paper paper) async {
