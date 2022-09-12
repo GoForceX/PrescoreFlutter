@@ -73,6 +73,12 @@ class MyApp extends StatelessWidget {
       BaseSingleton.singleton.sharedPreferences.setInt("classCount", 45);
     }
 
+    if (BaseSingleton.singleton.sharedPreferences
+            .getBool("useExperimentalDraw") == null) {
+      BaseSingleton.singleton.sharedPreferences
+          .setBool("useExperimentalDraw", true);
+    }
+
     return MaterialApp.router(
         routeInformationParser: _appRouter.defaultRouteParser(),
         routerDelegate: _appRouter.delegate(),

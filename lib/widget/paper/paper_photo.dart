@@ -35,6 +35,11 @@ class _PaperPhotoState extends State<PaperPhoto> {
     if (Provider.of<PaperModel>(context, listen: false).isDataLoaded) {
       List<Widget> photos = [];
 
+      photos.add(const ExperimentalDrawTips());
+      photos.add(const SizedBox(
+        height: 16,
+      ));
+
       List<Marker>? markers =
           Provider.of<PaperModel>(context, listen: false).paperData?.markers;
       markers ??= [];
@@ -67,6 +72,11 @@ class _PaperPhotoState extends State<PaperPhoto> {
           if (snapshot.hasData) {
             if (snapshot.data.state) {
               List<Widget> photos = [];
+
+              photos.add(const ExperimentalDrawTips());
+              photos.add(const SizedBox(
+                height: 16,
+              ));
 
               for (var i = 0;
                   i < snapshot.data.result.sheetImages.length;
@@ -118,6 +128,14 @@ class PaperPhotoWidget extends StatefulWidget {
 class _PaperPhotoWidgetState extends State<PaperPhotoWidget> {
   Future<Uint8List?> markerPainter(
       List<Marker> markers, Uint8List originalImage) async {
+    if (BaseSingleton.singleton.sharedPreferences
+            .getBool("useExperimentalDraw") !=
+        null) {
+      if (!BaseSingleton.singleton.sharedPreferences
+          .getBool("useExperimentalDraw")!) {
+        return originalImage;
+      }
+    }
     var pictureRecorder = ui.PictureRecorder();
     var canvas = Canvas(pictureRecorder);
 
@@ -173,8 +191,8 @@ class _PaperPhotoWidgetState extends State<PaperPhotoWidget> {
               case "wrong":
                 drawWrong(
                     canvas,
-                    50,
-                    50,
+                    100,
+                    100,
                     marker.top / heightRate + marker.topOffset,
                     marker.left / widthRate + marker.leftOffset,
                     marker.color);
@@ -182,8 +200,8 @@ class _PaperPhotoWidgetState extends State<PaperPhotoWidget> {
               case "half":
                 drawHalfCorrect(
                     canvas,
-                    50,
-                    50,
+                    100,
+                    100,
                     marker.top / heightRate + marker.topOffset,
                     marker.left / widthRate + marker.leftOffset,
                     marker.color);
@@ -191,8 +209,8 @@ class _PaperPhotoWidgetState extends State<PaperPhotoWidget> {
               case "correct":
                 drawCorrect(
                     canvas,
-                    50,
-                    50,
+                    100,
+                    100,
                     marker.top / heightRate + marker.topOffset,
                     marker.left / widthRate + marker.leftOffset,
                     marker.color);
@@ -348,5 +366,52 @@ class _PaperPhotoEnlargedState extends State<PaperPhotoEnlarged> {
         heroAttributes: PhotoViewHeroAttributes(tag: widget.tag),
       ),
     );
+  }
+}
+
+class ExperimentalDrawTips extends StatelessWidget {
+  const ExperimentalDrawTips({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    if (BaseSingleton.singleton.sharedPreferences
+            .getBool("useExperimentalDraw") !=
+        null) {
+      if (!BaseSingleton.singleton.sharedPreferences
+          .getBool("useExperimentalDraw")!) {
+        return Container(
+          padding: const EdgeInsets.all(16),
+          child: Card(
+              elevation: 4,
+              child: Container(
+                  padding: const EdgeInsets.all(16),
+                  child: const Text(
+                      "现在可以像智学网原版一样在原卷上绘制扣分信息啦（虽然可能有bug），为什么不去试试呢？就在主页侧边栏设置里啦！",
+                      style: TextStyle(fontSize: 16)))),
+        );
+      } else {
+        return Container(
+          padding: const EdgeInsets.all(16),
+          child: Card(
+              elevation: 4,
+              child: Container(
+                  padding: const EdgeInsets.all(16),
+                  child: const Text(
+                      "绘制功能有没有问题呢，如果没有问题的话就太好啦！但是如果有问题的话，可以去设置里面关掉哦，还可以去论坛反馈哦！",
+                      style: TextStyle(fontSize: 16)))),
+        );
+      }
+    } else {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        child: Card(
+            elevation: 4,
+            child: Container(
+                padding: const EdgeInsets.all(16),
+                child: const Text(
+                    "现在可以像智学网原版一样在原卷上绘制扣分信息啦（虽然可能有bug），为什么不去试试呢？就在主页侧边栏设置里啦！",
+                    style: TextStyle(fontSize: 16)))),
+      );
+    }
   }
 }

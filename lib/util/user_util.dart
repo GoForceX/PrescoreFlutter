@@ -530,6 +530,7 @@ class User {
       List sheetMarkersSheets, List<Question> questions) {
     logger.d("parseMarkers: $sheetMarkersSheets");
     List<Marker> markers = [];
+    List<int> parsedQuestionIds = [];
     for (var sheetId = 0; sheetId < sheetMarkersSheets.length; sheetId++) {
       Map sheet = sheetMarkersSheets[sheetId];
       for (var section in sheet["sections"]) {
@@ -555,8 +556,12 @@ class User {
                 Question question = questions.firstWhere(
                     (element) => element.questionId == qid.toString());
                 if (question.selectedAnswer != null) {
-                  fullScore += question.fullScore;
-                  userScore += question.userScore;
+                  if (!parsedQuestionIds.contains(qid)) {
+                    parsedQuestionIds.add(qid);
+                    fullScore += question.fullScore;
+                    userScore += question.userScore;
+                  }
+
                   int ix = choices.indexOf(question.selectedAnswer!);
                   if (ix != -1) {
                     markers.add(Marker(
@@ -584,8 +589,11 @@ class User {
                 int qid = numList[i];
                 Question question = questions.firstWhere(
                     (element) => element.questionId == qid.toString());
-                fullScore += question.fullScore;
-                userScore += question.userScore;
+                if (!parsedQuestionIds.contains(qid)) {
+                  parsedQuestionIds.add(qid);
+                  fullScore += question.fullScore;
+                  userScore += question.userScore;
+                }
               }
             }
           }
@@ -593,18 +601,20 @@ class User {
           double left = section["contents"]["position"]["left"].toDouble();
           double width = section["contents"]["position"]["width"].toDouble();
           double height = section["contents"]["position"]["height"].toDouble();
-          markers.add(Marker(
-            type: MarkerType.sectionEnd,
-            sheetId: sheetId,
-            top: top,
-            left: left + width,
-            topOffset: 0,
-            leftOffset: -60,
-            width: 0,
-            height: 0,
-            color: Colors.red.shade700,
-            message: "-${fullScore - userScore}",
-          ));
+          if (userScore != fullScore) {
+            markers.add(Marker(
+              type: MarkerType.sectionEnd,
+              sheetId: sheetId,
+              top: top,
+              left: left + width,
+              topOffset: 0,
+              leftOffset: -100,
+              width: 0,
+              height: 0,
+              color: Colors.red.shade700,
+              message: "-${fullScore - userScore}",
+            ));
+          }
           if (section["type"] != "SingleChoice") {
             logger.d("section parse, start, $userScore, $fullScore");
             markers.add(Marker(
@@ -612,8 +622,8 @@ class User {
                 sheetId: sheetId,
                 top: top + height,
                 left: left + width,
-                topOffset: -40,
-                leftOffset: -60,
+                topOffset: -60,
+                leftOffset: -100,
                 width: 0,
                 height: 0,
                 color: Colors.red.shade700,

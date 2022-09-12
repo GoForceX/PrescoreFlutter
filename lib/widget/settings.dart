@@ -65,7 +65,7 @@ class _SettingsPageState extends State<SettingsPage> {
         content: TextField(
             keyboardType: TextInputType.number,
             inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+              FilteringTextInputFormatter.allow(RegExp(r'\d')),
             ],
             obscureText: false,
             decoration: const InputDecoration(
@@ -107,6 +107,18 @@ class _SettingsPageState extends State<SettingsPage> {
                 onPressed: (BuildContext context) {
                   showChangeCountDialog(context);
                 },
+              ),
+              SettingsTile.switchTile(
+                onToggle: (value) {
+                  BaseSingleton.singleton.sharedPreferences
+                      .setBool('useExperimentalDraw', value);
+                  setState(() {});
+                },
+                initialValue: BaseSingleton.singleton.sharedPreferences
+                    .getBool('useExperimentalDraw'),
+                leading: const Icon(Icons.brush),
+                title: const Text('在原卷上绘制扣分等信息'),
+                description: const Text('实验性功能，可能会导致卡顿和图片无法加载，若遇到问题，请将此设置关闭并在论坛报告。'),
               ),
               SettingsTile.switchTile(
                 onToggle: (value) {
