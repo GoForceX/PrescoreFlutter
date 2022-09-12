@@ -126,10 +126,10 @@ class DetailCard extends StatelessWidget {
                 if (snapshot.hasData) {
                   if (snapshot.data.state) {
                     Widget scoreInfo = DetailScoreInfo(
-                        maximum: snapshot.data.result["max"],
-                        minimum: snapshot.data.result["min"],
-                        avg: snapshot.data.result["avg"],
-                        med: snapshot.data.result["med"]);
+                        maximum: snapshot.data.result.max,
+                        minimum: snapshot.data.result.min,
+                        avg: snapshot.data.result.avg,
+                        med: snapshot.data.result.med);
                     return scoreInfo;
                   } else {
                     return Container();

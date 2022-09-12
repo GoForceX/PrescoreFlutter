@@ -156,3 +156,21 @@ class Result<T> {
     return 'Result{state: $state, message: $message, result: $result}';
   }
 }
+
+class ScoreInfo {
+  double max;
+  double min;
+  double avg;
+  double med;
+
+  ScoreInfo(
+      {required this.max,
+      required this.min,
+      required this.avg,
+      required this.med});
+
+  @override
+  String toString() {
+    return 'ScoreInfo{max: $max, min: $min, avg: $avg, med: $med}';
+  }
+}

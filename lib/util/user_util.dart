@@ -552,8 +552,7 @@ class User {
     }
   }
 
-  Future<Result<double>> fetchExamPredict(
-      String examId, double score) async {
+  Future<Result<double>> fetchExamPredict(String examId, double score) async {
     Dio client = BaseSingleton.singleton.dio;
 
     try {
@@ -563,8 +562,7 @@ class User {
       Map<String, dynamic> result = jsonDecode(response.data);
       logger.d("fetchExamPredict: end, $result");
       if (result["code"] == 0) {
-        return Result(
-            state: true, message: "成功哒！", result: result["percent"]);
+        return Result(state: true, message: "成功哒！", result: result["percent"]);
       } else {
         return Result(state: false, message: result["code"]);
       }
@@ -574,8 +572,7 @@ class User {
     }
   }
 
-  Future<Result<double>> fetchPaperPredict(
-      String paperId, double score) async {
+  Future<Result<double>> fetchPaperPredict(String paperId, double score) async {
     Dio client = BaseSingleton.singleton.dio;
 
     try {
@@ -583,8 +580,7 @@ class User {
           await client.get('$telemetryPaperPredictUrl/$paperId/$score');
       Map<String, dynamic> result = jsonDecode(response.data);
       if (result["code"] == 0) {
-        return Result(
-            state: true, message: "成功哒！", result: result["percent"]);
+        return Result(state: true, message: "成功哒！", result: result["percent"]);
       } else {
         return Result(state: false, message: result["code"]);
       }
@@ -594,7 +590,7 @@ class User {
     }
   }
 
-  Future<Result<Object>> fetchExamScoreInfo(String examId) async {
+  Future<Result<ScoreInfo>> fetchExamScoreInfo(String examId) async {
     Dio client = BaseSingleton.singleton.dio;
 
     try {
@@ -604,7 +600,13 @@ class User {
       Map<String, dynamic> result = jsonDecode(response.data);
       logger.d("fetchExamScoreInfo: end, $result");
       if (result["code"] == 0) {
-        return Result(state: true, message: "成功哒！", result: result["data"]);
+        ScoreInfo scoreInfo = ScoreInfo(
+            max: result["data"]["max"],
+            min: result["data"]["min"],
+            avg: result["data"]["avg"],
+            med: result["data"]["med"]);
+
+        return Result(state: true, message: "成功哒！", result: scoreInfo);
       } else {
         return Result(state: false, message: result["code"]);
       }
@@ -614,7 +616,7 @@ class User {
     }
   }
 
-  Future<Result<Object>> fetchPaperScoreInfo(String paperId) async {
+  Future<Result<ScoreInfo>> fetchPaperScoreInfo(String paperId) async {
     Dio client = BaseSingleton.singleton.dio;
 
     try {
@@ -624,7 +626,13 @@ class User {
       Map<String, dynamic> result = jsonDecode(response.data);
       logger.d("fetchPaperScoreInfo: end, $result");
       if (result["code"] == 0) {
-        return Result(state: true, message: "成功哒！", result: result["data"]);
+        ScoreInfo scoreInfo = ScoreInfo(
+            max: result["data"]["max"],
+            min: result["data"]["min"],
+            avg: result["data"]["avg"],
+            med: result["data"]["med"]);
+
+        return Result(state: true, message: "成功哒！", result: scoreInfo);
       } else {
         return Result(state: false, message: result["code"]);
       }
