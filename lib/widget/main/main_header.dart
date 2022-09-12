@@ -72,40 +72,49 @@ class MainAppbarRowWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
+    return Column(
       children: [
-        const SizedBox(
-          width: 24,
-          height: 132,
-        ),
-        CircleAvatar(
-          radius: 50,
-          child: ClipOval(child: image),
-        ),
-        const SizedBox(
-          width: 30,
-        ),
-        Column(
+        Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 32),
+            const SizedBox(
+              width: 24,
+              height: 132,
             ),
-            Text(
-              subtitle,
-              style: const TextStyle(fontSize: 16, color: Colors.grey),
+            CircleAvatar(
+              radius: 50,
+              child: ClipOval(child: image),
             ),
+            const SizedBox(
+              width: 30,
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(fontSize: 32),
+                ),
+                Text(
+                  subtitle,
+                  style: const TextStyle(fontSize: 16, color: Colors.grey),
+                ),
+              ],
+            ),
+            const SizedBox(
+              width: 24,
+              height: 132,
+            )
           ],
         ),
+        const Text("你知道吗，长按可以退出登录",
+            style: TextStyle(fontSize: 16, color: Colors.grey)),
         const SizedBox(
-          width: 24,
-          height: 132,
-        )
+          height: 16,
+        ),
       ],
     );
   }
