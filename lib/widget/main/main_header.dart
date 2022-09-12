@@ -6,7 +6,8 @@ import 'package:prescore_flutter/model/login_model.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../util/login.dart';
+import '../../util/struct.dart';
+import '../../util/user_util.dart';
 import '../fancy_button.dart';
 
 class SliverHeader extends StatelessWidget {
@@ -300,10 +301,10 @@ class _FallbackAppbarWidgetState extends State<FallbackAppbarWidget> {
                             User user = User();
                             Provider.of<LoginModel>(context, listen: false)
                                 .setUser(user);
-                            Map<String, dynamic> result =
+                            Result result =
                                 await user.login(username, password);
                             if (mounted) {
-                              if (result["status"]) {
+                              if (result.state) {
                                 Provider.of<LoginModel>(context, listen: false)
                                     .setLoggedIn(true);
                                 logger.d(user.session?.xToken);
@@ -315,7 +316,7 @@ class _FallbackAppbarWidgetState extends State<FallbackAppbarWidget> {
                               } else {
                                 SnackBar snackBar = SnackBar(
                                   content: Text(
-                                      '呜呜呜，登录失败了……\n失败原因：${result["message"]}'),
+                                      '呜呜呜，登录失败了……\n失败原因：${result.message}'),
                                   backgroundColor:
                                       ThemeMode.system == ThemeMode.dark
                                           ? Colors.grey[900]

@@ -47,10 +47,10 @@ class _PaperPhotoState extends State<PaperPhoto> {
             .fetchPaperData(widget.examId, widget.paperId),
         builder: (BuildContext context, AsyncSnapshot snapshot) {
           if (snapshot.hasData) {
-            if (snapshot.data["state"]) {
+            if (snapshot.data.state) {
               List<Widget> photos = [];
 
-              snapshot.data["result"].sheetImages.forEach((element) {
+              snapshot.data.result.sheetImages.forEach((element) {
                 photos.add(
                     PaperPhotoWidget(url: element, tag: const Uuid().v4()));
               });
@@ -90,7 +90,8 @@ class _PaperPhotoWidgetState extends State<PaperPhotoWidget> {
     Uint8List? memoryImage;
     Dio dio = BaseSingleton.singleton.dio;
     return FutureBuilder(
-      future: dio.get(widget.url, options: Options(responseType: ResponseType.bytes)),
+        future: dio.get(widget.url,
+            options: Options(responseType: ResponseType.bytes)),
         builder: (BuildContext context, AsyncSnapshot snapshot) {
           if (snapshot.hasData) {
             memoryImage = Uint8List.fromList(snapshot.data.data);
@@ -100,87 +101,13 @@ class _PaperPhotoWidgetState extends State<PaperPhotoWidget> {
                     context,
                     MaterialPageRoute(
                         builder: (subContext) => GestureDetector(
-                          onTap: () {
-                            Navigator.pop(subContext);
-                          },
-                          child: Scaffold(
-                            floatingActionButton: FloatingActionButton(
-                              onPressed: () async {
-                                if (Platform.isAndroid) {
-                                  PermissionStatus storageStatus =
-                                  await Permission.storage.status;
-                                  if (!storageStatus.isGranted) {
-                                    await Permission.storage.request();
-                                  }
-
-                                  storageStatus = await Permission.storage.status;
-                                  if (storageStatus.isGranted) {
-                                    final result = await ImageGallerySaver.saveImage(
-                                        memoryImage!,
-                                        name:
-                                        "prescore_${(DateTime.now().millisecondsSinceEpoch / 100).round()}");
-                                    if (mounted) {
-                                      if (result["isSuccess"]) {
-                                        SnackBar snackBar = SnackBar(
-                                          content: const Text('保存大成功！'),
-                                          backgroundColor:
-                                          ThemeMode.system == ThemeMode.dark
-                                              ? Colors.grey[900]
-                                              : Colors.grey[200],
-                                        );
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(snackBar);
-                                      } else {
-                                        SnackBar snackBar = SnackBar(
-                                          content: Text(
-                                              '呜呜呜，失败了……\n失败原因：${result["errorMessage"]}'),
-                                          backgroundColor:
-                                          ThemeMode.system == ThemeMode.dark
-                                              ? Colors.grey[900]
-                                              : Colors.grey[200],
-                                        );
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(snackBar);
-                                      }
-                                    }
-                                  } else {
-                                    if (mounted) {
-                                      SnackBar snackBar = SnackBar(
-                                        content:
-                                        const Text('呜呜呜，失败了……\n失败原因：无保存权限……'),
-                                        backgroundColor:
-                                        ThemeMode.system == ThemeMode.dark
-                                            ? Colors.grey[900]
-                                            : Colors.grey[200],
-                                      );
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(snackBar);
-                                    }
-                                  }
-                                } else {
-                                  SnackBar snackBar = SnackBar(
-                                    content:
-                                    const Text('呜呜呜，失败了……\n还不支持其他系统保存图片哦……'),
-                                    backgroundColor:
-                                    ThemeMode.system == ThemeMode.dark
-                                        ? Colors.grey[900]
-                                        : Colors.grey[200],
-                                  );
-                                  ScaffoldMessenger.of(context)
-                                      .showSnackBar(snackBar);
-                                }
-                              },
-                              child: const Icon(Icons.save_alt_rounded),
-                            ),
-                            body: PhotoView(
-                              imageProvider: MemoryImage(
-                                memoryImage!,
-                              ),
-                              heroAttributes:
-                              PhotoViewHeroAttributes(tag: widget.tag),
-                            ),
-                          ),
-                        )),
+                            onTap: () {
+                              Navigator.pop(subContext);
+                            },
+                            child: PaperPhotoEnlarged(
+                              memoryImage: memoryImage!,
+                              tag: widget.tag,
+                            ))),
                   );
                 },
                 child: Hero(
@@ -198,5 +125,86 @@ class _PaperPhotoWidgetState extends State<PaperPhotoWidget> {
             );
           }
         });
+  }
+}
+
+class PaperPhotoEnlarged extends StatefulWidget {
+  final Uint8List? memoryImage;
+  final String tag;
+  const PaperPhotoEnlarged(
+      {Key? key, required this.memoryImage, required this.tag})
+      : super(key: key);
+
+  @override
+  State<PaperPhotoEnlarged> createState() => _PaperPhotoEnlargedState();
+}
+
+class _PaperPhotoEnlargedState extends State<PaperPhotoEnlarged> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          if (Platform.isAndroid) {
+            PermissionStatus storageStatus = await Permission.storage.status;
+            if (!storageStatus.isGranted) {
+              await Permission.storage.request();
+            }
+
+            storageStatus = await Permission.storage.status;
+            if (storageStatus.isGranted) {
+              final result = await ImageGallerySaver.saveImage(
+                  widget.memoryImage!,
+                  name:
+                      "prescore_${(DateTime.now().millisecondsSinceEpoch / 100).round()}");
+              if (mounted) {
+                if (result["isSuccess"]) {
+                  SnackBar snackBar = SnackBar(
+                    content: const Text('保存大成功！'),
+                    backgroundColor: ThemeMode.system == ThemeMode.dark
+                        ? Colors.grey[900]
+                        : Colors.grey[200],
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                } else {
+                  SnackBar snackBar = SnackBar(
+                    content: Text('呜呜呜，失败了……\n失败原因：${result["errorMessage"]}'),
+                    backgroundColor: ThemeMode.system == ThemeMode.dark
+                        ? Colors.grey[900]
+                        : Colors.grey[200],
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                }
+              }
+            } else {
+              if (mounted) {
+                SnackBar snackBar = SnackBar(
+                  content: const Text('呜呜呜，失败了……\n失败原因：无保存权限……'),
+                  backgroundColor: ThemeMode.system == ThemeMode.dark
+                      ? Colors.grey[900]
+                      : Colors.grey[200],
+                );
+                ScaffoldMessenger.of(context).showSnackBar(snackBar);
+              }
+            }
+          } else {
+            SnackBar snackBar = SnackBar(
+              content: const Text('呜呜呜，失败了……\n还不支持其他系统保存图片哦……'),
+              backgroundColor: ThemeMode.system == ThemeMode.dark
+                  ? Colors.grey[900]
+                  : Colors.grey[200],
+            );
+            ScaffoldMessenger.of(context).showSnackBar(snackBar);
+          }
+        },
+        child: const Icon(Icons.save_alt_rounded),
+      ),
+      body: PhotoView(
+        imageProvider: MemoryImage(
+          widget.memoryImage!,
+        ),
+        heroAttributes: PhotoViewHeroAttributes(tag: widget.tag),
+      ),
+    );
   }
 }

@@ -8,53 +8,8 @@ class ExamDashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    /*
-    double userScore = 0;
-    for (var element in papers) {
-      userScore += element.userScore;
-    }
-
-    double fullScore = 0;
-    for (var element in papers) {
-      fullScore += element.fullScore;
-    }
-
-     */
-
     return Column(
       children: [
-        /*
-        FutureBuilder(
-          future: Provider.of<ExamModel>(context, listen: false)
-              .user
-              .fetchPaperDiagnosis(examId),
-          builder: (BuildContext context, AsyncSnapshot snapshot) {
-            if (snapshot.hasData) {
-              if (snapshot.data["state"]) {
-                return DashboardCard(
-                  userScore: userScore,
-                  fullScore: fullScore,
-                  papers: papers,
-                  diagnoses: snapshot.data["result"],
-                  examId: examId,
-                );
-              } else {
-                return DashboardCard(
-                  examId: examId,
-                  userScore: userScore,
-                  fullScore: fullScore,
-                  papers: papers,
-                  diagnoses: const [],
-                );
-              }
-            } else {
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
-            }
-          },
-        )
-         */
         DashboardCard(examId: examId)
       ],
     );

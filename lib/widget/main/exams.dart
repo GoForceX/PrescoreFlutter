@@ -36,10 +36,10 @@ class _ExamsState extends State<Exams> {
         builder: (BuildContext context, AsyncSnapshot snapshot) {
           logger.d("snapshot.data: ${snapshot.data}");
           if (snapshot.hasData) {
-            if (!snapshot.data["state"]) {
+            if (!snapshot.data.state) {
               SnackBar snackBar = SnackBar(
                 content:
-                    Text('呜呜呜，考试数据获取失败了……\n失败原因：${snapshot.data["message"]}'),
+                    Text('呜呜呜，考试数据获取失败了……\n失败原因：${snapshot.data.message}'),
                 backgroundColor: ThemeMode.system == ThemeMode.dark
                     ? Colors.grey[900]
                     : Colors.grey[200],
@@ -51,7 +51,7 @@ class _ExamsState extends State<Exams> {
             }
             return SliverList(
                 delegate: SliverChildListDelegate(
-                    generateCardsFromExams(context, snapshot.data["result"])));
+                    generateCardsFromExams(context, snapshot.data.result)));
           } else {
             return const SliverFillRemaining(
               hasScrollBody: false,
@@ -61,14 +61,5 @@ class _ExamsState extends State<Exams> {
             );
           }
         });
-    /*
-    return SliverList(
-        delegate: SliverChildBuilderDelegate((context, index) => ExamCard(
-              uuid: const Uuid().v4(),
-              examName: "这么巨这么巨这么巨这么巨这么巨这么巨这么巨这么巨${index + 1}",
-              examTime: DateTime.now(),
-              examType: "midtermExam",
-            )));
-     */
   }
 }

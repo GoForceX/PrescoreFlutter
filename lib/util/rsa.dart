@@ -1,49 +1,13 @@
-import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:pointycastle/export.dart' hide Algorithm;
 import 'package:encrypt/encrypt.dart';
 
-BigInt readBytes(List<int> bytes) {
-  BigInt read(int start, int end) {
-    if (end - start <= 4) {
-      int result = 0;
-      for (int i = end - 1; i >= start; i--) {
-        result = result * 256 + bytes[i];
-      }
-      return BigInt.from(result);
-    }
-    int mid = start + ((end - start) >> 1);
-    var result =
-        read(start, mid) + read(mid, end) * (BigInt.one << ((mid - start) * 8));
-    return result;
-  }
-
-  return read(0, bytes.length);
-}
-
-List<int> writeBigInt(BigInt number) {
-  // Not handling negative numbers. Decide how you want to do that.
-  int bytes = (number.bitLength + 7) >> 3;
-  var b256 = BigInt.from(256);
-  var result = List<int>.generate(bytes, (index) => 0);
-  for (int i = 0; i < bytes; i++) {
-    result[i] = number.remainder(b256).toInt();
-    number = number >> 8;
-  }
-  return result;
-}
-
-Future<String> rsaEncrypt(String message) async {
-  BigInt payload = readBytes(utf8.encode(message));
-  int ekey = 65537;
-  BigInt n = BigInt.parse("0x008c147f73c2593cba0bd007e60a89ade5");
-
-  BigInt encrypted = payload.pow(ekey);
-  encrypted = encrypted % n;
-
-  return encrypted.toRadixString(16);
-}
+/*
+ * This is a helper class to encrypt and decrypt data using RSA algorithm.
+ * It uses the "pointycastle" and "encrypt" library to generate the RSA keys.
+ * Code from [JueJin Forum](https://juejin.cn/post/6844904133992923143)
+ */
 
 class NoPaddingEncoding extends PKCS1Encoding {
   NoPaddingEncoding(this._engine) : super(_engine);

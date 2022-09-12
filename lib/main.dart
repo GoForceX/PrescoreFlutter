@@ -22,6 +22,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:version/version.dart';
 import 'package:r_upgrade/r_upgrade.dart';
 
+import 'constants.dart';
 import 'model/login_model.dart';
 
 Future<void> main() async {
@@ -269,6 +270,7 @@ class BaseSingleton {
         dio.interceptors.add(CookieManager(cookieJar));
       });
     }
+    dio.options.headers = commonHeaders;
 
     SharedPreferences.getInstance().then((value) => sharedPreferences = value);
     PackageInfo.fromPlatform().then((value) => packageInfo = value);

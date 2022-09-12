@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../main.gr.dart';
-import '../../util/login.dart';
+import '../../util/user_util.dart';
 
 class ExamCard extends StatelessWidget {
   const ExamCard(

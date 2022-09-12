@@ -94,16 +94,16 @@ class DetailCard extends StatelessWidget {
               builder: (BuildContext context, AsyncSnapshot snapshot) {
                 logger.d("DetailPredict: ${snapshot.data}");
                 if (snapshot.hasData) {
-                  if (snapshot.data["state"]) {
-                    if (snapshot.data["result"] < 0) {
+                  if (snapshot.data.state) {
+                    if (snapshot.data.result < 0) {
                       Widget predict = const DetailPredict(percentage: 0);
                       return predict;
-                    } else if (snapshot.data["result"] > 1) {
+                    } else if (snapshot.data.result > 1) {
                       Widget predict = const DetailPredict(percentage: 1);
                       return predict;
                     } else {
                       Widget predict =
-                          DetailPredict(percentage: snapshot.data["result"]);
+                          DetailPredict(percentage: snapshot.data.result);
                       return predict;
                     }
                   } else {
@@ -124,12 +124,12 @@ class DetailCard extends StatelessWidget {
               builder: (BuildContext context, AsyncSnapshot snapshot) {
                 logger.d("DetailScoreInfo: ${snapshot.data}");
                 if (snapshot.hasData) {
-                  if (snapshot.data["state"]) {
+                  if (snapshot.data.state) {
                     Widget scoreInfo = DetailScoreInfo(
-                        maximum: snapshot.data["result"]["max"],
-                        minimum: snapshot.data["result"]["min"],
-                        avg: snapshot.data["result"]["avg"],
-                        med: snapshot.data["result"]["med"]);
+                        maximum: snapshot.data.result["max"],
+                        minimum: snapshot.data.result["min"],
+                        avg: snapshot.data.result["avg"],
+                        med: snapshot.data.result["med"]);
                     return scoreInfo;
                   } else {
                     return Container();

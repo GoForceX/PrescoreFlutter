@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../main.dart';
 import '../../model/exam_model.dart';
-import '../../util/login.dart';
+import '../../util/user_util.dart';
 import 'exam_dashboard.dart';
 import 'exam_detail.dart';
 

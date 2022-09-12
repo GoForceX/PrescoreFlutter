@@ -89,6 +89,23 @@ class PaperDiagnosis {
   }
 }
 
+class ExamDiagnosis {
+  String tips;
+  String subTips;
+  List<PaperDiagnosis> diagnoses;
+
+  ExamDiagnosis({
+    required this.tips,
+    required this.subTips,
+    required this.diagnoses,
+  });
+
+  @override
+  String toString() {
+    return 'ExamDiagnosis{tips: $tips, subTips: $subTips, diagnoses: $diagnoses}';
+  }
+}
+
 class Question {
   String questionId;
   double userScore;
@@ -124,5 +141,18 @@ class PaperData {
   @override
   String toString() {
     return 'PaperData{examId: $examId, paperId: $paperId, sheetImages: $sheetImages, questions: $questions}';
+  }
+}
+
+class Result<T> {
+  bool state;
+  String message;
+  T? result;
+
+  Result({required this.state, required this.message, this.result});
+
+  @override
+  String toString() {
+    return 'Result{state: $state, message: $message, result: $result}';
   }
 }

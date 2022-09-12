@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../main.dart';
 import '../../model/paper_model.dart';
-import '../../util/login.dart';
+import '../../util/user_util.dart';
 
 class PaperPage extends StatefulWidget {
   final String examId;
@@ -28,21 +28,6 @@ class _PaperPageState extends State<PaperPage> {
   @override
   Widget build(BuildContext context) {
     logger.d("exam session: ${widget.user.session}");
-
-    /*
-    Future.delayed(Duration.zero, () {
-                            SnackBar snackBar = SnackBar(
-                              content: Text(
-                                  '呜呜呜，数据获取失败了……\n失败原因：${snapshot.data["message"]}'),
-                              backgroundColor:
-                                  ThemeMode.system == ThemeMode.dark
-                                      ? Colors.grey[900]
-                                      : Colors.grey[200],
-                            );
-                            ScaffoldMessenger.of(context)
-                                .showSnackBar(snackBar);
-                          });
-     */
 
     return Scaffold(
       appBar: AppBar(

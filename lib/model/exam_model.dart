@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:prescore_flutter/util/login.dart';
+import 'package:prescore_flutter/util/user_util.dart';
 
 import '../util/struct.dart';
 

@@ -40,11 +40,11 @@ class _PaperDetailState extends State<PaperDetail> {
             .fetchPaperData(widget.examId, widget.paperId),
         builder: (BuildContext context, AsyncSnapshot snapshot) {
           if (snapshot.hasData) {
-            if (snapshot.data["state"]) {
+            if (snapshot.data.state) {
               List<Widget> questionCards = [];
               List<Widget> questionIndicators = [];
 
-              snapshot.data["result"].questions.forEach((element) {
+              snapshot.data.result.questions.forEach((element) {
                 (element as Question);
                 if (element.isSelected) {
                   questionCards.add(QuestionCard(question: element));

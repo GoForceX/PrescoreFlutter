@@ -41,14 +41,14 @@ class _ExamDetailState extends State<ExamDetail> {
             .fetchPaper(widget.examId),
         builder: (BuildContext context, AsyncSnapshot snapshot) {
           if (snapshot.hasData) {
-            if (snapshot.data["state"]) {
+            if (snapshot.data.state) {
               List<Widget> children = [];
               Provider.of<ExamModel>(context, listen: false)
-                  .setPapers(snapshot.data["result"]);
+                  .setPapers(snapshot.data.result);
               Provider.of<ExamModel>(context, listen: false)
                   .setPaperLoaded(true);
 
-              for (var element in snapshot.data["result"]) {
+              for (var element in snapshot.data.result) {
                 Widget chart = DetailCard(examId: widget.examId, paper: element);
                 children.add(chart);
               }

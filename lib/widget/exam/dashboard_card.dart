@@ -63,20 +63,20 @@ class _DashboardCardState extends State<DashboardCard> {
             .fetchPaper(widget.examId),
         builder: (BuildContext context, AsyncSnapshot snapshot) {
           if (snapshot.hasData) {
-            if (snapshot.data["state"]) {
+            if (snapshot.data.state) {
               Future.delayed(Duration.zero, () {
                 Provider.of<ExamModel>(context, listen: false)
-                    .setPapers(snapshot.data["result"]);
+                    .setPapers(snapshot.data.result);
                 Provider.of<ExamModel>(context, listen: false)
                     .setPaperLoaded(true);
               });
               double userScore = 0;
-              for (var element in snapshot.data["result"]) {
+              for (var element in snapshot.data.result) {
                 userScore += element.userScore;
               }
 
               double fullScore = 0;
-              for (var element in snapshot.data["result"]) {
+              for (var element in snapshot.data.result) {
                 fullScore += element.fullScore;
               }
               Widget chart =
@@ -111,16 +111,16 @@ class _DashboardCardState extends State<DashboardCard> {
           builder: (BuildContext context, AsyncSnapshot snapshot) {
             logger.d("DashboardPredict: ${snapshot.data}");
             if (snapshot.hasData) {
-              if (snapshot.data["state"]) {
-                if (snapshot.data["result"] < 0) {
+              if (snapshot.data.state) {
+                if (snapshot.data.result < 0) {
                   Widget predict = const DashboardPredict(percentage: 0);
                   return predict;
-                } else if (snapshot.data["result"] > 1) {
+                } else if (snapshot.data.result > 1) {
                   Widget predict = const DashboardPredict(percentage: 1);
                   return predict;
                 } else {
                   Widget predict =
-                      DashboardPredict(percentage: snapshot.data["result"]);
+                      DashboardPredict(percentage: snapshot.data.result);
                   return predict;
                 }
               } else {
@@ -147,12 +147,12 @@ class _DashboardCardState extends State<DashboardCard> {
         builder: (BuildContext context, AsyncSnapshot snapshot) {
           logger.d("DashboardScoreInfo: ${snapshot.data}");
           if (snapshot.hasData) {
-            if (snapshot.data["state"]) {
+            if (snapshot.data.state) {
               Widget scoreInfo = DashboardScoreInfo(
-                maximum: snapshot.data["result"]["max"],
-                minimum: snapshot.data["result"]["min"],
-                avg: snapshot.data["result"]["avg"],
-                med: snapshot.data["result"]["med"],
+                maximum: snapshot.data.result["max"],
+                minimum: snapshot.data.result["min"],
+                avg: snapshot.data.result["avg"],
+                med: snapshot.data.result["med"],
               );
               return scoreInfo;
             } else {
@@ -185,14 +185,14 @@ class _DashboardCardState extends State<DashboardCard> {
             .fetchPaperDiagnosis(widget.examId),
         builder: (BuildContext context, AsyncSnapshot snapshot) {
           if (snapshot.hasData) {
-            if (snapshot.data["state"]) {
+            if (snapshot.data.state) {
               Future.delayed(Duration.zero, () {
                 Provider.of<ExamModel>(context, listen: false)
-                    .setDiagnoses(snapshot.data["result"]["diags"]);
+                    .setDiagnoses(snapshot.data.result.diagnoses);
                 Provider.of<ExamModel>(context, listen: false)
-                    .setTips(snapshot.data["result"]["tips"]);
+                    .setTips(snapshot.data.result.tips);
                 Provider.of<ExamModel>(context, listen: false)
-                    .setSubTips(snapshot.data["result"]["subTips"]);
+                    .setSubTips(snapshot.data.result.subTips);
                 Provider.of<ExamModel>(context, listen: false)
                     .setDiagFetched(true);
                 Provider.of<ExamModel>(context, listen: false)
@@ -201,10 +201,10 @@ class _DashboardCardState extends State<DashboardCard> {
               return Column(
                 children: [
                   DashboardChart(
-                      diagnoses: snapshot.data["result"]["diags"],
-                      tips: snapshot.data["result"]["tips"],
-                      subTips: snapshot.data["result"]["subTips"]),
-                  DashboardRanking(diagnoses: snapshot.data["result"]["diags"])
+                      diagnoses: snapshot.data.result.diagnoses,
+                      tips: snapshot.data.result.tips,
+                      subTips: snapshot.data.result.subTips),
+                  DashboardRanking(diagnoses: snapshot.data.result.diagnoses),
                 ],
               );
             } else {
