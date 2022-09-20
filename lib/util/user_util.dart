@@ -537,65 +537,121 @@ class User {
         if (section["enabled"]) {
           double fullScore = 0;
           double userScore = 0;
-          if (section["type"] == "SingleChoice") {
-            for (var branch in section["contents"]["branch"]) {
-              List choices = branch["chooses"];
-              List numList = branch["numList"];
-              double top = branch["position"]["top"].toDouble();
-              double left = branch["position"]["left"].toDouble();
-              double topOffset = (branch["firstOption"]["top"] + 3).toDouble();
-              double leftOffset =
-                  (branch["firstOption"]["left"] + 3).toDouble();
-              double width = branch["firstOption"]["width"].toDouble();
-              double height = branch["firstOption"]["height"].toDouble();
-              double colOffset = (branch["colOffset"] + 2).toDouble();
-              double rowOffset = (branch["rowOffset"] + 2).toDouble();
-              logger.d("branch parse, start");
-              for (var i = 0; i < numList.length; i++) {
-                int qid = numList[i];
-                Question question = questions.firstWhere(
-                    (element) => element.questionId == qid.toString());
-                if (question.selectedAnswer != null) {
+          switch (section["type"]) {
+            case "SingleChoice":
+              for (var branch in section["contents"]["branch"]) {
+                List choices = branch["chooses"];
+                List numList = branch["numList"];
+                double top = branch["position"]["top"].toDouble();
+                double left = branch["position"]["left"].toDouble();
+                double topOffset =
+                    (branch["firstOption"]["top"] + 3).toDouble();
+                double leftOffset =
+                    (branch["firstOption"]["left"] + 3).toDouble();
+                double width = branch["firstOption"]["width"].toDouble();
+                double height = branch["firstOption"]["height"].toDouble();
+                double colOffset = (branch["colOffset"] + 2).toDouble();
+                double rowOffset = (branch["rowOffset"] + 2).toDouble();
+                logger.d("branch parse, start");
+                for (var i = 0; i < numList.length; i++) {
+                  int qid = numList[i];
+                  Question question = questions.firstWhere(
+                      (element) => element.questionId == qid.toString());
+                  if (question.selectedAnswer != null) {
+                    if (!parsedQuestionIds.contains(qid)) {
+                      parsedQuestionIds.add(qid);
+                      fullScore += question.fullScore;
+                      userScore += question.userScore;
+                    }
+
+                    int ix = choices.indexOf(question.selectedAnswer!);
+                    if (ix != -1) {
+                      markers.add(Marker(
+                        type: MarkerType.singleChoice,
+                        sheetId: sheetId,
+                        top: top,
+                        left: left,
+                        topOffset: topOffset + rowOffset * i,
+                        leftOffset: leftOffset + colOffset * ix,
+                        width: width,
+                        height: height,
+                        color: question.userScore == question.fullScore
+                            ? Colors.green.withOpacity(0.75)
+                            : Colors.red.withOpacity(0.75),
+                        message: "",
+                      ));
+                    }
+                  }
+                }
+              }
+              break;
+            case "Object":
+              for (var branch in section["contents"]["branch"]) {
+                List choices = branch["chooses"];
+                List numList = branch["numList"];
+                double top = branch["position"]["top"].toDouble();
+                double left = branch["position"]["left"].toDouble();
+                double topOffset =
+                    (branch["firstOption"]["top"] + 3).toDouble();
+                double leftOffset =
+                    (branch["firstOption"]["left"] + 3).toDouble();
+                double width = branch["firstOption"]["width"].toDouble();
+                double height = branch["firstOption"]["height"].toDouble();
+                double colOffset = (branch["colOffset"] + 2).toDouble();
+                double rowOffset = (branch["rowOffset"] + 2).toDouble();
+                logger.d("branch parse, start");
+                for (var i = 0; i < numList.length; i++) {
+                  int qid = numList[i];
+                  Question question = questions.firstWhere(
+                      (element) => element.questionId == qid.toString());
+                  if (question.selectedAnswer != null) {
+                    if (!parsedQuestionIds.contains(qid)) {
+                      parsedQuestionIds.add(qid);
+                      fullScore += question.fullScore;
+                      userScore += question.userScore;
+                    }
+
+                    for (var singleAnswer
+                        in question.selectedAnswer!.split('')) {
+                      int ix = choices.indexOf(singleAnswer);
+                      if (ix != -1) {
+                        markers.add(Marker(
+                          type: MarkerType.multipleChoice,
+                          sheetId: sheetId,
+                          top: top,
+                          left: left,
+                          topOffset: topOffset + rowOffset * i,
+                          leftOffset: leftOffset + colOffset * ix,
+                          width: width,
+                          height: height,
+                          color: question.userScore == question.fullScore
+                              ? Colors.green.withOpacity(0.75)
+                              : question.userScore < question.fullScore
+                                  ? Colors.deepOrange.withOpacity(0.75)
+                                  : Colors.red.withOpacity(0.75),
+                          message: "",
+                        ));
+                      }
+                    }
+                  }
+                }
+              }
+              break;
+            case "AnswerQuestion":
+              for (var branch in section["contents"]["branch"]) {
+                List numList = branch["numList"];
+                for (var i = 0; i < numList.length; i++) {
+                  int qid = numList[i];
+                  Question question = questions.firstWhere(
+                      (element) => element.questionId == qid.toString());
                   if (!parsedQuestionIds.contains(qid)) {
                     parsedQuestionIds.add(qid);
                     fullScore += question.fullScore;
                     userScore += question.userScore;
                   }
-
-                  int ix = choices.indexOf(question.selectedAnswer!);
-                  if (ix != -1) {
-                    markers.add(Marker(
-                      type: MarkerType.singleChoice,
-                      sheetId: sheetId,
-                      top: top,
-                      left: left,
-                      topOffset: topOffset + rowOffset * i,
-                      leftOffset: leftOffset + colOffset * ix,
-                      width: width,
-                      height: height,
-                      color: question.userScore == question.fullScore
-                          ? Colors.green.withOpacity(0.5)
-                          : Colors.red.withOpacity(0.5),
-                      message: "",
-                    ));
-                  }
                 }
               }
-            }
-          } else if (section["type"] == "AnswerQuestion") {
-            for (var branch in section["contents"]["branch"]) {
-              List numList = branch["numList"];
-              for (var i = 0; i < numList.length; i++) {
-                int qid = numList[i];
-                Question question = questions.firstWhere(
-                    (element) => element.questionId == qid.toString());
-                if (!parsedQuestionIds.contains(qid)) {
-                  parsedQuestionIds.add(qid);
-                  fullScore += question.fullScore;
-                  userScore += question.userScore;
-                }
-              }
-            }
+              break;
           }
           double top = section["contents"]["position"]["top"].toDouble();
           double left = section["contents"]["position"]["left"].toDouble();
@@ -615,7 +671,7 @@ class User {
               message: "-${fullScore - userScore}",
             ));
           }
-          if (section["type"] != "SingleChoice") {
+          if (!["SingleChoice", "Object"].contains(section["type"])) {
             logger.d("section parse, start, $userScore, $fullScore");
             markers.add(Marker(
                 type: MarkerType.svgPicture,

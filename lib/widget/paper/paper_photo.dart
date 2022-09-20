@@ -153,6 +153,7 @@ class _PaperPhotoWidgetState extends State<PaperPhotoWidget> {
       if (marker.sheetId == widget.sheetId) {
         switch (marker.type) {
           case MarkerType.singleChoice:
+          case MarkerType.multipleChoice:
             linePaint.color = marker.color;
             linePaint.strokeWidth = 5;
             linePaint.style = PaintingStyle.fill;
@@ -164,8 +165,6 @@ class _PaperPhotoWidgetState extends State<PaperPhotoWidget> {
                     marker.width,
                     marker.height),
                 linePaint);
-            break;
-          case MarkerType.multipleChoice:
             break;
           case MarkerType.shortAnswer:
             break;
