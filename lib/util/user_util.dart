@@ -500,17 +500,20 @@ class User {
       ));
     }
 
-    List sheetMarkersSheets =
-        jsonDecode(sheetQuestions)["answerSheetLocationDTO"]["pageSheets"];
+    if ((jsonDecode(sheetQuestions) as Map<String, dynamic>)
+        .containsKey("answerSheetLocationDTO")) {
+      List sheetMarkersSheets =
+      jsonDecode(sheetQuestions)["answerSheetLocationDTO"]["pageSheets"];
 
-    logger.d("sheetMarkersSheets, start: $sheetMarkersSheets");
-    try {
-      Result parseResult = parseMarkers(sheetMarkersSheets, questions);
-      if (parseResult.state) {
-        markers = parseResult.result;
+      logger.d("sheetMarkersSheets, start: $sheetMarkersSheets");
+      try {
+        Result parseResult = parseMarkers(sheetMarkersSheets, questions);
+        if (parseResult.state) {
+          markers = parseResult.result;
+        }
+      } on Exception catch (e) {
+        logger.e("parseMarkers: $e");
       }
-    } on Exception catch (e) {
-      logger.e("parseMarkers: $e");
     }
 
     logger.d("paperData: success, $sheetImages");
@@ -671,7 +674,7 @@ class User {
               message: "-${fullScore - userScore}",
             ));
           }
-          if (!["SingleChoice", "Object"].contains(section["type"])) {
+          if (!["SingleChoice", "Object"].contains(section["type"]) && fullScore != 0) {
             logger.d("section parse, start, $userScore, $fullScore");
             markers.add(Marker(
                 type: MarkerType.svgPicture,
@@ -755,7 +758,7 @@ class User {
       if (result["code"] == 0) {
         return Result(state: true, message: "成功哒！", result: result["percent"]);
       } else {
-        return Result(state: false, message: result["code"]);
+        return Result(state: false, message: result["code"].toString());
       }
     } catch (e) {
       logger.e(e);
@@ -799,7 +802,7 @@ class User {
 
         return Result(state: true, message: "成功哒！", result: scoreInfo);
       } else {
-        return Result(state: false, message: result["code"]);
+        return Result(state: false, message: result["code"].toString());
       }
     } catch (e) {
       logger.e(e);

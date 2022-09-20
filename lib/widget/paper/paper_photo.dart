@@ -136,6 +136,14 @@ class _PaperPhotoWidgetState extends State<PaperPhotoWidget> {
         return originalImage;
       }
     }
+
+    /*
+    img.Image? originalImg = img.decodeImage(originalImage);
+    if (originalImg == null) {
+      return originalImage;
+    }
+     */
+
     var pictureRecorder = ui.PictureRecorder();
     var canvas = Canvas(pictureRecorder);
 
@@ -223,9 +231,14 @@ class _PaperPhotoWidgetState extends State<PaperPhotoWidget> {
     var picture = await pictureRecorder
         .endRecording()
         .toImage(frameInfo.image.width, frameInfo.image.height);
+
     var pngImageBytes =
         await picture.toByteData(format: ui.ImageByteFormat.png);
-    Uint8List? pngBytes = pngImageBytes?.buffer.asUint8List();
+
+    if (pngImageBytes == null) {
+      return originalImage;
+    }
+    Uint8List pngBytes = Uint8List.view(pngImageBytes.buffer);
 
     return pngBytes;
   }
