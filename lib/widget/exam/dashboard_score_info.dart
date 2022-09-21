@@ -1,11 +1,150 @@
 import 'package:flutter/material.dart';
+import 'package:prescore_flutter/main.dart';
+import 'package:prescore_flutter/util/struct.dart';
+import 'package:provider/provider.dart';
 
-class DashboardScoreInfo extends StatelessWidget {
+import '../../model/exam_model.dart';
+
+class DashboardScoreInfo extends StatefulWidget {
+  final String examId;
   final double minimum;
   final double maximum;
   final double avg;
   final double med;
   const DashboardScoreInfo(
+      {Key? key,
+      required this.examId,
+      required this.minimum,
+      required this.maximum,
+      required this.avg,
+      required this.med})
+      : super(key: key);
+
+  @override
+  State<DashboardScoreInfo> createState() => _DashboardScoreInfoState();
+}
+
+class _DashboardScoreInfoState extends State<DashboardScoreInfo> {
+  String dropdownValue = "full";
+  ClassInfo? chosenClass;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.all(12.0),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+      elevation: 8,
+      child: Column(
+        children: [
+          const SizedBox(
+            height: 8,
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              const Text(
+                "当前选择的是：",
+                style: TextStyle(fontSize: 16),
+              ),
+              FutureBuilder(
+                  future: Provider.of<ExamModel>(context, listen: false)
+                      .user
+                      .fetchExamClassInfo(widget.examId),
+                  builder:
+                      (BuildContext futureContext, AsyncSnapshot snapshot) {
+                    if (snapshot.hasData) {
+                      if (snapshot.data.state == false) {
+                        return const Text("全年级",
+                            style: TextStyle(fontSize: 16));
+                      }
+
+                      if (dropdownValue == "") {
+                        dropdownValue = snapshot.data.result[0].classId;
+                        chosenClass = snapshot.data.result[0];
+                      }
+
+                      List<DropdownMenuItem<String>> items = snapshot
+                          .data.result
+                          .map<DropdownMenuItem<String>>((ClassInfo value) {
+                        return DropdownMenuItem<String>(
+                          value: value.classId,
+                          child: Text(value.className),
+                        );
+                      }).toList();
+                      items.insert(
+                          0,
+                          const DropdownMenuItem<String>(
+                            value: "full",
+                            child: Text("全年级"),
+                          ));
+
+                      return Row(
+                        children: [
+                          DropdownButton<String>(
+                            value: dropdownValue,
+                            // elevation: 16,
+                            underline: Container(
+                              height: 2,
+                              color: Colors.blueAccent,
+                            ),
+                            onChanged: (String? newValue) {
+                              logger.d(newValue);
+                              setState(() {
+                                dropdownValue = newValue!;
+                                if (dropdownValue == "full") {
+                                  chosenClass = null;
+                                } else {
+                                  chosenClass = snapshot.data.result.firstWhere(
+                                      (element) =>
+                                          element.classId == dropdownValue);
+                                }
+                              });
+                            },
+                            items: items,
+                          ),
+                        ],
+                      );
+                    } else {
+                      return const Text("全年级", style: TextStyle(fontSize: 16));
+                    }
+                  }),
+              Builder(builder: (BuildContext context) {
+                if (["", "full"].contains(dropdownValue)) {
+                  return Container();
+                } else {
+                  return Text("该班级数据条数: ${chosenClass?.count}",
+                      style: const TextStyle(fontSize: 16));
+                }
+              })
+            ],
+          ),
+          Builder(builder: (BuildContext bc) {
+            if (["", "full"].contains(dropdownValue) || chosenClass == null) {
+              return DashboardScoreInfoData(
+                  minimum: widget.minimum,
+                  maximum: widget.maximum,
+                  avg: widget.avg,
+                  med: widget.med);
+            } else {
+              return DashboardScoreInfoData(
+                  minimum: chosenClass!.min,
+                  maximum: chosenClass!.max,
+                  avg: chosenClass!.avg,
+                  med: chosenClass!.med);
+            }
+          })
+        ],
+      ),
+    );
+  }
+}
+
+class DashboardScoreInfoData extends StatelessWidget {
+  final double minimum;
+  final double maximum;
+  final double avg;
+  final double med;
+  const DashboardScoreInfoData(
       {Key? key,
       required this.minimum,
       required this.maximum,
@@ -15,7 +154,7 @@ class DashboardScoreInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Container infoCard = Container(
+    return Container(
         padding: const EdgeInsets.all(12.0),
         alignment: AlignmentDirectional.topStart,
         child: Column(
@@ -95,12 +234,5 @@ class DashboardScoreInfo extends StatelessWidget {
             )
           ],
         ));
-
-    return Card(
-      margin: const EdgeInsets.all(12.0),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-      elevation: 8,
-      child: infoCard,
-    );
   }
 }

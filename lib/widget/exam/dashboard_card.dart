@@ -149,6 +149,7 @@ class _DashboardCardState extends State<DashboardCard> {
           if (snapshot.hasData) {
             if (snapshot.data.state) {
               Widget scoreInfo = DashboardScoreInfo(
+                examId: widget.examId,
                 maximum: snapshot.data.result.max,
                 minimum: snapshot.data.result.min,
                 avg: snapshot.data.result.avg,

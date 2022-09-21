@@ -214,3 +214,27 @@ class ScoreInfo {
     return 'ScoreInfo{max: $max, min: $min, avg: $avg, med: $med}';
   }
 }
+
+class ClassInfo {
+  String classId;
+  String className;
+  int count;
+  double max;
+  double min;
+  double avg;
+  double med;
+
+  ClassInfo(
+      {required this.classId,
+      required this.className,
+      required this.count,
+      required this.max,
+      required this.min,
+      required this.avg,
+      required this.med});
+
+  @override
+  String toString() {
+    return 'ClassInfo{classId: $classId, className: $className, count: $count, max: $max, min: $min, avg: $avg, med: $med}';
+  }
+}

@@ -503,7 +503,7 @@ class User {
     if ((jsonDecode(sheetQuestions) as Map<String, dynamic>)
         .containsKey("answerSheetLocationDTO")) {
       List sheetMarkersSheets =
-      jsonDecode(sheetQuestions)["answerSheetLocationDTO"]["pageSheets"];
+          jsonDecode(sheetQuestions)["answerSheetLocationDTO"]["pageSheets"];
 
       logger.d("sheetMarkersSheets, start: $sheetMarkersSheets");
       try {
@@ -674,7 +674,8 @@ class User {
               message: "-${fullScore - userScore}",
             ));
           }
-          if (!["SingleChoice", "Object"].contains(section["type"]) && fullScore != 0) {
+          if (!["SingleChoice", "Object"].contains(section["type"]) &&
+              fullScore != 0) {
             logger.d("section parse, start, $userScore, $fullScore");
             markers.add(Marker(
                 type: MarkerType.svgPicture,
@@ -829,6 +830,72 @@ class User {
         return Result(state: true, message: "成功哒！", result: scoreInfo);
       } else {
         return Result(state: false, message: result["code"]);
+      }
+    } catch (e) {
+      logger.e(e);
+      return Result(state: false, message: e.toString());
+    }
+  }
+
+  Future<Result<List<ClassInfo>>> fetchExamClassInfo(String examId) async {
+    Dio client = BaseSingleton.singleton.dio;
+
+    try {
+      logger.d("fetchExamClassInfo: start, $examId");
+      Response response =
+          await client.get('$telemetryExamClassInfoUrl/$examId');
+      Map<String, dynamic> result = jsonDecode(response.data);
+      logger.d("fetchExamClassInfo: end, $result");
+      if (result["code"] == 0) {
+        List<ClassInfo> classesInfo = [];
+        for (Map<String, dynamic> item in result["data"]) {
+          ClassInfo classInfo = ClassInfo(
+              classId: item["class_id"],
+              className: item["class_name"],
+              count: item["count"],
+              max: item["max"],
+              min: item["min"],
+              avg: item["avg"],
+              med: item["med"]);
+          classesInfo.add(classInfo);
+        }
+
+        return Result(state: true, message: "成功哒！", result: classesInfo);
+      } else {
+        return Result(state: false, message: result["code"].toString());
+      }
+    } catch (e) {
+      logger.e(e);
+      return Result(state: false, message: e.toString());
+    }
+  }
+
+  Future<Result<List<ClassInfo>>> fetchPaperClassInfo(String examId) async {
+    Dio client = BaseSingleton.singleton.dio;
+
+    try {
+      logger.d("fetchPaperClassInfo: start, $examId");
+      Response response =
+      await client.get('$telemetryPaperClassInfoUrl/$examId');
+      Map<String, dynamic> result = jsonDecode(response.data);
+      logger.d("fetchPaperClassInfo: end, $result");
+      if (result["code"] == 0) {
+        List<ClassInfo> classesInfo = [];
+        for (Map<String, dynamic> item in result["data"]) {
+          ClassInfo classInfo = ClassInfo(
+              classId: item["class_id"],
+              className: item["class_name"],
+              count: item["count"],
+              max: item["max"],
+              min: item["min"],
+              avg: item["avg"],
+              med: item["med"]);
+          classesInfo.add(classInfo);
+        }
+
+        return Result(state: true, message: "成功哒！", result: classesInfo);
+      } else {
+        return Result(state: false, message: result["code"].toString());
       }
     } catch (e) {
       logger.e(e);

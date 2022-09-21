@@ -28,3 +28,5 @@ const String telemetryExamPredictUrl = "$telemetryBaseUrl/exam/predict";
 const String telemetryPaperPredictUrl = "$telemetryBaseUrl/paper/predict";
 const String telemetryExamScoreInfoUrl = "$telemetryBaseUrl/exam/score_info";
 const String telemetryPaperScoreInfoUrl = "$telemetryBaseUrl/paper/score_info";
+const String telemetryExamClassInfoUrl = "$telemetryBaseUrl/exam/class_info";
+const String telemetryPaperClassInfoUrl = "$telemetryBaseUrl/paper/class_info";

@@ -126,6 +126,7 @@ class DetailCard extends StatelessWidget {
                 if (snapshot.hasData) {
                   if (snapshot.data.state) {
                     Widget scoreInfo = DetailScoreInfo(
+                        paperId: paper.paperId,
                         maximum: snapshot.data.result.max,
                         minimum: snapshot.data.result.min,
                         avg: snapshot.data.result.avg,
@@ -135,8 +136,12 @@ class DetailCard extends StatelessWidget {
                     return Container();
                   }
                 } else {
-                  return const DetailScoreInfo(
-                      maximum: -1, minimum: -1, avg: -1, med: -1);
+                  return DetailScoreInfo(
+                      paperId: paper.paperId,
+                      maximum: -1,
+                      minimum: -1,
+                      avg: -1,
+                      med: -1);
                 }
               },
             ),
@@ -210,12 +215,132 @@ class DetailPredict extends StatelessWidget {
   }
 }
 
-class DetailScoreInfo extends StatelessWidget {
+class DetailScoreInfo extends StatefulWidget {
+  final String paperId;
   final double minimum;
   final double maximum;
   final double avg;
   final double med;
   const DetailScoreInfo(
+      {Key? key,
+      required this.paperId,
+      required this.minimum,
+      required this.maximum,
+      required this.avg,
+      required this.med})
+      : super(key: key);
+
+  @override
+  State<DetailScoreInfo> createState() => _DetailScoreInfoState();
+}
+
+class _DetailScoreInfoState extends State<DetailScoreInfo> {
+  String dropdownValue = "full";
+  ClassInfo? chosenClass;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            const Text("当前选择的是："),
+            FutureBuilder(
+                future: Provider.of<ExamModel>(context, listen: false)
+                    .user
+                    .fetchPaperClassInfo(widget.paperId),
+                builder: (BuildContext futureContext, AsyncSnapshot snapshot) {
+                  if (snapshot.hasData) {
+                    if (snapshot.data.state == false) {
+                      return const Text("全年级", style: TextStyle(fontSize: 16));
+                    }
+
+                    if (dropdownValue == "") {
+                      dropdownValue = snapshot.data.result[0].classId;
+                      chosenClass = snapshot.data.result[0];
+                    }
+
+                    List<DropdownMenuItem<String>> items = snapshot.data.result
+                        .map<DropdownMenuItem<String>>((ClassInfo value) {
+                      return DropdownMenuItem<String>(
+                        value: value.classId,
+                        child: Text(value.className),
+                      );
+                    }).toList();
+                    items.insert(
+                        0,
+                        const DropdownMenuItem<String>(
+                          value: "full",
+                          child: Text("全年级"),
+                        ));
+
+                    return Row(
+                      children: [
+                        DropdownButton<String>(
+                          value: dropdownValue,
+                          // elevation: 16,
+                          underline: Container(
+                            height: 2,
+                            color: Colors.blueAccent,
+                          ),
+                          onChanged: (String? newValue) {
+                            logger.d(newValue);
+                            setState(() {
+                              dropdownValue = newValue!;
+                              if (dropdownValue == "full") {
+                                chosenClass = null;
+                              } else {
+                                chosenClass = snapshot.data.result.firstWhere(
+                                    (element) =>
+                                        element.classId == dropdownValue);
+                              }
+                            });
+                          },
+                          items: items,
+                        ),
+                      ],
+                    );
+                  } else {
+                    return const Text("全年级", style: TextStyle(fontSize: 16));
+                  }
+                }),
+            Builder(builder: (BuildContext context) {
+              if (["", "full"].contains(dropdownValue)) {
+                return Container();
+              } else {
+                return Text("该班级数据条数: ${chosenClass?.count}",
+                    style: const TextStyle(fontSize: 16));
+              }
+            })
+          ],
+        ),
+        Builder(builder: (BuildContext bc) {
+          if (["", "full"].contains(dropdownValue) || chosenClass == null) {
+            return DetailScoreInfoData(
+                minimum: widget.minimum,
+                maximum: widget.maximum,
+                avg: widget.avg,
+                med: widget.med);
+          } else {
+            return DetailScoreInfoData(
+                minimum: chosenClass!.min,
+                maximum: chosenClass!.max,
+                avg: chosenClass!.avg,
+                med: chosenClass!.med);
+          }
+        })
+      ],
+    );
+  }
+}
+
+class DetailScoreInfoData extends StatelessWidget {
+  final double minimum;
+  final double maximum;
+  final double avg;
+  final double med;
+  const DetailScoreInfoData(
       {Key? key,
       required this.minimum,
       required this.maximum,
