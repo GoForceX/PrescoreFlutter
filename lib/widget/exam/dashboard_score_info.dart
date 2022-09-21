@@ -39,84 +39,98 @@ class _DashboardScoreInfoState extends State<DashboardScoreInfo> {
           const SizedBox(
             height: 8,
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              const Text(
-                "当前选择的是：",
-                style: TextStyle(fontSize: 16),
-              ),
-              FutureBuilder(
-                  future: Provider.of<ExamModel>(context, listen: false)
-                      .user
-                      .fetchExamClassInfo(widget.examId),
-                  builder:
-                      (BuildContext futureContext, AsyncSnapshot snapshot) {
-                    if (snapshot.hasData) {
-                      if (snapshot.data.state == false) {
-                        return const Text("全年级",
-                            style: TextStyle(fontSize: 16));
-                      }
+          FittedBox(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                const SizedBox(
+                  width: 16,
+                ),
+                const Text(
+                  "当前选择的是：",
+                  style: TextStyle(fontSize: 16),
+                ),
+                const SizedBox(
+                  width: 16,
+                ),
+                FutureBuilder(
+                    future: Provider.of<ExamModel>(context, listen: false)
+                        .user
+                        .fetchExamClassInfo(widget.examId),
+                    builder:
+                        (BuildContext futureContext, AsyncSnapshot snapshot) {
+                      if (snapshot.hasData) {
+                        if (snapshot.data.state == false) {
+                          return const Text("全年级",
+                              style: TextStyle(fontSize: 16));
+                        }
 
-                      if (dropdownValue == "") {
-                        dropdownValue = snapshot.data.result[0].classId;
-                        chosenClass = snapshot.data.result[0];
-                      }
+                        if (dropdownValue == "") {
+                          dropdownValue = snapshot.data.result[0].classId;
+                          chosenClass = snapshot.data.result[0];
+                        }
 
-                      List<DropdownMenuItem<String>> items = snapshot
-                          .data.result
-                          .map<DropdownMenuItem<String>>((ClassInfo value) {
-                        return DropdownMenuItem<String>(
-                          value: value.classId,
-                          child: Text(value.className),
-                        );
-                      }).toList();
-                      items.insert(
-                          0,
-                          const DropdownMenuItem<String>(
-                            value: "full",
-                            child: Text("全年级"),
-                          ));
+                        List<DropdownMenuItem<String>> items = snapshot
+                            .data.result
+                            .map<DropdownMenuItem<String>>((ClassInfo value) {
+                          return DropdownMenuItem<String>(
+                            value: value.classId,
+                            child: Text(value.className),
+                          );
+                        }).toList();
+                        items.insert(
+                            0,
+                            const DropdownMenuItem<String>(
+                              value: "full",
+                              child: Text("全年级"),
+                            ));
 
-                      return Row(
-                        children: [
-                          DropdownButton<String>(
-                            value: dropdownValue,
-                            // elevation: 16,
-                            underline: Container(
-                              height: 2,
-                              color: Colors.blueAccent,
+                        return Row(
+                          children: [
+                            DropdownButton<String>(
+                              value: dropdownValue,
+                              // elevation: 16,
+                              underline: Container(
+                                height: 2,
+                                color: Colors.blueAccent,
+                              ),
+                              onChanged: (String? newValue) {
+                                logger.d(newValue);
+                                setState(() {
+                                  dropdownValue = newValue!;
+                                  if (dropdownValue == "full") {
+                                    chosenClass = null;
+                                  } else {
+                                    chosenClass = snapshot.data.result.firstWhere(
+                                            (element) =>
+                                        element.classId == dropdownValue);
+                                  }
+                                });
+                              },
+                              items: items,
                             ),
-                            onChanged: (String? newValue) {
-                              logger.d(newValue);
-                              setState(() {
-                                dropdownValue = newValue!;
-                                if (dropdownValue == "full") {
-                                  chosenClass = null;
-                                } else {
-                                  chosenClass = snapshot.data.result.firstWhere(
-                                      (element) =>
-                                          element.classId == dropdownValue);
-                                }
-                              });
-                            },
-                            items: items,
-                          ),
-                        ],
-                      );
-                    } else {
-                      return const Text("全年级", style: TextStyle(fontSize: 16));
-                    }
-                  }),
-              Builder(builder: (BuildContext context) {
-                if (["", "full"].contains(dropdownValue)) {
-                  return Container();
-                } else {
-                  return Text("该班级数据条数: ${chosenClass?.count}",
-                      style: const TextStyle(fontSize: 16));
-                }
-              })
-            ],
+                          ],
+                        );
+                      } else {
+                        return const Text("全年级", style: TextStyle(fontSize: 16));
+                      }
+                    }),
+                const SizedBox(
+                  width: 16,
+                ),
+                Builder(builder: (BuildContext context) {
+                  if (["", "full"].contains(dropdownValue)) {
+                    return Container();
+                  } else {
+                    return Text("该班级数据条数: ${chosenClass?.count}",
+                        style: const TextStyle(fontSize: 16));
+                  }
+                }),
+                const SizedBox(
+                  width: 16,
+                ),
+              ],
+            ),
           ),
           Builder(builder: (BuildContext bc) {
             if (["", "full"].contains(dropdownValue) || chosenClass == null) {
