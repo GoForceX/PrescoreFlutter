@@ -32,9 +32,21 @@ class _DashboardCardState extends State<DashboardCard> {
             in Provider.of<ExamModel>(context, listen: false).papers) {
           try {
             logger.d("DashboardInfo: ${paper.name}");
+            Paper processedPaper = Paper(
+                examId: paper.examId,
+                paperId: paper.paperId,
+                name: paper.name,
+                subjectId: paper.subjectId,
+                userScore: paper.userScore,
+                fullScore: paper.fullScore,
+                diagnosticScore: 100 - Provider.of<ExamModel>(context, listen: false)
+                    .diagnoses
+                    .firstWhere(
+                        (element) => element.subjectId == paper.subjectId)
+                    .diagnosticScore);
             Provider.of<ExamModel>(context, listen: false)
                 .user
-                .uploadPaperData(paper);
+                .uploadPaperData(processedPaper);
           } catch (e) {
             logger.e(e);
           }
