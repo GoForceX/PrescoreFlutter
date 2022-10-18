@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "²é·ÖÆ÷"
-#define MyAppVersion "0.22.2"
+#define MyAppVersion "0.26.2"
 #define MyAppPublisher "GoForceX"
 #define MyAppURL "https://matrix.bjbybbs.com/"
 #define MyAppExeName "prescore_flutter.exe"
