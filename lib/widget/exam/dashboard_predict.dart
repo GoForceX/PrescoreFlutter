@@ -9,6 +9,8 @@ class DashboardPredict extends StatelessWidget {
   const DashboardPredict({Key? key, required this.percentage})
       : super(key: key);
 
+  
+
   @override
   Widget build(BuildContext context) {
     Container infoCard = Container(
@@ -20,43 +22,84 @@ class DashboardPredict extends StatelessWidget {
             Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: FittedBox(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                  child: Column(
                     children: [
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: const [
-                          Text(
-                            "预测年排百分比：",
-                            style: TextStyle(fontSize: 24),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: const [
+                              Text(
+                                "预测赋分得分：",
+                                style: TextStyle(fontSize: 24),
+                              ),
+                              SizedBox(
+                                height: 12,
+                              )
+                            ],
                           ),
-                          SizedBox(
-                            height: 12,
-                          )
+                          Text(
+                            (percentage * 100).toStringAsFixed(2),
+                            style: const TextStyle(fontSize: 48),
+                          ),
+                          const SizedBox(
+                            width: 16,
+                          ),
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: const [
+                              Text(
+                                "%",
+                                style: TextStyle(fontSize: 24),
+                              ),
+                              SizedBox(
+                                height: 12,
+                              )
+                            ],
+                          ),
                         ],
                       ),
-                      Text(
-                        (percentage * 100).toStringAsFixed(2),
-                        style: const TextStyle(fontSize: 48),
-                      ),
-                      const SizedBox(
-                        width: 16,
-                      ),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: const [
-                          Text(
-                            "%",
-                            style: TextStyle(fontSize: 24),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: const [
+                              Text(
+                                "预测年排百分比：",
+                                style: TextStyle(fontSize: 24),
+                              ),
+                              SizedBox(
+                                height: 12,
+                              )
+                            ],
                           ),
-                          SizedBox(
-                            height: 12,
-                          )
+                          Text(
+                            (percentage * 100).toStringAsFixed(2),
+                            style: const TextStyle(fontSize: 48),
+                          ),
+                          const SizedBox(
+                            width: 16,
+                          ),
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: const [
+                              Text(
+                                "%",
+                                style: TextStyle(fontSize: 24),
+                              ),
+                              SizedBox(
+                                height: 12,
+                              )
+                            ],
+                          ),
                         ],
                       ),
                     ],
-                  ),
+                  )
                 )),
             const SizedBox(
               height: 16,

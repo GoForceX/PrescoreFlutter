@@ -95,22 +95,22 @@ class DetailCard extends StatelessWidget {
                 logger.d("DetailPredict: ${snapshot.data}");
                 if (snapshot.hasData) {
                   if (snapshot.data.state) {
-                    if (snapshot.data.result < 0) {
-                      Widget predict = const DetailPredict(percentage: 0);
+                    if (snapshot.data.result[1] < 0) {
+                      Widget predict = DetailPredict(version: snapshot.data.result[0], percentage: 0);
                       return predict;
-                    } else if (snapshot.data.result > 1) {
-                      Widget predict = const DetailPredict(percentage: 1);
+                    } else if (snapshot.data.result[1] > 1) {
+                      Widget predict = DetailPredict(version: snapshot.data.result[0], percentage: 1);
                       return predict;
                     } else {
                       Widget predict =
-                          DetailPredict(percentage: snapshot.data.result);
+                          DetailPredict(version: snapshot.data.result[0], percentage: snapshot.data.result[1]);
                       return predict;
                     }
                   } else {
                     return Container();
                   }
                 } else {
-                  return const DetailPredict(percentage: -1);
+                  return DetailPredict(version: snapshot.data.result[0], percentage: -1);
                 }
               },
             ),
@@ -166,8 +166,9 @@ class DetailCard extends StatelessWidget {
 }
 
 class DetailPredict extends StatelessWidget {
+  final int version;
   final double percentage;
-  const DetailPredict({Key? key, required this.percentage}) : super(key: key);
+  const DetailPredict({Key? key, required this.version, required this.percentage}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -176,8 +177,23 @@ class DetailPredict extends StatelessWidget {
         child: FittedBox(
           child: Row(
             mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
+              Container(
+                height: 20,
+                width: 30,
+                decoration: const BoxDecoration(
+                  color: Colors.grey,
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(4),
+                  ),
+                ),
+                child: Center(
+                  child: Text('v$version', style: const TextStyle(fontSize: 10),),
+                ),
+              ),
+              const SizedBox(
+                width: 16,
+              ),
               Column(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: const [
@@ -185,9 +201,6 @@ class DetailPredict extends StatelessWidget {
                     "预测年排百分比：",
                     style: TextStyle(fontSize: 24),
                   ),
-                  SizedBox(
-                    height: 12,
-                  )
                 ],
               ),
               Text(
@@ -204,9 +217,6 @@ class DetailPredict extends StatelessWidget {
                     "%",
                     style: TextStyle(fontSize: 24),
                   ),
-                  SizedBox(
-                    height: 12,
-                  )
                 ],
               ),
             ],

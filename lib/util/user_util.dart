@@ -767,7 +767,7 @@ class User {
     }
   }
 
-  Future<Result<double>> fetchPaperPredict(String paperId, double score) async {
+  Future<Result<List<dynamic>>> fetchPaperPredict(String paperId, double score) async {
     Dio client = BaseSingleton.singleton.dio;
 
     try {
@@ -775,7 +775,7 @@ class User {
           await client.get('$telemetryPaperPredictUrl/$paperId/$score');
       Map<String, dynamic> result = jsonDecode(response.data);
       if (result["code"] == 0) {
-        return Result(state: true, message: "成功哒！", result: result["percent"]);
+        return Result(state: true, message: "成功哒！", result: [result["version"], result["percent"]]);
       } else {
         return Result(state: false, message: result["code"]);
       }
