@@ -274,7 +274,7 @@ class User {
       return Result(state: false, message: "不允许数据上传");
     }
 
-    Dio client = BaseSingleton.singleton.dioH2;
+    Dio client = BaseSingleton.singleton.dio;
 
     try {
       // Fetch basic info and upload to server to register.
