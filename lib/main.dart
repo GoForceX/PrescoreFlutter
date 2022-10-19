@@ -1,6 +1,7 @@
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
+import 'package:dio_http2_adapter/dio_http2_adapter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
@@ -74,7 +75,8 @@ class MyApp extends StatelessWidget {
     }
 
     if (BaseSingleton.singleton.sharedPreferences
-            .getBool("useExperimentalDraw") == null) {
+            .getBool("useExperimentalDraw") ==
+        null) {
       BaseSingleton.singleton.sharedPreferences
           .setBool("useExperimentalDraw", true);
     }
@@ -252,7 +254,9 @@ class BaseSingleton {
 
   static final BaseSingleton _singleton = BaseSingleton._();
   final Dio dio = Dio();
+  final Dio dioH2 = Dio();
   late final CookieJar cookieJar;
+  late final CookieJar cookieJarH2;
   late final SharedPreferences sharedPreferences;
   late final PackageInfo packageInfo;
   static BaseSingleton get singleton => _singleton;
@@ -260,8 +264,6 @@ class BaseSingleton {
   init() async {
     // private constructor that creates the singleton instance
     dio.options.responseType = ResponseType.plain;
-    dio.options.headers["User-Agent"] =
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.124 Safari/537.36 Edg/102.0.1245.41";
     if (kIsWeb) {
       cookieJar = CookieJar();
       dio.interceptors.add(CookieManager(cookieJar));
@@ -277,6 +279,27 @@ class BaseSingleton {
       });
     }
     dio.options.headers = commonHeaders;
+
+    dioH2.options.responseType = ResponseType.plain;
+    if (kIsWeb) {
+      cookieJarH2 = CookieJar();
+      dioH2.interceptors.add(CookieManager(cookieJarH2));
+    } else {
+      getApplicationSupportDirectory().then((value) {
+        String dataPathH2 = value.path;
+        cookieJarH2 = PersistCookieJar(
+            storage: FileStorage(
+              dataPathH2,
+            ),
+            ignoreExpires: true);
+        dioH2.interceptors.add(CookieManager(cookieJarH2));
+        dioH2.httpClientAdapter = Http2Adapter(ConnectionManager(
+          idleTimeout: 5000,
+          onClientCreate: (_, config) => config.onBadCertificate = (_) => true,
+        ));
+      });
+    }
+    dioH2.options.headers = commonHeaders;
 
     SharedPreferences.getInstance().then((value) => sharedPreferences = value);
     PackageInfo.fromPlatform().then((value) => packageInfo = value);

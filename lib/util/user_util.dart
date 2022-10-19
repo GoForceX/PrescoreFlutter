@@ -274,7 +274,7 @@ class User {
       return Result(state: false, message: "不允许数据上传");
     }
 
-    Dio client = BaseSingleton.singleton.dio;
+    Dio client = BaseSingleton.singleton.dioH2;
 
     try {
       // Fetch basic info and upload to server to register.
@@ -706,7 +706,7 @@ class User {
       return Result(state: true, message: "不允许数据上传");
     }
 
-    Dio client = BaseSingleton.singleton.dio;
+    Dio client = BaseSingleton.singleton.dioH2;
 
     logger.d("uploadPaperData: start, data: ${{
       "user_id": basicInfo?.id,
@@ -748,7 +748,7 @@ class User {
   }
 
   Future<Result<double>> fetchExamPredict(String examId, double score) async {
-    Dio client = BaseSingleton.singleton.dio;
+    Dio client = BaseSingleton.singleton.dioH2;
 
     try {
       logger.d("fetchExamPredict: start, $examId, $score");
@@ -768,7 +768,7 @@ class User {
   }
 
   Future<Result<List<dynamic>>> fetchPaperPredict(String paperId, double score) async {
-    Dio client = BaseSingleton.singleton.dio;
+    Dio client = BaseSingleton.singleton.dioH2;
 
     try {
       Response response =
@@ -786,7 +786,7 @@ class User {
   }
 
   Future<Result<ScoreInfo>> fetchExamScoreInfo(String examId) async {
-    Dio client = BaseSingleton.singleton.dio;
+    Dio client = BaseSingleton.singleton.dioH2;
 
     try {
       logger.d("fetchExamScoreInfo: start, $examId");
@@ -812,7 +812,7 @@ class User {
   }
 
   Future<Result<ScoreInfo>> fetchPaperScoreInfo(String paperId) async {
-    Dio client = BaseSingleton.singleton.dio;
+    Dio client = BaseSingleton.singleton.dioH2;
 
     try {
       logger.d("fetchPaperScoreInfo: start, $paperId");
@@ -838,7 +838,7 @@ class User {
   }
 
   Future<Result<List<ClassInfo>>> fetchExamClassInfo(String examId) async {
-    Dio client = BaseSingleton.singleton.dio;
+    Dio client = BaseSingleton.singleton.dioH2;
 
     try {
       logger.d("fetchExamClassInfo: start, $examId");
@@ -871,7 +871,7 @@ class User {
   }
 
   Future<Result<List<ClassInfo>>> fetchPaperClassInfo(String examId) async {
-    Dio client = BaseSingleton.singleton.dio;
+    Dio client = BaseSingleton.singleton.dioH2;
 
     try {
       logger.d("fetchPaperClassInfo: start, $examId");
