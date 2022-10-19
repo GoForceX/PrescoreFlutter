@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
+import 'package:prescore_flutter/util/user_util.dart';
 import 'package:provider/provider.dart';
 
 import '../../main.dart';
@@ -97,14 +98,22 @@ class DetailCard extends StatelessWidget {
                   if (snapshot.data.state) {
                     if (snapshot.data.result[1] < 0) {
                       Widget predict = DetailPredict(
-                          version: snapshot.data.result[0], percentage: 0);
+                          subjectId: paper.subjectId,
+                          subjectName: paper.name,
+                          version: snapshot.data.result[0],
+                          percentage: 0);
                       return predict;
                     } else if (snapshot.data.result[1] > 1) {
                       Widget predict = DetailPredict(
-                          version: snapshot.data.result[0], percentage: 1);
+                          subjectId: paper.subjectId,
+                          subjectName: paper.name,
+                          version: snapshot.data.result[0],
+                          percentage: 1);
                       return predict;
                     } else {
                       Widget predict = DetailPredict(
+                          subjectId: paper.subjectId,
+                          subjectName: paper.name,
                           version: snapshot.data.result[0],
                           percentage: snapshot.data.result[1]);
                       return predict;
@@ -113,12 +122,13 @@ class DetailCard extends StatelessWidget {
                     return Container();
                   }
                 } else {
-                  return const DetailPredict(version: -1, percentage: -1);
+                  return DetailPredict(
+                      subjectId: paper.subjectId,
+                      subjectName: paper.name,
+                      version: -1,
+                      percentage: -1);
                 }
               },
-            ),
-            const SizedBox(
-              height: 8,
             ),
             FutureBuilder(
               future: Provider.of<ExamModel>(context, listen: false)
@@ -169,75 +179,140 @@ class DetailCard extends StatelessWidget {
 }
 
 class DetailPredict extends StatelessWidget {
+  final String subjectId;
+  final String subjectName;
   final int version;
   final double percentage;
   const DetailPredict(
-      {Key? key, required this.version, required this.percentage})
+      {Key? key,
+      required this.subjectId,
+      required this.subjectName,
+      required this.version,
+      required this.percentage})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Container(
         padding: const EdgeInsets.symmetric(horizontal: 8),
-        child: FittedBox(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Builder(builder: (BuildContext ct) {
-                if (version == -1) {
-                  return Container();
-                }
-                return Row(
+        child: Column(
+          children: [
+            FittedBox(
+              child: Row(
+                children: [
+                  Builder(builder: (BuildContext ct) {
+                    if (version == -1) {
+                      return Container();
+                    }
+                    return Row(
+                      children: [
+                        Container(
+                          height: 20,
+                          width: 30,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade600,
+                            borderRadius: const BorderRadius.all(
+                              Radius.circular(4),
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              'v$version',
+                              style: const TextStyle(fontSize: 10),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(
+                          width: 16,
+                        ),
+                      ],
+                    );
+                  }),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: const [
+                      Text(
+                        "预测年排百分比：",
+                        style: TextStyle(fontSize: 24),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    percentage != -1
+                        ? (percentage * 100).toStringAsFixed(2)
+                        : "-",
+                    style: const TextStyle(fontSize: 48),
+                  ),
+                  const SizedBox(
+                    width: 16,
+                  ),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: const [
+                      Text(
+                        "%",
+                        style: TextStyle(fontSize: 24),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Builder(builder: (BuildContext ct) {
+              if (['数学', '语文', '英语'].contains(subjectName)) {
+                return Container();
+              }
+              if (percentage == -1 || getScoringResult(percentage) == -1) {
+                return Container();
+              }
+              return FittedBox(
+                child: Row(
                   children: [
-                    Container(
-                      height: 20,
-                      width: 30,
-                      decoration: const BoxDecoration(
-                        color: Colors.grey,
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(4),
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          'v$version',
-                          style: const TextStyle(fontSize: 10),
-                        ),
-                      ),
+                    Builder(builder: (BuildContext ct) {
+                      if (version == -1) {
+                        return Container();
+                      }
+                      return Row(
+                        children: [
+                          Container(
+                            height: 20,
+                            width: 30,
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade600,
+                              borderRadius: const BorderRadius.all(
+                                Radius.circular(4),
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                'v$version',
+                                style: const TextStyle(fontSize: 10),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(
+                            width: 16,
+                          ),
+                        ],
+                      );
+                    }),
+                    Column(
+                      children: const [
+                        Text(
+                          "预测赋分：",
+                          style: TextStyle(fontSize: 24),
+                        )
+                      ],
                     ),
-                    const SizedBox(
-                      width: 16,
+                    Text(
+                      "${getScoringResult(percentage).toInt()}",
+                      style: const TextStyle(fontSize: 32),
                     ),
                   ],
-                );
-              }),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: const [
-                  Text(
-                    "预测年排百分比：",
-                    style: TextStyle(fontSize: 24),
-                  ),
-                ],
-              ),
-              Text(
-                percentage != -1 ? (percentage * 100).toStringAsFixed(2) : "-",
-                style: const TextStyle(fontSize: 48),
-              ),
-              const SizedBox(
-                width: 16,
-              ),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: const [
-                  Text(
-                    "%",
-                    style: TextStyle(fontSize: 24),
-                  ),
-                ],
-              ),
-            ],
-          ),
+                ),
+              );
+            }),
+          ],
         ));
   }
 }

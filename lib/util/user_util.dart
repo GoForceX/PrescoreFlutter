@@ -767,7 +767,8 @@ class User {
     }
   }
 
-  Future<Result<List<dynamic>>> fetchPaperPredict(String paperId, double score) async {
+  Future<Result<List<dynamic>>> fetchPaperPredict(
+      String paperId, double score) async {
     Dio client = BaseSingleton.singleton.dioH2;
 
     try {
@@ -775,7 +776,10 @@ class User {
           await client.get('$telemetryPaperPredictUrl/$paperId/$score');
       Map<String, dynamic> result = jsonDecode(response.data);
       if (result["code"] == 0) {
-        return Result(state: true, message: "成功哒！", result: [result["version"], result["percent"]]);
+        return Result(
+            state: true,
+            message: "成功哒！",
+            result: [result["version"], result["percent"]]);
       } else {
         return Result(state: false, message: result["code"]);
       }
@@ -833,7 +837,27 @@ class User {
       }
     } catch (e) {
       logger.e(e);
-      return Result(state: false, message: e.toString());
+      try {
+        logger.d("fetchPaperScoreInfo: retry start, $paperId");
+        Response response =
+        await client.get('$telemetryPaperScoreInfoUrl/$paperId');
+        Map<String, dynamic> result = jsonDecode(response.data);
+        logger.d("fetchPaperScoreInfo: retry end, $result");
+        if (result["code"] == 0) {
+          ScoreInfo scoreInfo = ScoreInfo(
+              max: result["data"]["max"],
+              min: result["data"]["min"],
+              avg: result["data"]["avg"],
+              med: result["data"]["med"]);
+
+          return Result(state: true, message: "成功哒！", result: scoreInfo);
+        } else {
+          return Result(state: false, message: result["code"]);
+        }
+      } catch (e) {
+        logger.e(e);
+        return Result(state: false, message: e.toString());
+      }
     }
   }
 
@@ -876,7 +900,7 @@ class User {
     try {
       logger.d("fetchPaperClassInfo: start, $examId");
       Response response =
-      await client.get('$telemetryPaperClassInfoUrl/$examId');
+          await client.get('$telemetryPaperClassInfoUrl/$examId');
       Map<String, dynamic> result = jsonDecode(response.data);
       logger.d("fetchPaperClassInfo: end, $result");
       if (result["code"] == 0) {
@@ -901,5 +925,53 @@ class User {
       logger.e(e);
       return Result(state: false, message: e.toString());
     }
+  }
+}
+
+double getScoringResult(double percentage) {
+  if (percentage <= 0.01 && percentage >= 0) {
+    return 100;
+  } else if (percentage <= 0.03) {
+    return 97;
+  } else if (percentage <= 0.06) {
+    return 94;
+  } else if (percentage <= 0.1) {
+    return 91;
+  } else if (percentage <= 0.15) {
+    return 88;
+  } else if (percentage <= 0.21) {
+    return 85;
+  } else if (percentage <= 0.28) {
+    return 82;
+  } else if (percentage <= 0.36) {
+    return 79;
+  } else if (percentage <= 0.43) {
+    return 76;
+  } else if (percentage <= 0.50) {
+    return 73;
+  } else if (percentage <= 0.57) {
+    return 70;
+  } else if (percentage <= 0.64) {
+    return 67;
+  } else if (percentage <= 0.71) {
+    return 64;
+  } else if (percentage <= 0.78) {
+    return 61;
+  } else if (percentage <= 0.84) {
+    return 58;
+  } else if (percentage <= 0.89) {
+    return 55;
+  } else if (percentage <= 0.93) {
+    return 52;
+  } else if (percentage <= 0.96) {
+    return 49;
+  } else if (percentage <= 0.98) {
+    return 46;
+  } else if (percentage <= 0.99) {
+    return 43;
+  } else if (percentage > 1 || percentage < 0) {
+    return -1;
+  } else {
+    return 40;
   }
 }
