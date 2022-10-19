@@ -96,21 +96,24 @@ class DetailCard extends StatelessWidget {
                 if (snapshot.hasData) {
                   if (snapshot.data.state) {
                     if (snapshot.data.result[1] < 0) {
-                      Widget predict = DetailPredict(version: snapshot.data.result[0], percentage: 0);
+                      Widget predict = DetailPredict(
+                          version: snapshot.data.result[0], percentage: 0);
                       return predict;
                     } else if (snapshot.data.result[1] > 1) {
-                      Widget predict = DetailPredict(version: snapshot.data.result[0], percentage: 1);
+                      Widget predict = DetailPredict(
+                          version: snapshot.data.result[0], percentage: 1);
                       return predict;
                     } else {
-                      Widget predict =
-                          DetailPredict(version: snapshot.data.result[0], percentage: snapshot.data.result[1]);
+                      Widget predict = DetailPredict(
+                          version: snapshot.data.result[0],
+                          percentage: snapshot.data.result[1]);
                       return predict;
                     }
                   } else {
                     return Container();
                   }
                 } else {
-                  return DetailPredict(version: snapshot.data.result[0], percentage: -1);
+                  return const DetailPredict(version: -1, percentage: -1);
                 }
               },
             ),
@@ -168,7 +171,9 @@ class DetailCard extends StatelessWidget {
 class DetailPredict extends StatelessWidget {
   final int version;
   final double percentage;
-  const DetailPredict({Key? key, required this.version, required this.percentage}) : super(key: key);
+  const DetailPredict(
+      {Key? key, required this.version, required this.percentage})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -178,22 +183,34 @@ class DetailPredict extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              Container(
-                height: 20,
-                width: 30,
-                decoration: const BoxDecoration(
-                  color: Colors.grey,
-                  borderRadius: BorderRadius.all(
-                    Radius.circular(4),
-                  ),
-                ),
-                child: Center(
-                  child: Text('v$version', style: const TextStyle(fontSize: 10),),
-                ),
-              ),
-              const SizedBox(
-                width: 16,
-              ),
+              Builder(builder: (BuildContext ct) {
+                if (version == -1) {
+                  return Container();
+                }
+                return Row(
+                  children: [
+                    Container(
+                      height: 20,
+                      width: 30,
+                      decoration: const BoxDecoration(
+                        color: Colors.grey,
+                        borderRadius: BorderRadius.all(
+                          Radius.circular(4),
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'v$version',
+                          style: const TextStyle(fontSize: 10),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(
+                      width: 16,
+                    ),
+                  ],
+                );
+              }),
               Column(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: const [
@@ -267,10 +284,12 @@ class _DetailScoreInfoState extends State<DetailScoreInfo> {
                   future: Provider.of<ExamModel>(context, listen: false)
                       .user
                       .fetchPaperClassInfo(widget.paperId),
-                  builder: (BuildContext futureContext, AsyncSnapshot snapshot) {
+                  builder:
+                      (BuildContext futureContext, AsyncSnapshot snapshot) {
                     if (snapshot.hasData) {
                       if (snapshot.data.state == false) {
-                        return const Text("全年级", style: TextStyle(fontSize: 16));
+                        return const Text("全年级",
+                            style: TextStyle(fontSize: 16));
                       }
 
                       if (dropdownValue == "") {
@@ -278,7 +297,8 @@ class _DetailScoreInfoState extends State<DetailScoreInfo> {
                         chosenClass = snapshot.data.result[0];
                       }
 
-                      List<DropdownMenuItem<String>> items = snapshot.data.result
+                      List<DropdownMenuItem<String>> items = snapshot
+                          .data.result
                           .map<DropdownMenuItem<String>>((ClassInfo value) {
                         return DropdownMenuItem<String>(
                           value: value.classId,
@@ -309,8 +329,8 @@ class _DetailScoreInfoState extends State<DetailScoreInfo> {
                                   chosenClass = null;
                                 } else {
                                   chosenClass = snapshot.data.result.firstWhere(
-                                          (element) =>
-                                      element.classId == dropdownValue);
+                                      (element) =>
+                                          element.classId == dropdownValue);
                                 }
                               });
                             },
