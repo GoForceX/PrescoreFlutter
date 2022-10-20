@@ -1,4 +1,5 @@
 import 'package:cookie_jar/cookie_jar.dart';
+import 'package:cronet/cronet.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:dio_http2_adapter/dio_http2_adapter.dart';
@@ -259,6 +260,8 @@ class BaseSingleton {
   late final CookieJar cookieJarH2;
   late final SharedPreferences sharedPreferences;
   late final PackageInfo packageInfo;
+  final cronetClient = HttpClient(userAgent: userAgent);
+
   static BaseSingleton get singleton => _singleton;
 
   init() async {

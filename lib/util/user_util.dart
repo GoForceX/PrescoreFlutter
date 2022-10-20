@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:cronet/cronet.dart';
 import 'package:dio/dio.dart';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:encrypt/encrypt.dart';
@@ -105,6 +106,7 @@ class User {
 
     // Get session from st.
     logger.d("st: $st");
+
     Response loginResponse = await client.post(
       zhixueLoginUrl,
       data: {
@@ -708,6 +710,8 @@ class User {
 
     Dio client = BaseSingleton.singleton.dioH2;
 
+    HttpClient cronetClient = BaseSingleton.singleton.cronetClient;
+
     logger.d("uploadPaperData: start, data: ${{
       "user_id": basicInfo?.id,
       "exam_id": paper.examId,
@@ -719,73 +723,78 @@ class User {
       "diagnostic_score": paper.diagnosticScore,
     }}");
 
-    try {
-      Response response = await client.post(
-        'https://matrix.bjbybbs.com/api/exam/submit',
-        data: {
-          "user_id": basicInfo?.id,
-          "exam_id": paper.examId,
-          "paper_id": paper.paperId,
-          "subject_id": paper.subjectId,
-          "subject_name": paper.name,
-          "standard_score": paper.fullScore,
-          "user_score": paper.userScore,
-          "diagnostic_score": paper.diagnosticScore,
-        },
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer ${session?.serverToken}',
-          },
-          contentType: Headers.jsonContentType,
-        ),
-      );
-      logger.d("uploadPaperData: response: ${response.data}");
-      return Result(state: true, message: "成功哒！", result: response.data);
-    } catch (e) {
-      logger.e(e);
-      return Result(state: false, message: e.toString());
-    }
+    String retData = await cronetClient
+        .postUrl(Uri.parse('https://matrix.bjbybbs.com/api/exam/submit'))
+        .then((HttpClientRequest request) {
+      request.headers.set("Authorization", 'Bearer ${session?.serverToken}');
+      request.headers.set("Content-Type", 'application/json');
+      request.write(jsonEncode({
+        "user_id": basicInfo?.id,
+        "exam_id": paper.examId,
+        "paper_id": paper.paperId,
+        "subject_id": paper.subjectId,
+        "subject_name": paper.name,
+        "standard_score": paper.fullScore,
+        "user_score": paper.userScore,
+        "diagnostic_score": paper.diagnosticScore,
+      }));
+      return request.close();
+    }).then((HttpClientResponse response) {
+      return response
+          .transform(utf8.decoder)
+          .reduce((previous, element) => previous + element);
+    });
+
+    logger.d("uploadPaperData: response: $retData");
+    return Result(state: true, message: "成功哒！", result: retData);
   }
 
   Future<Result<double>> fetchExamPredict(String examId, double score) async {
-    Dio client = BaseSingleton.singleton.dioH2;
+    HttpClient cronetClient = BaseSingleton.singleton.cronetClient;
 
-    try {
-      logger.d("fetchExamPredict: start, $examId, $score");
-      Response response =
-          await client.get('$telemetryExamPredictUrl/$examId/$score');
-      Map<String, dynamic> result = jsonDecode(response.data);
-      logger.d("fetchExamPredict: end, $result");
-      if (result["code"] == 0) {
-        return Result(state: true, message: "成功哒！", result: result["percent"]);
-      } else {
-        return Result(state: false, message: result["code"].toString());
-      }
-    } catch (e) {
-      logger.e(e);
-      return Result(state: false, message: e.toString());
+    String retData = await cronetClient
+        .getUrl(Uri.parse('$telemetryExamPredictUrl/$examId/$score'))
+        .then((HttpClientRequest request) {
+      return request.close();
+    }).then((Stream<List<int>> response) {
+      return response
+          .transform(utf8.decoder)
+          .reduce((previous, element) => previous + element);
+    });
+    logger.d("fetchExamPredict: cronet, response: $retData");
+
+    Map<String, dynamic> result = jsonDecode(retData);
+    logger.d("fetchExamPredict: end, $result");
+    if (result["code"] == 0) {
+      return Result(state: true, message: "成功哒！", result: result["percent"]);
+    } else {
+      return Result(state: false, message: result["code"].toString());
     }
   }
 
   Future<Result<List<dynamic>>> fetchPaperPredict(
       String paperId, double score) async {
-    Dio client = BaseSingleton.singleton.dioH2;
+    HttpClient cronetClient = BaseSingleton.singleton.cronetClient;
 
-    try {
-      Response response =
-          await client.get('$telemetryPaperPredictUrl/$paperId/$score');
-      Map<String, dynamic> result = jsonDecode(response.data);
-      if (result["code"] == 0) {
-        return Result(
-            state: true,
-            message: "成功哒！",
-            result: [result["version"], result["percent"]]);
-      } else {
-        return Result(state: false, message: result["code"]);
-      }
-    } catch (e) {
-      logger.e(e);
-      return Result(state: false, message: e.toString());
+    String retData = await cronetClient
+        .getUrl(Uri.parse('$telemetryPaperPredictUrl/$paperId/$score'))
+        .then((HttpClientRequest request) {
+      return request.close();
+    }).then((Stream<List<int>> response) {
+      return response
+          .transform(utf8.decoder)
+          .reduce((previous, element) => previous + element);
+    });
+    logger.d("fetchPaperPredict: cronet, response: $retData");
+
+    Map<String, dynamic> result = jsonDecode(retData);
+    if (result["code"] == 0) {
+      return Result(
+          state: true,
+          message: "成功哒！",
+          result: [result["version"], result["percent"]]);
+    } else {
+      return Result(state: false, message: result["code"]);
     }
   }
 
@@ -840,7 +849,7 @@ class User {
       try {
         logger.d("fetchPaperScoreInfo: retry start, $paperId");
         Response response =
-        await client.get('$telemetryPaperScoreInfoUrl/$paperId');
+            await client.get('$telemetryPaperScoreInfoUrl/$paperId');
         Map<String, dynamic> result = jsonDecode(response.data);
         logger.d("fetchPaperScoreInfo: retry end, $result");
         if (result["code"] == 0) {
