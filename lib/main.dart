@@ -255,9 +255,7 @@ class BaseSingleton {
 
   static final BaseSingleton _singleton = BaseSingleton._();
   final Dio dio = Dio();
-  final Dio dioH2 = Dio();
   late final CookieJar cookieJar;
-  late final CookieJar cookieJarH2;
   late final SharedPreferences sharedPreferences;
   late final PackageInfo packageInfo;
   final cronetClient = HttpClient(userAgent: userAgent);
@@ -282,27 +280,6 @@ class BaseSingleton {
       });
     }
     dio.options.headers = commonHeaders;
-
-    dioH2.options.responseType = ResponseType.plain;
-    if (kIsWeb) {
-      cookieJarH2 = CookieJar();
-      dioH2.interceptors.add(CookieManager(cookieJarH2));
-    } else {
-      getApplicationSupportDirectory().then((value) {
-        String dataPathH2 = value.path;
-        cookieJarH2 = PersistCookieJar(
-            storage: FileStorage(
-              dataPathH2,
-            ),
-            ignoreExpires: true);
-        dioH2.interceptors.add(CookieManager(cookieJarH2));
-        dioH2.httpClientAdapter = Http2Adapter(ConnectionManager(
-          idleTimeout: 5000,
-          onClientCreate: (_, config) => config.onBadCertificate = (_) => true,
-        ));
-      });
-    }
-    dioH2.options.headers = commonHeaders;
 
     SharedPreferences.getInstance().then((value) => sharedPreferences = value);
     PackageInfo.fromPlatform().then((value) => packageInfo = value);

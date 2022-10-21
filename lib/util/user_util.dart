@@ -276,33 +276,30 @@ class User {
       return Result(state: false, message: "不允许数据上传");
     }
 
-    Dio client = BaseSingleton.singleton.dio;
+    HttpClient cronetClient = BaseSingleton.singleton.cronetClient;
 
-    try {
-      // Fetch basic info and upload to server to register.
-      BasicInfo? bi = await fetchBasicInfo();
-      logger.d("telemetryLogin: start, ${{
-        'username': bi?.id,
-        'password': session?.sessionId,
-      }}");
-      Response response = await client.post(telemetryLoginUrl,
-          data: {
-            'username': bi?.id,
-            'password': session?.sessionId,
-          },
-          options: Options(
-            contentType: Headers.formUrlEncodedContentType,
-          ));
-      logger.d('serverLogin response: ${response.data}');
-      Map<String, dynamic> parsed = jsonDecode(response.data);
-      session?.serverToken = parsed['access_token'];
+    BasicInfo? bi = await fetchBasicInfo();
+    String retData = await cronetClient
+        .postUrl(Uri.parse(telemetryLoginUrl))
+        .then((HttpClientRequest request) {
+      request.headers.set("Content-Type", "application/x-www-form-urlencoded");
+      logger.d("username=${bi?.id}&password=${session?.sessionId}"
+          .replaceAll(" ", "+"));
+      request.write("username=${bi?.id}&password=${session?.sessionId}"
+          .replaceAll(" ", "+"));
+      return request.close();
+    }).then((Stream<List<int>> response) {
+      return response
+          .transform(utf8.decoder)
+          .reduce((previous, element) => previous + element);
+    }).catchError((err) {
+      logger.e(err);
+    });
+    logger.d('serverLogin response: $retData');
+    Map<String, dynamic> parsed = jsonDecode(retData);
+    session?.serverToken = parsed['access_token'];
 
-      return Result(
-          state: true, message: "成功哒！", result: parsed['access_token']);
-    } catch (e) {
-      logger.e(e);
-      return Result(state: false, message: e.toString());
-    }
+    return Result(state: true, message: "成功哒！", result: parsed['access_token']);
   }
 
   /// Get basic info from [zhixueBasicInfoUrl].
@@ -708,8 +705,6 @@ class User {
       return Result(state: true, message: "不允许数据上传");
     }
 
-    Dio client = BaseSingleton.singleton.dioH2;
-
     HttpClient cronetClient = BaseSingleton.singleton.cronetClient;
 
     logger.d("uploadPaperData: start, data: ${{
@@ -799,140 +794,130 @@ class User {
   }
 
   Future<Result<ScoreInfo>> fetchExamScoreInfo(String examId) async {
-    Dio client = BaseSingleton.singleton.dioH2;
+    HttpClient cronetClient = BaseSingleton.singleton.cronetClient;
 
-    try {
-      logger.d("fetchExamScoreInfo: start, $examId");
-      Response response =
-          await client.get('$telemetryExamScoreInfoUrl/$examId');
-      Map<String, dynamic> result = jsonDecode(response.data);
-      logger.d("fetchExamScoreInfo: end, $result");
-      if (result["code"] == 0) {
-        ScoreInfo scoreInfo = ScoreInfo(
-            max: result["data"]["max"],
-            min: result["data"]["min"],
-            avg: result["data"]["avg"],
-            med: result["data"]["med"]);
+    logger.d("fetchExamScoreInfo: start, $examId");
+    String retData = await cronetClient
+        .getUrl(Uri.parse('$telemetryExamScoreInfoUrl/$examId'))
+        .then((HttpClientRequest request) {
+      return request.close();
+    }).then((Stream<List<int>> response) {
+      return response
+          .transform(utf8.decoder)
+          .reduce((previous, element) => previous + element);
+    });
+    Map<String, dynamic> result = jsonDecode(retData);
+    logger.d("fetchExamScoreInfo: end, $result");
+    if (result["code"] == 0) {
+      ScoreInfo scoreInfo = ScoreInfo(
+          max: result["data"]["max"],
+          min: result["data"]["min"],
+          avg: result["data"]["avg"],
+          med: result["data"]["med"]);
 
-        return Result(state: true, message: "成功哒！", result: scoreInfo);
-      } else {
-        return Result(state: false, message: result["code"].toString());
-      }
-    } catch (e) {
-      logger.e(e);
-      return Result(state: false, message: e.toString());
+      return Result(state: true, message: "成功哒！", result: scoreInfo);
+    } else {
+      return Result(state: false, message: result["code"].toString());
     }
   }
 
   Future<Result<ScoreInfo>> fetchPaperScoreInfo(String paperId) async {
-    Dio client = BaseSingleton.singleton.dioH2;
+    HttpClient cronetClient = BaseSingleton.singleton.cronetClient;
 
-    try {
-      logger.d("fetchPaperScoreInfo: start, $paperId");
-      Response response =
-          await client.get('$telemetryPaperScoreInfoUrl/$paperId');
-      Map<String, dynamic> result = jsonDecode(response.data);
-      logger.d("fetchPaperScoreInfo: end, $result");
-      if (result["code"] == 0) {
-        ScoreInfo scoreInfo = ScoreInfo(
-            max: result["data"]["max"],
-            min: result["data"]["min"],
-            avg: result["data"]["avg"],
-            med: result["data"]["med"]);
+    logger.d("fetchPaperScoreInfo: start, $paperId");
+    String retData = await cronetClient
+        .getUrl(Uri.parse('$telemetryPaperScoreInfoUrl/$paperId'))
+        .then((HttpClientRequest request) {
+      return request.close();
+    }).then((Stream<List<int>> response) {
+      return response
+          .transform(utf8.decoder)
+          .reduce((previous, element) => previous + element);
+    });
+    Map<String, dynamic> result = jsonDecode(retData);
+    logger.d("fetchPaperScoreInfo: end, $result");
+    if (result["code"] == 0) {
+      ScoreInfo scoreInfo = ScoreInfo(
+          max: result["data"]["max"],
+          min: result["data"]["min"],
+          avg: result["data"]["avg"],
+          med: result["data"]["med"]);
 
-        return Result(state: true, message: "成功哒！", result: scoreInfo);
-      } else {
-        return Result(state: false, message: result["code"]);
-      }
-    } catch (e) {
-      logger.e(e);
-      try {
-        logger.d("fetchPaperScoreInfo: retry start, $paperId");
-        Response response =
-            await client.get('$telemetryPaperScoreInfoUrl/$paperId');
-        Map<String, dynamic> result = jsonDecode(response.data);
-        logger.d("fetchPaperScoreInfo: retry end, $result");
-        if (result["code"] == 0) {
-          ScoreInfo scoreInfo = ScoreInfo(
-              max: result["data"]["max"],
-              min: result["data"]["min"],
-              avg: result["data"]["avg"],
-              med: result["data"]["med"]);
-
-          return Result(state: true, message: "成功哒！", result: scoreInfo);
-        } else {
-          return Result(state: false, message: result["code"]);
-        }
-      } catch (e) {
-        logger.e(e);
-        return Result(state: false, message: e.toString());
-      }
+      return Result(state: true, message: "成功哒！", result: scoreInfo);
+    } else {
+      return Result(state: false, message: result["code"]);
     }
   }
 
   Future<Result<List<ClassInfo>>> fetchExamClassInfo(String examId) async {
-    Dio client = BaseSingleton.singleton.dioH2;
+    HttpClient cronetClient = BaseSingleton.singleton.cronetClient;
 
-    try {
-      logger.d("fetchExamClassInfo: start, $examId");
-      Response response =
-          await client.get('$telemetryExamClassInfoUrl/$examId');
-      Map<String, dynamic> result = jsonDecode(response.data);
-      logger.d("fetchExamClassInfo: end, $result");
-      if (result["code"] == 0) {
-        List<ClassInfo> classesInfo = [];
-        for (Map<String, dynamic> item in result["data"]) {
-          ClassInfo classInfo = ClassInfo(
-              classId: item["class_id"],
-              className: item["class_name"],
-              count: item["count"],
-              max: item["max"],
-              min: item["min"],
-              avg: item["avg"],
-              med: item["med"]);
-          classesInfo.add(classInfo);
-        }
+    logger.d("fetchExamClassInfo: start, $examId");
+    String retData = await cronetClient
+        .getUrl(Uri.parse('$telemetryExamClassInfoUrl/$examId'))
+        .then((HttpClientRequest request) {
+      return request.close();
+    }).then((Stream<List<int>> response) {
+      return response
+          .transform(utf8.decoder)
+          .reduce((previous, element) => previous + element);
+    });
+    Map<String, dynamic> result = jsonDecode(retData);
 
-        return Result(state: true, message: "成功哒！", result: classesInfo);
-      } else {
-        return Result(state: false, message: result["code"].toString());
+    logger.d("fetchExamClassInfo: end, $result");
+    if (result["code"] == 0) {
+      List<ClassInfo> classesInfo = [];
+      for (Map<String, dynamic> item in result["data"]) {
+        ClassInfo classInfo = ClassInfo(
+            classId: item["class_id"],
+            className: item["class_name"],
+            count: item["count"],
+            max: item["max"],
+            min: item["min"],
+            avg: item["avg"],
+            med: item["med"]);
+        classesInfo.add(classInfo);
       }
-    } catch (e) {
-      logger.e(e);
-      return Result(state: false, message: e.toString());
+
+      return Result(state: true, message: "成功哒！", result: classesInfo);
+    } else {
+      return Result(state: false, message: result["code"].toString());
     }
   }
 
   Future<Result<List<ClassInfo>>> fetchPaperClassInfo(String examId) async {
-    Dio client = BaseSingleton.singleton.dioH2;
+    HttpClient cronetClient = BaseSingleton.singleton.cronetClient;
 
-    try {
-      logger.d("fetchPaperClassInfo: start, $examId");
-      Response response =
-          await client.get('$telemetryPaperClassInfoUrl/$examId');
-      Map<String, dynamic> result = jsonDecode(response.data);
-      logger.d("fetchPaperClassInfo: end, $result");
-      if (result["code"] == 0) {
-        List<ClassInfo> classesInfo = [];
-        for (Map<String, dynamic> item in result["data"]) {
-          ClassInfo classInfo = ClassInfo(
-              classId: item["class_id"],
-              className: item["class_name"],
-              count: item["count"],
-              max: item["max"],
-              min: item["min"],
-              avg: item["avg"],
-              med: item["med"]);
-          classesInfo.add(classInfo);
-        }
+    logger.d("fetchPaperClassInfo: start, $examId");
+    String retData = await cronetClient
+        .getUrl(Uri.parse('$telemetryPaperClassInfoUrl/$examId'))
+        .then((HttpClientRequest request) {
+      return request.close();
+    }).then((Stream<List<int>> response) {
+      return response
+          .transform(utf8.decoder)
+          .reduce((previous, element) => previous + element);
+    });
+    Map<String, dynamic> result = jsonDecode(retData);
 
-        return Result(state: true, message: "成功哒！", result: classesInfo);
-      } else {
-        return Result(state: false, message: result["code"].toString());
+    logger.d("fetchPaperClassInfo: end, $result");
+    if (result["code"] == 0) {
+      List<ClassInfo> classesInfo = [];
+      for (Map<String, dynamic> item in result["data"]) {
+        ClassInfo classInfo = ClassInfo(
+            classId: item["class_id"],
+            className: item["class_name"],
+            count: item["count"],
+            max: item["max"],
+            min: item["min"],
+            avg: item["avg"],
+            med: item["med"]);
+        classesInfo.add(classInfo);
       }
-    } catch (e) {
-      logger.e(e);
-      return Result(state: false, message: e.toString());
+
+      return Result(state: true, message: "成功哒！", result: classesInfo);
+    } else {
+      return Result(state: false, message: result["code"].toString());
     }
   }
 }
