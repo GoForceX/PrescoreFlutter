@@ -194,126 +194,135 @@ class DetailPredict extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        child: Column(
-          children: [
-            FittedBox(
-              child: Row(
-                children: [
-                  Builder(builder: (BuildContext ct) {
-                    if (version == -1) {
-                      return Container();
-                    }
-                    return Row(
-                      children: [
-                        Container(
-                          height: 20,
-                          width: 30,
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade600,
-                            borderRadius: const BorderRadius.all(
-                              Radius.circular(4),
-                            ),
-                          ),
-                          child: Center(
-                            child: Text(
-                              'v$version',
-                              style: const TextStyle(fontSize: 10),
-                            ),
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Column(
+        children: [
+          SizedBox(
+            height: 40,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Builder(builder: (BuildContext ct) {
+                  if (version == -1) {
+                    return Container();
+                  }
+                  return Row(
+                    children: [
+                      Container(
+                        height: 20,
+                        width: 32,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withOpacity(0.5),
+                          borderRadius: const BorderRadius.all(
+                            Radius.circular(4),
                           ),
                         ),
-                        const SizedBox(
-                          width: 16,
+                        child: Center(
+                          child: Text(
+                            'v$version',
+                            style: const TextStyle(fontSize: 12),
+                          ),
                         ),
-                      ],
-                    );
-                  }),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: const [
-                      Text(
+                      ),
+                      const SizedBox(
+                        width: 16,
+                      ),
+                    ],
+                  );
+                }),
+                Flexible(
+                    child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Row(
+                    children: [
+                      const Text(
                         "预测年排百分比：",
                         style: TextStyle(fontSize: 24),
                       ),
-                    ],
-                  ),
-                  Text(
-                    percentage != -1
-                        ? (percentage * 100).toStringAsFixed(2)
-                        : "-",
-                    style: const TextStyle(fontSize: 48),
-                  ),
-                  const SizedBox(
-                    width: 16,
-                  ),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: const [
                       Text(
-                        "%",
-                        style: TextStyle(fontSize: 24),
+                        percentage != -1
+                            ? (percentage * 100).toStringAsFixed(2)
+                            : "-",
+                        style: const TextStyle(fontSize: 48),
+                      ),
+                      const SizedBox(
+                        width: 16,
+                      ),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: const [
+                          Text(
+                            "%",
+                            style: TextStyle(fontSize: 24),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              ),
+                ))
+              ],
             ),
-            Builder(builder: (BuildContext ct) {
-              if (['数学', '语文', '英语'].contains(subjectName)) {
-                return Container();
-              }
-              if (percentage == -1 || getScoringResult(percentage) == -1) {
-                return Container();
-              }
-              return FittedBox(
-                child: Row(
+          ),
+          Builder(builder: (BuildContext ct) {
+            if (['数学', '语文', '英语'].contains(subjectName)) {
+              return Container();
+            }
+            if (percentage == -1 || getScoringResult(percentage) == -1) {
+              return Container();
+            }
+            return SizedBox(
+              height: 40,
+              child: Builder(builder: (BuildContext ct) {
+                if (version == -1) {
+                  return Container();
+                }
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Builder(builder: (BuildContext ct) {
-                      if (version == -1) {
-                        return Container();
-                      }
-                      return Row(
+                    Container(
+                      height: 20,
+                      width: 32,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.withOpacity(0.5),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(4),
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'v$version',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(
+                      width: 16,
+                    ),
+                    Flexible(
+                        child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Container(
-                            height: 20,
-                            width: 30,
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade600,
-                              borderRadius: const BorderRadius.all(
-                                Radius.circular(4),
-                              ),
-                            ),
-                            child: Center(
-                              child: Text(
-                                'v$version',
-                                style: const TextStyle(fontSize: 10),
-                              ),
-                            ),
+                          const Text(
+                            "预测赋分：",
+                            style: TextStyle(fontSize: 24),
                           ),
-                          const SizedBox(
-                            width: 16,
+                          Text(
+                            "${getScoringResult(percentage).toInt()}",
+                            style: const TextStyle(fontSize: 32),
                           ),
                         ],
-                      );
-                    }),
-                    Column(
-                      children: const [
-                        Text(
-                          "预测赋分：",
-                          style: TextStyle(fontSize: 24),
-                        )
-                      ],
-                    ),
-                    Text(
-                      "${getScoringResult(percentage).toInt()}",
-                      style: const TextStyle(fontSize: 32),
-                    ),
+                      ),
+                    ))
                   ],
-                ),
-              );
-            }),
-          ],
-        ));
+                );
+              }),
+            );
+          }),
+        ],
+      ),
+    );
   }
 }
 

@@ -40,9 +40,7 @@ class _ExamsState extends State<Exams> {
               SnackBar snackBar = SnackBar(
                 content:
                     Text('呜呜呜，考试数据获取失败了……\n失败原因：${snapshot.data.message}'),
-                backgroundColor: ThemeMode.system == ThemeMode.dark
-                    ? Colors.grey[900]
-                    : Colors.grey[200],
+                backgroundColor: Colors.grey.withOpacity(0.5),
               );
               ScaffoldMessenger.of(context).showSnackBar(snackBar);
               return SliverList(

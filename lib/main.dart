@@ -182,9 +182,7 @@ class HomePageState extends State<HomePage> {
                     onPressed: () {
                       SnackBar snackBar = SnackBar(
                         content: const Text('拒绝之后小部分功能可能无法使用哦，在侧边栏设置中可以手动授权！'),
-                        backgroundColor: ThemeMode.system == ThemeMode.dark
-                            ? Colors.grey[900]
-                            : Colors.grey[200],
+                        backgroundColor: Colors.grey.withOpacity(0.5)
                       );
                       ScaffoldMessenger.of(context).showSnackBar(snackBar);
                       Navigator.pop(dialogContext, '不要');

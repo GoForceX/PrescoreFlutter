@@ -333,17 +333,13 @@ class _PaperPhotoEnlargedState extends State<PaperPhotoEnlarged> {
                 if (result["isSuccess"]) {
                   SnackBar snackBar = SnackBar(
                     content: const Text('保存大成功！'),
-                    backgroundColor: ThemeMode.system == ThemeMode.dark
-                        ? Colors.grey[900]
-                        : Colors.grey[200],
+                    backgroundColor: Colors.grey.withOpacity(0.5),
                   );
                   ScaffoldMessenger.of(context).showSnackBar(snackBar);
                 } else {
                   SnackBar snackBar = SnackBar(
                     content: Text('呜呜呜，失败了……\n失败原因：${result["errorMessage"]}'),
-                    backgroundColor: ThemeMode.system == ThemeMode.dark
-                        ? Colors.grey[900]
-                        : Colors.grey[200],
+                    backgroundColor: Colors.grey.withOpacity(0.5),
                   );
                   ScaffoldMessenger.of(context).showSnackBar(snackBar);
                 }
@@ -352,9 +348,7 @@ class _PaperPhotoEnlargedState extends State<PaperPhotoEnlarged> {
               if (mounted) {
                 SnackBar snackBar = SnackBar(
                   content: const Text('呜呜呜，失败了……\n失败原因：无保存权限……'),
-                  backgroundColor: ThemeMode.system == ThemeMode.dark
-                      ? Colors.grey[900]
-                      : Colors.grey[200],
+                  backgroundColor: Colors.grey.withOpacity(0.5),
                 );
                 ScaffoldMessenger.of(context).showSnackBar(snackBar);
               }
@@ -362,9 +356,7 @@ class _PaperPhotoEnlargedState extends State<PaperPhotoEnlarged> {
           } else {
             SnackBar snackBar = SnackBar(
               content: const Text('呜呜呜，失败了……\n还不支持其他系统保存图片哦……'),
-              backgroundColor: ThemeMode.system == ThemeMode.dark
-                  ? Colors.grey[900]
-                  : Colors.grey[200],
+              backgroundColor: Colors.grey.withOpacity(0.5),
             );
             ScaffoldMessenger.of(context).showSnackBar(snackBar);
           }
