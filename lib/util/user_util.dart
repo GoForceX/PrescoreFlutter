@@ -255,7 +255,7 @@ class User {
 
     // Login to private server.
     try {
-      await telemetryLogin();
+      Result telLoginResult = await telemetryLogin();
     } catch (e) {
       logger.e("login: telemetryLogin error: $e");
     }
