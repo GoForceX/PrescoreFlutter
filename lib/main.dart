@@ -271,9 +271,9 @@ class HomePageState extends State<HomePage> {
                         failedText: '失败了 TwT',
                         messageText: '上次更新于 %T',
                       ),
-                      onRefresh: () async {
+                      onRefresh: (model.isLoggedIn && !prevLoginState) ? () async {
                         await key.currentState?.refresh();
-                      },
+                      } : null,
                       childBuilder: (BuildContext ct, ScrollPhysics sp) =>
                           CustomScrollView(
                             physics: sp,
