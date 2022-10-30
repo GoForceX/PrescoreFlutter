@@ -2,6 +2,7 @@ import 'package:cookie_jar/cookie_jar.dart';
 import 'package:cronet/cronet.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
+import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
@@ -180,9 +181,9 @@ class HomePageState extends State<HomePage> {
                   TextButton(
                     onPressed: () {
                       SnackBar snackBar = SnackBar(
-                        content: const Text('拒绝之后小部分功能可能无法使用哦，在侧边栏设置中可以手动授权！'),
-                        backgroundColor: Colors.grey.withOpacity(0.5)
-                      );
+                          content:
+                              const Text('拒绝之后小部分功能可能无法使用哦，在侧边栏设置中可以手动授权！'),
+                          backgroundColor: Colors.grey.withOpacity(0.5));
                       ScaffoldMessenger.of(context).showSnackBar(snackBar);
                       Navigator.pop(dialogContext, '不要');
                     },
@@ -226,20 +227,59 @@ class HomePageState extends State<HomePage> {
                 return Consumer<LoginModel>(builder: (context, model, child) {
                   List<Widget> slivers = [];
 
+                  EasyRefreshController controller = EasyRefreshController(
+                    controlFinishRefresh: true,
+                    controlFinishLoad: true,
+                  );
+
                   slivers.add(const SliverHeader());
 
+                  slivers.add(const HeaderLocator.sliver());
+
+                  GlobalKey<ExamsState> key = GlobalKey();
+                  Exams exams = Exams(key: key, controller: controller);
+
                   if (model.isLoggedIn && !prevLoginState) {
-                    slivers.add(const Exams());
+                    slivers.add(exams);
                   } else {
                     slivers.add(const SliverFillRemaining(
                       hasScrollBody: false,
                     ));
                   }
 
-                  return CustomScrollView(
-                    shrinkWrap: true,
-                    slivers: slivers,
-                  );
+                  return EasyRefresh.builder(
+                      controller: controller,
+                      header: const ClassicHeader(
+                        position: IndicatorPosition.locator,
+                        dragText: '下滑刷新 (´ρ`)',
+                        armedText: '松开刷新 (´ρ`)',
+                        readyText: '获取数据中... (›´ω`‹)',
+                        processingText: '获取数据中... (›´ω`‹)',
+                        processedText: '成功！(`ヮ´)',
+                        noMoreText: '太多啦 TwT',
+                        failedText: '失败了 TwT',
+                        messageText: '上次更新于 %T',
+                      ),
+                      footer: const ClassicFooter(
+                        position: IndicatorPosition.locator,
+                        dragText: '下滑刷新 (´ρ`)',
+                        armedText: '松开刷新 (´ρ`)',
+                        readyText: '获取数据中... (›´ω`‹)',
+                        processingText: '获取数据中... (›´ω`‹)',
+                        processedText: '成功！(`ヮ´)',
+                        noMoreText: '太多啦 TwT',
+                        failedText: '失败了 TwT',
+                        messageText: '上次更新于 %T',
+                      ),
+                      onRefresh: () async {
+                        await key.currentState?.refresh();
+                      },
+                      childBuilder: (BuildContext ct, ScrollPhysics sp) =>
+                          CustomScrollView(
+                            physics: sp,
+                            shrinkWrap: true,
+                            slivers: slivers,
+                          ));
                 });
               }),
           drawer: const MainDrawer(),

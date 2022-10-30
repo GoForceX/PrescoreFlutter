@@ -1,3 +1,4 @@
+import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:prescore_flutter/main.dart';
 import 'package:prescore_flutter/model/login_model.dart';
@@ -21,25 +22,55 @@ List<ExamCard> generateCardsFromExams(BuildContext context, List<Exam> exams) {
 }
 
 class Exams extends StatefulWidget {
-  const Exams({Key? key}) : super(key: key);
+  final EasyRefreshController controller;
+  const Exams({Key? key, required this.controller}) : super(key: key);
 
   @override
-  State<Exams> createState() => _ExamsState();
+  State<StatefulWidget> createState() => ExamsState();
 }
 
-class _ExamsState extends State<Exams> {
+class ExamsState extends State<Exams> {
+  List<Exam>? result;
+
+  Future<bool> refresh() async {
+    LoginModel model = Provider.of<LoginModel>(context, listen: false);
+    result = (await model.user.fetchExams()).result;
+    setState(() {});
+    widget.controller.finishRefresh();
+    widget.controller.resetHeader();
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
+    logger.d("Rebuild!");
+    if (result != null) {
+      return SliverList(
+          delegate: SliverChildListDelegate(
+              generateCardsFromExams(context, result!)));
+    }
+
     LoginModel model = Provider.of<LoginModel>(context, listen: false);
+    return ExamsBuilder(
+      future: model.user.fetchExams(),
+    );
+  }
+}
+
+class ExamsBuilder extends StatelessWidget {
+  final Future future;
+  const ExamsBuilder({Key? key, required this.future}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
     return FutureBuilder(
-        future: model.user.fetchExams(),
+        future: future,
         builder: (BuildContext context, AsyncSnapshot snapshot) {
           logger.d("snapshot.data: ${snapshot.data}");
-          if (snapshot.hasData) {
+          if (snapshot.connectionState == ConnectionState.done) {
             if (!snapshot.data.state) {
               SnackBar snackBar = SnackBar(
-                content:
-                    Text('呜呜呜，考试数据获取失败了……\n失败原因：${snapshot.data.message}'),
+                content: Text('呜呜呜，考试数据获取失败了……\n失败原因：${snapshot.data.message}'),
                 backgroundColor: Colors.grey.withOpacity(0.5),
               );
               ScaffoldMessenger.of(context).showSnackBar(snackBar);
