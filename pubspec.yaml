@@ -63,6 +63,7 @@ dependencies:
   flutter_svg: ^1.1.4
   image: ^3.2.0
   cronet: ^0.0.7
+  easy_refresh: ^3.0.4+2
 
 dev_dependencies:
   flutter_test:

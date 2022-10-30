@@ -281,6 +281,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.0.0"
+  easy_refresh:
+    dependency: "direct main"
+    description:
+      name: easy_refresh
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "3.0.4+2"
   encrypt:
     dependency: "direct main"
     description:
