@@ -247,6 +247,8 @@ class HomePageState extends State<HomePage> {
                     ));
                   }
 
+                  slivers.add(const FooterLocator.sliver());
+
                   return EasyRefresh.builder(
                       controller: controller,
                       header: const ClassicHeader(
@@ -261,22 +263,27 @@ class HomePageState extends State<HomePage> {
                         messageText: '上次更新于 %T',
                       ),
                       footer: const ClassicFooter(
+                        infiniteOffset: 0,
                         position: IndicatorPosition.locator,
                         dragText: '下滑刷新 (´ρ`)',
                         armedText: '松开刷新 (´ρ`)',
                         readyText: '获取数据中... (›´ω`‹)',
                         processingText: '获取数据中... (›´ω`‹)',
                         processedText: '成功！(`ヮ´)',
-                        noMoreText: '太多啦 TwT',
+                        noMoreText: '我一点都没有了... TwT',
                         failedText: '失败了 TwT',
                         messageText: '上次更新于 %T',
                       ),
-                      onRefresh: (model.isLoggedIn && !prevLoginState) ? () async {
-                        await key.currentState?.refresh();
-                      } : null,
-                      onLoad: (model.isLoggedIn && !prevLoginState) ? () async {
-                        await key.currentState?.load();
-                      } : null,
+                      onRefresh: (model.isLoggedIn && !prevLoginState)
+                          ? () async {
+                              await key.currentState?.refresh();
+                            }
+                          : null,
+                      onLoad: (model.isLoggedIn && !prevLoginState)
+                          ? () async {
+                              await key.currentState?.load();
+                            }
+                          : null,
                       childBuilder: (BuildContext ct, ScrollPhysics sp) =>
                           CustomScrollView(
                             physics: sp,

@@ -32,9 +32,19 @@ class Exams extends StatefulWidget {
 class ExamsState extends State<Exams> {
   int pageIndex = 1;
   bool lastFetched = false;
+  bool isLoading = false;
   List<Exam>? result;
 
+  bool isLoaded() {
+    final result = this.result;
+    if (result != null) {
+      return result.isNotEmpty;
+    }
+    return false;
+  }
+
   Future<bool> refresh() async {
+    isLoading = true;
     LoginModel model = Provider.of<LoginModel>(context, listen: false);
     result = (await model.user.fetchExams(1)).result;
     pageIndex = 1;
@@ -43,10 +53,12 @@ class ExamsState extends State<Exams> {
     widget.controller.finishRefresh();
     widget.controller.resetHeader();
     widget.controller.resetFooter();
+    isLoading = true;
     return true;
   }
 
   Future<bool> load() async {
+    isLoading = true;
     LoginModel model = Provider.of<LoginModel>(context, listen: false);
     pageIndex += 1;
     List<Exam>? newResult = ((await model.user.fetchExams(pageIndex)).result);
@@ -57,9 +69,9 @@ class ExamsState extends State<Exams> {
     if (newResult.length < 10) {
       lastFetched = true;
     }
-    newResult.forEach((element) {
+    for (var element in newResult) {
       result?.add(element);
-    });
+    }
 
     setState(() {});
     if (lastFetched) {
@@ -73,7 +85,6 @@ class ExamsState extends State<Exams> {
   @override
   Widget build(BuildContext context) {
     logger.d("Rebuild!");
-
 
     if (result != null) {
       return SliverList(
