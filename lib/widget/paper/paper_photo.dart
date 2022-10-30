@@ -394,28 +394,10 @@ class ExperimentalDrawTips extends StatelessWidget {
                       style: TextStyle(fontSize: 16)))),
         );
       } else {
-        return Container(
-          padding: const EdgeInsets.all(16),
-          child: Card(
-              elevation: 4,
-              child: Container(
-                  padding: const EdgeInsets.all(16),
-                  child: const Text(
-                      "绘制功能有没有问题呢，如果没有问题的话就太好啦！但是如果有问题的话，可以去设置里面关掉哦，还可以去论坛反馈哦！",
-                      style: TextStyle(fontSize: 16)))),
-        );
+        return Container();
       }
     } else {
-      return Container(
-        padding: const EdgeInsets.all(16),
-        child: Card(
-            elevation: 4,
-            child: Container(
-                padding: const EdgeInsets.all(16),
-                child: const Text(
-                    "现在可以像智学网原版一样在原卷上绘制扣分信息啦（虽然可能有bug），为什么不去试试呢？就在主页侧边栏设置里啦！",
-                    style: TextStyle(fontSize: 16)))),
-      );
+      return Container();
     }
   }
 }
