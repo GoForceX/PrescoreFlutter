@@ -352,7 +352,7 @@ class User {
   }
 
   /// Fetch exam list from [zhixueExamListUrl]
-  Future<Result<List<Exam>>> fetchExams() async {
+  Future<Result<List<Exam>>> fetchExams(int pageIndex) async {
     Dio client = BaseSingleton.singleton.dio;
 
     // Reject if not logged in.
@@ -362,7 +362,7 @@ class User {
 
     // Fetch exams.
     logger.d("fetchExams, xToken: ${session?.xToken}");
-    Response response = await client.get(zhixueExamListUrl);
+    Response response = await client.get("$zhixueExamListUrl?pageIndex=$pageIndex");
     logger.d("exams: ${response.data}");
     Map<String, dynamic> json = jsonDecode(response.data);
     logger.d("exams: $json");

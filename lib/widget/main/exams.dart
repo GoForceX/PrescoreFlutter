@@ -30,20 +30,51 @@ class Exams extends StatefulWidget {
 }
 
 class ExamsState extends State<Exams> {
+  int pageIndex = 1;
+  bool lastFetched = false;
   List<Exam>? result;
 
   Future<bool> refresh() async {
     LoginModel model = Provider.of<LoginModel>(context, listen: false);
-    result = (await model.user.fetchExams()).result;
+    result = (await model.user.fetchExams(1)).result;
+    pageIndex = 1;
+    lastFetched = false;
     setState(() {});
     widget.controller.finishRefresh();
     widget.controller.resetHeader();
+    widget.controller.resetFooter();
+    return true;
+  }
+
+  Future<bool> load() async {
+    LoginModel model = Provider.of<LoginModel>(context, listen: false);
+    pageIndex += 1;
+    List<Exam>? newResult = ((await model.user.fetchExams(pageIndex)).result);
+    if (newResult == null) {
+      widget.controller.finishLoad(IndicatorResult.fail);
+      return true;
+    }
+    if (newResult.length < 10) {
+      lastFetched = true;
+    }
+    newResult.forEach((element) {
+      result?.add(element);
+    });
+
+    setState(() {});
+    if (lastFetched) {
+      widget.controller.finishLoad(IndicatorResult.noMore);
+    } else {
+      widget.controller.finishLoad();
+    }
     return true;
   }
 
   @override
   Widget build(BuildContext context) {
     logger.d("Rebuild!");
+
+
     if (result != null) {
       return SliverList(
           delegate: SliverChildListDelegate(
@@ -51,8 +82,15 @@ class ExamsState extends State<Exams> {
     }
 
     LoginModel model = Provider.of<LoginModel>(context, listen: false);
-    return ExamsBuilder(
-      future: model.user.fetchExams(),
+    model.user.fetchExams(1).then((value) {
+      result = value.result;
+      setState(() {});
+    });
+    return const SliverFillRemaining(
+      hasScrollBody: false,
+      child: Center(
+        child: CircularProgressIndicator(),
+      ),
     );
   }
 }

@@ -274,6 +274,9 @@ class HomePageState extends State<HomePage> {
                       onRefresh: (model.isLoggedIn && !prevLoginState) ? () async {
                         await key.currentState?.refresh();
                       } : null,
+                      onLoad: (model.isLoggedIn && !prevLoginState) ? () async {
+                        await key.currentState?.load();
+                      } : null,
                       childBuilder: (BuildContext ct, ScrollPhysics sp) =>
                           CustomScrollView(
                             physics: sp,
