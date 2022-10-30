@@ -219,8 +219,8 @@ class HomePageState extends State<HomePage> {
           ),
           body: FutureBuilder(
               future: Future.delayed(Duration.zero, () {
-                showUpgradeAlert(context);
                 showRequestDialog(context);
+                showUpgradeAlert(context);
               }),
               builder: (BuildContext context, AsyncSnapshot snapshot) {
                 return Consumer<LoginModel>(builder: (context, model, child) {
