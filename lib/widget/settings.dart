@@ -151,6 +151,21 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               SettingsTile.navigation(
                 leading: const Icon(Icons.web),
+                title: const Text("问题反馈"),
+                onPressed: (_) {
+                  launchUrl(Uri.parse("https://youtrack.bjbybbs.com/"));
+                },
+              ),
+              SettingsTile.navigation(
+                leading: const Icon(Icons.web),
+                title: const Text("支持一下？"),
+                description: const Text("会非常感谢你的！"),
+                onPressed: (_) {
+                  launchUrl(Uri.parse("https://afdian.net/a/GoForceX"));
+                },
+              ),
+              SettingsTile.navigation(
+                leading: const Icon(Icons.web),
                 title: const Text("去论坛看看"),
                 onPressed: (_) {
                   launchUrl(Uri.parse("https://bjbybbs.com/t/Revealer"));
