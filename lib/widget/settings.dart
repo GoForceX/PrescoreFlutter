@@ -118,7 +118,8 @@ class _SettingsPageState extends State<SettingsPage> {
                     .getBool('useExperimentalDraw'),
                 leading: const Icon(Icons.brush),
                 title: const Text('在原卷上绘制扣分等信息'),
-                description: const Text('实验性功能，可能会导致卡顿和图片无法加载，若遇到问题，请将此设置关闭并在论坛报告。'),
+                description:
+                    const Text('实验性功能，可能会导致卡顿和图片无法加载，若遇到问题，请将此设置关闭并在论坛报告。'),
               ),
               SettingsTile.switchTile(
                 onToggle: (value) {
@@ -153,7 +154,8 @@ class _SettingsPageState extends State<SettingsPage> {
                 leading: const Icon(Icons.web),
                 title: const Text("问题反馈"),
                 onPressed: (_) {
-                  launchUrl(Uri.parse("https://youtrack.bjbybbs.com/"));
+                  launchUrl(Uri.parse("https://youtrack.bjbybbs.com/"),
+                      mode: LaunchMode.externalApplication);
                 },
               ),
               SettingsTile.navigation(
@@ -161,14 +163,16 @@ class _SettingsPageState extends State<SettingsPage> {
                 title: const Text("支持一下？"),
                 description: const Text("会非常感谢你的！"),
                 onPressed: (_) {
-                  launchUrl(Uri.parse("https://afdian.net/a/GoForceX"));
+                  launchUrl(Uri.parse("https://afdian.net/a/GoForceX"),
+                      mode: LaunchMode.externalApplication);
                 },
               ),
               SettingsTile.navigation(
                 leading: const Icon(Icons.web),
                 title: const Text("去论坛看看"),
                 onPressed: (_) {
-                  launchUrl(Uri.parse("https://bjbybbs.com/t/Revealer"));
+                  launchUrl(Uri.parse("https://bjbybbs.com/t/Revealer"),
+                      mode: LaunchMode.externalApplication);
                 },
               ),
               SettingsTile.navigation(
@@ -176,7 +180,8 @@ class _SettingsPageState extends State<SettingsPage> {
                 title: const Text("去官网看看"),
                 onPressed: (_) {
                   launchUrl(
-                      Uri.parse("https://matrix.bjbybbs.com/docs/landing"));
+                      Uri.parse("https://matrix.bjbybbs.com/docs/landing"),
+                      mode: LaunchMode.externalApplication);
                 },
               ),
             ],
