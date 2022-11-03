@@ -562,8 +562,10 @@ class User {
                   if (question.selectedAnswer != null) {
                     if (!parsedQuestionIds.contains(qid)) {
                       parsedQuestionIds.add(qid);
-                      fullScore += question.fullScore;
-                      userScore += question.userScore;
+                      if (question.isSelected) {
+                        fullScore += question.fullScore;
+                        userScore += question.userScore;
+                      }
                     }
 
                     int ix = choices.indexOf(question.selectedAnswer!);
@@ -609,8 +611,10 @@ class User {
                   if (question.selectedAnswer != null) {
                     if (!parsedQuestionIds.contains(qid)) {
                       parsedQuestionIds.add(qid);
-                      fullScore += question.fullScore;
-                      userScore += question.userScore;
+                      if (question.isSelected) {
+                        fullScore += question.fullScore;
+                        userScore += question.userScore;
+                      }
                     }
 
                     for (var singleAnswer
@@ -648,8 +652,10 @@ class User {
                       (element) => element.questionId == qid.toString());
                   if (!parsedQuestionIds.contains(qid)) {
                     parsedQuestionIds.add(qid);
-                    fullScore += question.fullScore;
-                    userScore += question.userScore;
+                    if (question.isSelected) {
+                      fullScore += question.fullScore;
+                      userScore += question.userScore;
+                    }
                   }
                 }
               }
