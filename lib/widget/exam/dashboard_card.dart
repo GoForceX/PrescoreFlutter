@@ -31,7 +31,20 @@ class _DashboardCardState extends State<DashboardCard> {
         for (var paper
             in Provider.of<ExamModel>(context, listen: false).papers) {
           try {
-            logger.d("DashboardInfo: ${paper.name}");
+            logger.d("DashboardInfo: ${paper}");
+            bool noDiag = false;
+            if (Provider.of<ExamModel>(context, listen: false)
+                    .diagnoses
+                    .firstWhere(
+                        (element) => element.subjectId == paper.subjectId,
+                        orElse: () => PaperDiagnosis(
+                            subjectId: '',
+                            subjectName: '',
+                            diagnosticScore: -1))
+                    .diagnosticScore ==
+                -1) {
+              noDiag = true;
+            }
             Paper processedPaper = Paper(
                 examId: paper.examId,
                 paperId: paper.paperId,
@@ -39,11 +52,14 @@ class _DashboardCardState extends State<DashboardCard> {
                 subjectId: paper.subjectId,
                 userScore: paper.userScore,
                 fullScore: paper.fullScore,
-                diagnosticScore: 100 - Provider.of<ExamModel>(context, listen: false)
-                    .diagnoses
-                    .firstWhere(
-                        (element) => element.subjectId == paper.subjectId)
-                    .diagnosticScore);
+                diagnosticScore: noDiag
+                    ? null
+                    : 100 -
+                        Provider.of<ExamModel>(context, listen: false)
+                            .diagnoses
+                            .firstWhere((element) =>
+                                element.subjectId == paper.subjectId)
+                            .diagnosticScore);
             Provider.of<ExamModel>(context, listen: false)
                 .user
                 .uploadPaperData(processedPaper);
