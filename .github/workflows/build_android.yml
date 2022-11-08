@@ -16,6 +16,8 @@ jobs:
       - run: flutter pub run cronet:setup
       - run: flutter build apk
       - run: flutter build appbundle
+      
+      - run: zip -d build/app/outputs/bundle/release/app-release.aab META-INF/\*
 
       - uses: r0adkll/sign-android-release@v1
         id: sign_apk
