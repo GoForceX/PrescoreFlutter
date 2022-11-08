@@ -64,6 +64,7 @@ dependencies:
   image: ^3.2.0
   cronet: ^0.0.7
   easy_refresh: ^3.0.4+2
+  camera: ^0.10.0+4
 
 dev_dependencies:
   flutter_test:

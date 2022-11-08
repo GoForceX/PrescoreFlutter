@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:photo_view/photo_view.dart';
@@ -239,6 +240,20 @@ class _PaperPhotoWidgetState extends State<PaperPhotoWidget> {
       return originalImage;
     }
     Uint8List pngBytes = Uint8List.view(pngImageBytes.buffer);
+
+    try {
+      const platform = MethodChannel('com.bjbybbs.prescore_flutter/opencv');
+      pngBytes = await platform.invokeMethod('edgeDetect', {
+        "src": pngBytes,
+        "code": 7,
+        "t1": 30.0,
+        "t2": 120.0,
+        "blurSize": 5.0,
+        "dilateSize": 3.0,
+      });
+    } catch (e) {
+      logger.e("e");
+    }
 
     return pngBytes;
   }

@@ -30,6 +30,13 @@ class MainDrawer extends StatelessWidget {
             },
           ),
           ListTile(
+            title: const Text('扫描'),
+            onTap: () {
+              Navigator.pop(context);
+              context.router.navigate(const ScannerRoute());
+            },
+          ),
+          ListTile(
             title: const Text('设置'),
             onTap: () {
               Navigator.pop(context);

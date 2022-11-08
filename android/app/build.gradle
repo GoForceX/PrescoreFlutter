@@ -55,6 +55,13 @@ android {
         ndk {
             abiFilters 'x86_64', 'arm64-v8a', 'armeabi-v7a'
         }
+
+        externalNativeBuild {
+            cmake {
+                cppFlags "-std=c++11 -frtti -Wall -D__STDC_INT64__"
+                arguments "-DANDROID_STL=c++_shared"
+            }
+        }
     }
 
     buildTypes {
@@ -67,6 +74,9 @@ android {
             useProguard
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+        profile {
+            matchingFallbacks = ['release']
+        }
     }
 }
 
@@ -76,4 +86,5 @@ flutter {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation project(path: ':opencv')
 }

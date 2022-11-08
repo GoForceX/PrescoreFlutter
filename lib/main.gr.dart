@@ -11,84 +11,151 @@
 // ignore_for_file: type=lint
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'package:auto_route/auto_route.dart' as _i5;
-import 'package:flutter/foundation.dart' as _i7;
-import 'package:flutter/material.dart' as _i6;
+import 'package:auto_route/auto_route.dart' as _i7;
+import 'package:camera/camera.dart' as _i11;
+import 'package:flutter/foundation.dart' as _i9;
+import 'package:flutter/material.dart' as _i8;
 
 import 'main.dart' as _i1;
-import 'util/user_util.dart' as _i8;
+import 'util/user_util.dart' as _i10;
 import 'widget/exam/exam.dart' as _i2;
 import 'widget/paper/paper_page.dart' as _i3;
+import 'widget/scanner.dart' as _i5;
+import 'widget/scanner/process_page.dart' as _i6;
 import 'widget/settings.dart' as _i4;
 
-class AppRouter extends _i5.RootStackRouter {
-  AppRouter([_i6.GlobalKey<_i6.NavigatorState>? navigatorKey])
+class AppRouter extends _i7.RootStackRouter {
+  AppRouter([_i8.GlobalKey<_i8.NavigatorState>? navigatorKey])
       : super(navigatorKey);
 
   @override
-  final Map<String, _i5.PageFactory> pagesMap = {
+  final Map<String, _i7.PageFactory> pagesMap = {
     HomeRoute.name: (routeData) {
-      return _i5.MaterialPageX<dynamic>(
-          routeData: routeData, child: const _i1.HomePage());
+      return _i7.MaterialPageX<dynamic>(
+        routeData: routeData,
+        child: const _i1.HomePage(),
+      );
     },
     ExamRoute.name: (routeData) {
       final args = routeData.argsAs<ExamRouteArgs>();
-      return _i5.MaterialPageX<dynamic>(
-          routeData: routeData,
-          child: _i2.ExamPage(key: args.key, uuid: args.uuid, user: args.user));
+      return _i7.MaterialPageX<dynamic>(
+        routeData: routeData,
+        child: _i2.ExamPage(
+          key: args.key,
+          uuid: args.uuid,
+          user: args.user,
+        ),
+      );
     },
     PaperRoute.name: (routeData) {
       final args = routeData.argsAs<PaperRouteArgs>();
-      return _i5.MaterialPageX<dynamic>(
-          routeData: routeData,
-          child: _i3.PaperPage(
-              key: args.key,
-              user: args.user,
-              examId: args.examId,
-              paperId: args.paperId));
+      return _i7.MaterialPageX<dynamic>(
+        routeData: routeData,
+        child: _i3.PaperPage(
+          key: args.key,
+          user: args.user,
+          examId: args.examId,
+          paperId: args.paperId,
+        ),
+      );
     },
     SettingsRoute.name: (routeData) {
-      return _i5.MaterialPageX<dynamic>(
-          routeData: routeData, child: const _i4.SettingsPage());
-    }
+      return _i7.MaterialPageX<dynamic>(
+        routeData: routeData,
+        child: const _i4.SettingsPage(),
+      );
+    },
+    ScannerRoute.name: (routeData) {
+      return _i7.MaterialPageX<dynamic>(
+        routeData: routeData,
+        child: const _i5.ScannerPage(),
+      );
+    },
+    ScanProcessRoute.name: (routeData) {
+      final args = routeData.argsAs<ScanProcessRouteArgs>();
+      return _i7.MaterialPageX<dynamic>(
+        routeData: routeData,
+        child: _i6.ScanProcessPage(
+          key: args.key,
+          image: args.image,
+        ),
+      );
+    },
   };
 
   @override
-  List<_i5.RouteConfig> get routes => [
-        _i5.RouteConfig(HomeRoute.name, path: '/'),
-        _i5.RouteConfig(ExamRoute.name, path: '/exam-page'),
-        _i5.RouteConfig(PaperRoute.name, path: '/paper-page'),
-        _i5.RouteConfig(SettingsRoute.name, path: '/settings-page')
+  List<_i7.RouteConfig> get routes => [
+        _i7.RouteConfig(
+          HomeRoute.name,
+          path: '/',
+        ),
+        _i7.RouteConfig(
+          ExamRoute.name,
+          path: '/exam-page',
+        ),
+        _i7.RouteConfig(
+          PaperRoute.name,
+          path: '/paper-page',
+        ),
+        _i7.RouteConfig(
+          SettingsRoute.name,
+          path: '/settings-page',
+        ),
+        _i7.RouteConfig(
+          ScannerRoute.name,
+          path: '/scanner-page',
+        ),
+        _i7.RouteConfig(
+          ScanProcessRoute.name,
+          path: '/scan-process-page',
+        ),
       ];
 }
 
 /// generated route for
 /// [_i1.HomePage]
-class HomeRoute extends _i5.PageRouteInfo<void> {
-  const HomeRoute() : super(HomeRoute.name, path: '/');
+class HomeRoute extends _i7.PageRouteInfo<void> {
+  const HomeRoute()
+      : super(
+          HomeRoute.name,
+          path: '/',
+        );
 
   static const String name = 'HomeRoute';
 }
 
 /// generated route for
 /// [_i2.ExamPage]
-class ExamRoute extends _i5.PageRouteInfo<ExamRouteArgs> {
-  ExamRoute({_i7.Key? key, required String uuid, required _i8.User user})
-      : super(ExamRoute.name,
-            path: '/exam-page',
-            args: ExamRouteArgs(key: key, uuid: uuid, user: user));
+class ExamRoute extends _i7.PageRouteInfo<ExamRouteArgs> {
+  ExamRoute({
+    _i9.Key? key,
+    required String uuid,
+    required _i10.User user,
+  }) : super(
+          ExamRoute.name,
+          path: '/exam-page',
+          args: ExamRouteArgs(
+            key: key,
+            uuid: uuid,
+            user: user,
+          ),
+        );
 
   static const String name = 'ExamRoute';
 }
 
 class ExamRouteArgs {
-  const ExamRouteArgs({this.key, required this.uuid, required this.user});
+  const ExamRouteArgs({
+    this.key,
+    required this.uuid,
+    required this.user,
+  });
 
-  final _i7.Key? key;
+  final _i9.Key? key;
 
   final String uuid;
 
-  final _i8.User user;
+  final _i10.User user;
 
   @override
   String toString() {
@@ -98,30 +165,37 @@ class ExamRouteArgs {
 
 /// generated route for
 /// [_i3.PaperPage]
-class PaperRoute extends _i5.PageRouteInfo<PaperRouteArgs> {
-  PaperRoute(
-      {_i7.Key? key,
-      required _i8.User user,
-      required String examId,
-      required String paperId})
-      : super(PaperRoute.name,
-            path: '/paper-page',
-            args: PaperRouteArgs(
-                key: key, user: user, examId: examId, paperId: paperId));
+class PaperRoute extends _i7.PageRouteInfo<PaperRouteArgs> {
+  PaperRoute({
+    _i9.Key? key,
+    required _i10.User user,
+    required String examId,
+    required String paperId,
+  }) : super(
+          PaperRoute.name,
+          path: '/paper-page',
+          args: PaperRouteArgs(
+            key: key,
+            user: user,
+            examId: examId,
+            paperId: paperId,
+          ),
+        );
 
   static const String name = 'PaperRoute';
 }
 
 class PaperRouteArgs {
-  const PaperRouteArgs(
-      {this.key,
-      required this.user,
-      required this.examId,
-      required this.paperId});
+  const PaperRouteArgs({
+    this.key,
+    required this.user,
+    required this.examId,
+    required this.paperId,
+  });
 
-  final _i7.Key? key;
+  final _i9.Key? key;
 
-  final _i8.User user;
+  final _i10.User user;
 
   final String examId;
 
@@ -135,8 +209,58 @@ class PaperRouteArgs {
 
 /// generated route for
 /// [_i4.SettingsPage]
-class SettingsRoute extends _i5.PageRouteInfo<void> {
-  const SettingsRoute() : super(SettingsRoute.name, path: '/settings-page');
+class SettingsRoute extends _i7.PageRouteInfo<void> {
+  const SettingsRoute()
+      : super(
+          SettingsRoute.name,
+          path: '/settings-page',
+        );
 
   static const String name = 'SettingsRoute';
+}
+
+/// generated route for
+/// [_i5.ScannerPage]
+class ScannerRoute extends _i7.PageRouteInfo<void> {
+  const ScannerRoute()
+      : super(
+          ScannerRoute.name,
+          path: '/scanner-page',
+        );
+
+  static const String name = 'ScannerRoute';
+}
+
+/// generated route for
+/// [_i6.ScanProcessPage]
+class ScanProcessRoute extends _i7.PageRouteInfo<ScanProcessRouteArgs> {
+  ScanProcessRoute({
+    _i9.Key? key,
+    required _i11.XFile image,
+  }) : super(
+          ScanProcessRoute.name,
+          path: '/scan-process-page',
+          args: ScanProcessRouteArgs(
+            key: key,
+            image: image,
+          ),
+        );
+
+  static const String name = 'ScanProcessRoute';
+}
+
+class ScanProcessRouteArgs {
+  const ScanProcessRouteArgs({
+    this.key,
+    required this.image,
+  });
+
+  final _i9.Key? key;
+
+  final _i11.XFile image;
+
+  @override
+  String toString() {
+    return 'ScanProcessRouteArgs{key: $key, image: $image}';
+  }
 }

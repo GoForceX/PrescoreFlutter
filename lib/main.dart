@@ -15,6 +15,8 @@ import 'package:auto_route/annotations.dart';
 import 'package:prescore_flutter/widget/main/exams.dart';
 import 'package:prescore_flutter/widget/main/main_header.dart';
 import 'package:prescore_flutter/widget/paper/paper_page.dart';
+import 'package:prescore_flutter/widget/scanner.dart';
+import 'package:prescore_flutter/widget/scanner/process_page.dart';
 import 'package:prescore_flutter/widget/settings.dart';
 import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -23,6 +25,7 @@ import 'package:upgrader/upgrader.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:version/version.dart';
 import 'package:r_upgrade/r_upgrade.dart';
+import 'package:camera/camera.dart';
 
 import 'constants.dart';
 import 'model/login_model.dart';
@@ -49,6 +52,8 @@ Future<void> main() async {
     AutoRoute(page: ExamPage),
     AutoRoute(page: PaperPage),
     AutoRoute(page: SettingsPage),
+    AutoRoute(page: ScannerPage),
+    AutoRoute(page: ScanProcessPage),
   ],
 )
 class $AppRouter {}
@@ -306,6 +311,7 @@ class BaseSingleton {
   late final SharedPreferences sharedPreferences;
   late final PackageInfo packageInfo;
   final cronetClient = HttpClient(userAgent: userAgent);
+  late final cameras;
 
   static BaseSingleton get singleton => _singleton;
 
@@ -330,5 +336,7 @@ class BaseSingleton {
 
     SharedPreferences.getInstance().then((value) => sharedPreferences = value);
     PackageInfo.fromPlatform().then((value) => packageInfo = value);
+
+    cameras = await availableCameras();
   }
 }
