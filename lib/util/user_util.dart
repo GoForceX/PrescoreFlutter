@@ -404,15 +404,37 @@ class User {
     }
 
     List<Paper> papers = [];
-    json["result"]["paperList"].forEach((element) {
-      papers.add(Paper(
-          examId: examId,
-          paperId: element["paperId"],
-          name: element["subjectName"],
-          subjectId: element["subjectCode"],
-          userScore: element["userScore"],
-          fullScore: element["standardScore"]));
-    });
+    dynamic paperList = json["result"]["paperList"];
+    for (int i = 0; i < paperList.length; i++) {
+      Map<String, dynamic> element = paperList[i];
+      if (element.containsKey("userScore")) {
+        papers.add(Paper(
+            examId: examId,
+            paperId: element["paperId"],
+            name: element["subjectName"],
+            subjectId: element["subjectCode"],
+            userScore: element["userScore"],
+            fullScore: element["standardScore"]));
+      } else {
+        Response response2 = await client
+            .get("$zhixueChecksheetUrl?examId=$examId&paperId=${element["paperId"]}");
+        Map<String, dynamic> json = jsonDecode(response2.data);
+        logger.d("paperData: $json");
+        if (json["errorCode"] != 0) {
+          logger.d("paperData: failed");
+          logger.d("paper: ${element["subjectName"]} not finished, $element");
+        } else {
+          logger.d("paper: ${element["subjectName"]} finished, $element");
+          papers.add(Paper(
+              examId: examId,
+              paperId: element["paperId"],
+              name: element["subjectName"],
+              subjectId: element["subjectCode"],
+              userScore: json["result"]["score"],
+              fullScore: json["result"]["standardScore"]));
+        }
+      }
+    }
     logger.d("paper: success, $papers");
     return Result(state: true, message: "", result: papers);
   }
