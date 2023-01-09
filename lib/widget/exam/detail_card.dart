@@ -101,21 +101,24 @@ class DetailCard extends StatelessWidget {
                           subjectId: paper.subjectId,
                           subjectName: paper.name,
                           version: snapshot.data.result[0],
-                          percentage: 0);
+                          percentage: 0,
+                          assignScore: paper.assignScore);
                       return predict;
                     } else if (snapshot.data.result[1] > 1) {
                       Widget predict = DetailPredict(
                           subjectId: paper.subjectId,
                           subjectName: paper.name,
                           version: snapshot.data.result[0],
-                          percentage: 1);
+                          percentage: 1,
+                          assignScore: paper.assignScore);
                       return predict;
                     } else {
                       Widget predict = DetailPredict(
                           subjectId: paper.subjectId,
                           subjectName: paper.name,
                           version: snapshot.data.result[0],
-                          percentage: snapshot.data.result[1]);
+                          percentage: snapshot.data.result[1],
+                          assignScore: paper.assignScore);
                       return predict;
                     }
                   } else {
@@ -126,7 +129,8 @@ class DetailCard extends StatelessWidget {
                       subjectId: paper.subjectId,
                       subjectName: paper.name,
                       version: -1,
-                      percentage: -1);
+                      percentage: -1,
+                      assignScore: paper.assignScore);
                 }
               },
             ),
@@ -183,12 +187,14 @@ class DetailPredict extends StatelessWidget {
   final String subjectName;
   final int version;
   final double percentage;
+  final double? assignScore;
   const DetailPredict(
       {Key? key,
       required this.subjectId,
       required this.subjectName,
       required this.version,
-      required this.percentage})
+      required this.percentage,
+      this.assignScore})
       : super(key: key);
 
   @override
@@ -270,55 +276,88 @@ class DetailPredict extends StatelessWidget {
             if (percentage == -1 || getScoringResult(percentage) == -1) {
               return Container();
             }
-            return SizedBox(
-              height: 40,
-              child: Builder(builder: (BuildContext ct) {
-                if (version == -1) {
-                  return Container();
-                }
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      height: 20,
-                      width: 32,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.withOpacity(0.5),
-                        borderRadius: const BorderRadius.all(
-                          Radius.circular(4),
+            if (assignScore == null) {
+              return SizedBox(
+                height: 40,
+                child: Builder(builder: (BuildContext ct) {
+                  if (version == -1) {
+                    return Container();
+                  }
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        height: 20,
+                        width: 32,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withOpacity(0.5),
+                          borderRadius: const BorderRadius.all(
+                            Radius.circular(4),
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'v$version',
+                            style: const TextStyle(fontSize: 12),
+                          ),
                         ),
                       ),
-                      child: Center(
-                        child: Text(
-                          'v$version',
-                          style: const TextStyle(fontSize: 12),
-                        ),
+                      const SizedBox(
+                        width: 16,
                       ),
-                    ),
-                    const SizedBox(
-                      width: 16,
-                    ),
-                    Flexible(
-                        child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Text(
-                            "预测赋分：",
-                            style: TextStyle(fontSize: 24),
-                          ),
-                          Text(
-                            "${getScoringResult(percentage).toInt()}",
-                            style: const TextStyle(fontSize: 32),
-                          ),
-                        ],
-                      ),
-                    ))
-                  ],
-                );
-              }),
-            );
+                      Flexible(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text(
+                                  "预测赋分：",
+                                  style: TextStyle(fontSize: 24),
+                                ),
+                                Text(
+                                  "${getScoringResult(percentage).toInt()}",
+                                  style: const TextStyle(fontSize: 32),
+                                ),
+                              ],
+                            ),
+                          ))
+                    ],
+                  );
+                }),
+              );
+            } else {
+              return SizedBox(
+                height: 40,
+                child: Builder(builder: (BuildContext ct) {
+                  if (version == -1) {
+                    return Container();
+                  }
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Flexible(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text(
+                                  "实际赋分：",
+                                  style: TextStyle(fontSize: 24),
+                                ),
+                                Text(
+                                  "$assignScore",
+                                  style: const TextStyle(fontSize: 32),
+                                ),
+                              ],
+                            ),
+                          ))
+                    ],
+                  );
+                }),
+              );
+            }
           }),
         ],
       ),

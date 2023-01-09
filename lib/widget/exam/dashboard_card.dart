@@ -78,12 +78,33 @@ class _DashboardCardState extends State<DashboardCard> {
         userScore += element.userScore;
       }
 
+      double assignScore = 0;
+      int noAssignCount = 0;
+      for (var element in papers) {
+        if (element.assignScore == null) {
+          noAssignCount += 1;
+        }
+        assignScore += element.assignScore ?? element.userScore;
+      }
+
       double fullScore = 0;
       for (var element in papers) {
         fullScore += element.fullScore;
       }
-      Widget chart = DashboardInfo(userScore: userScore, fullScore: fullScore);
-      children.add(chart);
+      if (noAssignCount != papers.length) {
+        Widget chart = DashboardInfo(
+          userScore: userScore,
+          fullScore: fullScore,
+          assignScore: assignScore,
+        );
+        children.add(chart);
+      } else {
+        Widget chart = DashboardInfo(
+          userScore: userScore,
+          fullScore: fullScore,
+        );
+        children.add(chart);
+      }
     } else {
       FutureBuilder futureBuilder = FutureBuilder(
         future: Provider.of<ExamModel>(context, listen: false)
@@ -103,13 +124,33 @@ class _DashboardCardState extends State<DashboardCard> {
                 userScore += element.userScore;
               }
 
+              double assignScore = 0;
+              int noAssignCount = 0;
+              for (var element in snapshot.data.result) {
+                if (element.assignScore == null) {
+                  noAssignCount += 1;
+                }
+                assignScore += element.assignScore ?? element.userScore;
+              }
+
               double fullScore = 0;
               for (var element in snapshot.data.result) {
                 fullScore += element.fullScore;
               }
-              Widget chart =
-                  DashboardInfo(userScore: userScore, fullScore: fullScore);
-              return chart;
+              if (noAssignCount != snapshot.data.result.length) {
+                Widget chart = DashboardInfo(
+                  userScore: userScore,
+                  fullScore: fullScore,
+                  assignScore: assignScore,
+                );
+                return chart;
+              } else {
+                Widget chart = DashboardInfo(
+                  userScore: userScore,
+                  fullScore: fullScore,
+                );
+                return chart;
+              }
             } else {
               return Container();
             }

@@ -362,7 +362,8 @@ class User {
 
     // Fetch exams.
     logger.d("fetchExams, xToken: ${session?.xToken}");
-    Response response = await client.get("$zhixueExamListUrl?pageIndex=$pageIndex");
+    Response response =
+        await client.get("$zhixueExamListUrl?pageIndex=$pageIndex");
     logger.d("exams: ${response.data}");
     Map<String, dynamic> json = jsonDecode(response.data);
     logger.d("exams: $json");
@@ -408,16 +409,37 @@ class User {
     for (int i = 0; i < paperList.length; i++) {
       Map<String, dynamic> element = paperList[i];
       if (element.containsKey("userScore")) {
-        papers.add(Paper(
-            examId: examId,
-            paperId: element["paperId"],
-            name: element["subjectName"],
-            subjectId: element["subjectCode"],
-            userScore: element["userScore"],
-            fullScore: element["standardScore"]));
+        if (element.containsKey("hasAssignScore")) {
+          if (element["hasAssignScore"]) {
+            papers.add(Paper(
+                examId: examId,
+                paperId: element["paperId"],
+                name: element["subjectName"],
+                subjectId: element["subjectCode"],
+                userScore: element["preAssignScore"],
+                fullScore: element["standardScore"],
+                assignScore: element["userScore"]));
+          } else {
+            papers.add(Paper(
+                examId: examId,
+                paperId: element["paperId"],
+                name: element["subjectName"],
+                subjectId: element["subjectCode"],
+                userScore: element["preAssignScore"],
+                fullScore: element["standardScore"]));
+          }
+        } else {
+          papers.add(Paper(
+              examId: examId,
+              paperId: element["paperId"],
+              name: element["subjectName"],
+              subjectId: element["subjectCode"],
+              userScore: element["userScore"],
+              fullScore: element["standardScore"]));
+        }
       } else {
-        Response response2 = await client
-            .get("$zhixueChecksheetUrl?examId=$examId&paperId=${element["paperId"]}");
+        Response response2 = await client.get(
+            "$zhixueChecksheetUrl?examId=$examId&paperId=${element["paperId"]}");
         Map<String, dynamic> json = jsonDecode(response2.data);
         logger.d("paperData: $json");
         if (json["errorCode"] != 0) {
@@ -947,6 +969,54 @@ class User {
     } else {
       return Result(state: false, message: result["code"].toString());
     }
+  }
+}
+
+double getAssignScoreFromLevel(String level) {
+  if (level == "A1") {
+    return 100;
+  } else if (level == "A2") {
+    return 97;
+  } else if (level == "A3") {
+    return 94;
+  } else if (level == "A4") {
+    return 91;
+  } else if (level == "A5") {
+    return 88;
+  } else if (level == "B1") {
+    return 85;
+  } else if (level == "B2") {
+    return 82;
+  } else if (level == "B3") {
+    return 79;
+  } else if (level == "B4") {
+    return 76;
+  } else if (level == "B5") {
+    return 73;
+  } else if (level == "C1") {
+    return 70;
+  } else if (level == "C2") {
+    return 67;
+  } else if (level == "C3") {
+    return 64;
+  } else if (level == "C4") {
+    return 61;
+  } else if (level == "C5") {
+    return 58;
+  } else if (level == "D1") {
+    return 55;
+  } else if (level == "D2") {
+    return 52;
+  } else if (level == "D3") {
+    return 49;
+  } else if (level == "D4") {
+    return 46;
+  } else if (level == "D5") {
+    return 43;
+  } else if (level == "E") {
+    return 40;
+  } else {
+    return -1;
   }
 }
 

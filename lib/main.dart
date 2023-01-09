@@ -328,7 +328,8 @@ class BaseSingleton {
     }
     dio.options.headers = commonHeaders;
 
-    SharedPreferences.getInstance().then((value) => sharedPreferences = value);
+    sharedPreferences = await SharedPreferences.getInstance();
+    // SharedPreferences.getInstance().then((value) => sharedPreferences = value);
     PackageInfo.fromPlatform().then((value) => packageInfo = value);
   }
 }

@@ -7,8 +7,9 @@ import 'dart:math' as math;
 class DashboardInfo extends StatelessWidget {
   final double userScore;
   final double fullScore;
+  final double? assignScore;
   const DashboardInfo(
-      {Key? key, required this.userScore, required this.fullScore})
+      {Key? key, required this.userScore, required this.fullScore, this.assignScore})
       : super(key: key);
 
   @override
@@ -67,6 +68,60 @@ class DashboardInfo extends StatelessWidget {
                     ],
                   ),
                 )),
+            Builder(builder: (BuildContext ctx) {
+              if (assignScore != null) {
+                return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: FittedBox(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: const [
+                              Text(
+                                "赋分得分：",
+                                style: TextStyle(fontSize: 16),
+                              ),
+                              SizedBox(
+                                height: 12,
+                              )
+                            ],
+                          ),
+                          Text(
+                            "$assignScore",
+                            style: const TextStyle(fontSize: 48),
+                          ),
+                          const SizedBox(
+                            width: 16,
+                          ),
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: const [
+                              Text(
+                                "/",
+                                style: TextStyle(fontSize: 16),
+                              ),
+                              SizedBox(
+                                height: 12,
+                              )
+                            ],
+                          ),
+                          const SizedBox(
+                            width: 16,
+                          ),
+                          Text(
+                            "$fullScore",
+                            style: const TextStyle(fontSize: 48),
+                          ),
+                        ],
+                      ),
+                    ));
+              } else {
+                return Container();
+              }
+            }),
             const SizedBox(
               height: 8,
             ),
