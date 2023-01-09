@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "²é·ÖÆ÷"
-#define MyAppVersion "0.26.2"
+#define MyAppVersion "0.29.0"
 #define MyAppPublisher "GoForceX"
 #define MyAppURL "https://matrix.bjbybbs.com/"
 #define MyAppExeName "prescore_flutter.exe"
@@ -38,6 +38,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 [Files]
 Source: "E:\prescore_flutter\build\windows\runner\Release\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "E:\prescore_flutter\build\windows\runner\Release\flutter_windows.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "E:\prescore_flutter\build\windows\runner\Release\cronet_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "E:\prescore_flutter\build\windows\runner\Release\permission_handler_windows_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "E:\prescore_flutter\build\windows\runner\Release\sentry_flutter_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "E:\prescore_flutter\build\windows\runner\Release\url_launcher_windows_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion

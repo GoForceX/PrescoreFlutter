@@ -56,6 +56,7 @@ class Paper {
   String subjectId;
   double userScore;
   double fullScore;
+  double? assignScore;
   double? diagnosticScore;
 
   Paper({
@@ -65,12 +66,13 @@ class Paper {
     required this.subjectId,
     required this.userScore,
     required this.fullScore,
+    this.assignScore,
     this.diagnosticScore,
   });
 
   @override
   String toString() {
-    return 'Paper{paperId: $paperId, name: $name, subjectId: $subjectId, userScore: $userScore, fullScore: $fullScore, diagnosticScore: $diagnosticScore}';
+    return 'Paper{examId: $examId, paperId: $paperId, name: $name, subjectId: $subjectId, userScore: $userScore, fullScore: $fullScore, assignScore: $assignScore, diagnosticScore: $diagnosticScore}';
   }
 }
 
