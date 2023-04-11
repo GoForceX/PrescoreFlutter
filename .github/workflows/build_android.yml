@@ -55,10 +55,10 @@ jobs:
         with:
           args: '--acl public-read --follow-symlinks'
         env:
-          AWS_S3_BUCKET: 'app-dist-1307054264'
+          AWS_S3_BUCKET: 'matrix-app-dist'
           AWS_ACCESS_KEY_ID: ${{ secrets.COS_SECRET_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.COS_SECRET_KEY }}
-          AWS_S3_ENDPOINT: 'https://cos.ap-beijing.myqcloud.com/'
+          AWS_S3_ENDPOINT: 'https://62a009fecd6c4069e4a928d203e3e493.r2.cloudflarestorage.com/'
           SOURCE_DIR: 'build/app/outputs/apk/release' 
           DEST_DIR: 'actions/prescore_flutter/${{ github.run_number }}/apk'
           
@@ -67,9 +67,9 @@ jobs:
         with:
           args: '--acl public-read --follow-symlinks'
         env:
-          AWS_S3_BUCKET: 'app-dist-1307054264'
+          AWS_S3_BUCKET: 'matrix-app-dist'
           AWS_ACCESS_KEY_ID: ${{ secrets.COS_SECRET_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.COS_SECRET_KEY }}
-          AWS_S3_ENDPOINT: 'https://cos.ap-beijing.myqcloud.com/'
+          AWS_S3_ENDPOINT: 'https://62a009fecd6c4069e4a928d203e3e493.r2.cloudflarestorage.com/'
           SOURCE_DIR: 'build/app/outputs/bundle/release' 
           DEST_DIR: 'actions/prescore_flutter/${{ github.run_number }}/aab'
