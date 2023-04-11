@@ -269,6 +269,12 @@ class _FallbackAppbarWidgetState extends State<FallbackAppbarWidget> {
                           suffixIcon: IconButton(
                               onPressed: () {
                                 setState(() {
+                                  final username = usernameController.text;
+                                  final password = passwordController.text;
+
+                                  sharedPrefs.setString("username", username);
+                                  sharedPrefs.setString("password", password);
+
                                   _isObscured = !_isObscured;
                                 });
                               },
