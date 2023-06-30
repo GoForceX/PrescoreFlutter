@@ -81,7 +81,7 @@ jobs:
           AWS_S3_BUCKET: 'app-dist-1307054264'
           AWS_ACCESS_KEY_ID: ${{ secrets.COS_SECRET_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.COS_SECRET_KEY }}
-          AWS_S3_ENDPOINT: 'https://cos.ap-beijing.myqcloud.com/'
+          AWS_S3_ENDPOINT: 'https://cos.accelerate.myqcloud.com/'
           SOURCE_DIR: 'build/app/outputs/apk/release'
           DEST_DIR: 'actions/prescore_flutter/${{ github.run_number }}/apk'
 
@@ -93,6 +93,6 @@ jobs:
           AWS_S3_BUCKET: 'app-dist-1307054264'
           AWS_ACCESS_KEY_ID: ${{ secrets.COS_SECRET_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.COS_SECRET_KEY }}
-          AWS_S3_ENDPOINT: 'https://cos.ap-beijing.myqcloud.com/'
+          AWS_S3_ENDPOINT: 'https://cos.accelerate.myqcloud.com/'
           SOURCE_DIR: 'build/app/outputs/bundle/release'
           DEST_DIR: 'actions/prescore_flutter/${{ github.run_number }}/aab'
