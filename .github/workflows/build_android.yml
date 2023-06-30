@@ -13,7 +13,6 @@ jobs:
         with:
           channel: 'stable'
       - run: flutter pub get
-      - run: flutter pub run cronet:setup
       - run: flutter build apk
       - run: flutter build appbundle
       
