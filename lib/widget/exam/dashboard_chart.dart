@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 
 import '../../util/struct.dart';
 
-class DashboardChart extends StatelessWidget {
+class DashboardChart extends StatefulWidget {
   final List<PaperDiagnosis> diagnoses;
   final String tips;
   final String subTips;
+
   const DashboardChart(
       {Key? key,
       required this.diagnoses,
@@ -15,8 +16,36 @@ class DashboardChart extends StatelessWidget {
       : super(key: key);
 
   @override
+  State<DashboardChart> createState() => _DashboardChartState();
+}
+
+class _DashboardChartState extends State<DashboardChart> {
+  bool officialStyle = false;
+  List<PaperDiagnosis> parsedDiagnoses = [];
+
+  void onChanged(bool state) {
+    setState(() {
+      officialStyle = state;
+      if (officialStyle) {
+        parsedDiagnoses = widget.diagnoses.map((e) {
+          return PaperDiagnosis(
+            subjectName: e.subjectName,
+            diagnosticScore: 100 - e.diagnosticScore,
+            subjectId: e.subjectId,
+          );
+        }).toList();
+      } else {
+        parsedDiagnoses = widget.diagnoses;
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (diagnoses.length >= 3) {
+    if (parsedDiagnoses.isEmpty) {
+      parsedDiagnoses = widget.diagnoses;
+    }
+    if (widget.diagnoses.length >= 3) {
       Container chartCard = Container(
           padding: const EdgeInsets.all(12.0),
           alignment: AlignmentDirectional.center,
@@ -30,27 +59,28 @@ class DashboardChart extends StatelessWidget {
                   RadarChartData(
                     dataSets: [
                       RadarDataSet(
-                        fillColor: Colors.blueAccent.withOpacity(0.45), // Set the color inside the data
+                        fillColor: Colors.blueAccent.withOpacity(0.45),
+                        // Set the color inside the data
                         borderColor: Colors.blue,
                         entryRadius: 0,
                         borderWidth: 2,
-                        dataEntries: diagnoses
+                        dataEntries: parsedDiagnoses
                             .map((e) => RadarEntry(value: e.diagnosticScore))
                             .toList(),
                       ),
                       RadarDataSet(
                         entryRadius: 0,
                         borderWidth: 2,
-                        dataEntries: List.filled(
-                            diagnoses.length, const RadarEntry(value: 125)),
+                        dataEntries: List.filled(parsedDiagnoses.length,
+                            const RadarEntry(value: 125)),
                         fillColor: Colors.transparent,
                         borderColor: Colors.transparent,
                       ),
                       RadarDataSet(
                         entryRadius: 0,
                         borderWidth: 2,
-                        dataEntries: List.filled(
-                            diagnoses.length, const RadarEntry(value: 0)),
+                        dataEntries: List.filled(parsedDiagnoses.length,
+                            const RadarEntry(value: 0)),
                         fillColor: Colors.transparent,
                         borderColor: Colors.transparent,
                       )
@@ -73,15 +103,15 @@ class DashboardChart extends StatelessWidget {
                     radarShape: RadarShape.circle,
                     getTitle: (index, angle) {
                       return RadarChartTitle(
-                          text: diagnoses[index].subjectName);
+                          text: parsedDiagnoses[index].subjectName);
                     },
                   ),
                   swapAnimationDuration: const Duration(milliseconds: 150),
                   swapAnimationCurve: Curves.linear,
                 ),
               ),
-              Text(tips, style: const TextStyle(fontSize: 16)),
-              Text(subTips, style: const TextStyle(fontSize: 12)),
+              Text(widget.tips, style: const TextStyle(fontSize: 16)),
+              Text(widget.subTips, style: const TextStyle(fontSize: 12)),
             ],
           ));
 
@@ -90,7 +120,22 @@ class DashboardChart extends StatelessWidget {
         shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
         elevation: 8,
-        child: chartCard,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const Text('智学网风格的雷达图', style: TextStyle(fontSize: 16)),
+                const SizedBox(width: 8),
+                Switch(value: officialStyle, onChanged: onChanged)
+              ],
+            ),
+            chartCard
+          ],
+        ),
       );
     } else {
       return Container();

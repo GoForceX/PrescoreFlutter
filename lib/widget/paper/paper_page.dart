@@ -1,3 +1,4 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:prescore_flutter/widget/paper/paper_detail.dart';
 import 'package:prescore_flutter/widget/paper/paper_photo.dart';
@@ -7,6 +8,7 @@ import '../../main.dart';
 import '../../model/paper_model.dart';
 import '../../util/user_util.dart';
 
+@RoutePage()
 class PaperPage extends StatefulWidget {
   final String examId;
   final String paperId;

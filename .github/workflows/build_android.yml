@@ -50,7 +50,7 @@ jobs:
             ${{steps.sign_apk.outputs.signedReleaseFile}}
             ${{steps.sign_aab.outputs.signedReleaseFile}}
           
-      - name: Upload COS APK
+      - name: Upload R2 APK
         uses: jakejarvis/s3-sync-action@master
         with:
           args: '--acl public-read --follow-symlinks'
@@ -62,7 +62,7 @@ jobs:
           SOURCE_DIR: 'build/app/outputs/apk/release' 
           DEST_DIR: 'actions/prescore_flutter/${{ github.run_number }}/apk'
           
-      - name: Upload COS AAB
+      - name: Upload R2 AAB
         uses: jakejarvis/s3-sync-action@master
         with:
           args: '--acl public-read --follow-symlinks'
@@ -72,4 +72,28 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.COS_SECRET_KEY }}
           AWS_S3_ENDPOINT: 'https://62a009fecd6c4069e4a928d203e3e493.r2.cloudflarestorage.com/'
           SOURCE_DIR: 'build/app/outputs/bundle/release' 
+          DEST_DIR: 'actions/prescore_flutter/${{ github.run_number }}/aab'
+
+      - name: Upload COS APK
+        uses: jakejarvis/s3-sync-action@master
+        with:
+          args: '--acl public-read --follow-symlinks'
+        env:
+          AWS_S3_BUCKET: 'app-dist-1307054264'
+          AWS_ACCESS_KEY_ID: ${{ secrets.COS_SECRET_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.COS_SECRET_KEY }}
+          AWS_S3_ENDPOINT: 'https://cos.ap-beijing.myqcloud.com/'
+          SOURCE_DIR: 'build/app/outputs/apk/release'
+          DEST_DIR: 'actions/prescore_flutter/${{ github.run_number }}/apk'
+
+      - name: Upload COS AAB
+        uses: jakejarvis/s3-sync-action@master
+        with:
+          args: '--acl public-read --follow-symlinks'
+        env:
+          AWS_S3_BUCKET: 'app-dist-1307054264'
+          AWS_ACCESS_KEY_ID: ${{ secrets.COS_SECRET_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.COS_SECRET_KEY }}
+          AWS_S3_ENDPOINT: 'https://cos.ap-beijing.myqcloud.com/'
+          SOURCE_DIR: 'build/app/outputs/bundle/release'
           DEST_DIR: 'actions/prescore_flutter/${{ github.run_number }}/aab'

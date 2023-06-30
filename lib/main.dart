@@ -1,5 +1,7 @@
+import 'dart:io';
+
 import 'package:cookie_jar/cookie_jar.dart';
-import 'package:cronet/cronet.dart';
+import 'package:cronet_http_embedded/cronet_http.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:easy_refresh/easy_refresh.dart';
@@ -8,14 +10,12 @@ import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:prescore_flutter/util/cronet_adapter.dart';
 import 'package:prescore_flutter/widget/drawer.dart';
-import 'package:prescore_flutter/widget/exam/exam.dart';
 import 'package:prescore_flutter/main.gr.dart';
-import 'package:auto_route/annotations.dart';
+import 'package:auto_route/auto_route.dart';
 import 'package:prescore_flutter/widget/main/exams.dart';
 import 'package:prescore_flutter/widget/main/main_header.dart';
-import 'package:prescore_flutter/widget/paper/paper_page.dart';
-import 'package:prescore_flutter/widget/settings.dart';
 import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -23,6 +23,7 @@ import 'package:upgrader/upgrader.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:version/version.dart';
 import 'package:r_upgrade/r_upgrade.dart';
+import 'package:http/http.dart';
 
 import 'constants.dart';
 import 'model/login_model.dart';
@@ -30,6 +31,15 @@ import 'model/login_model.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await BaseSingleton.singleton.init();
+  var clientFactory = Client.new; // Constructs the default client.
+  if (Platform.isAndroid) {
+    Future<CronetEngine>? engine;
+    clientFactory = () {
+      engine ??= CronetEngine.build(
+          cacheMode: CacheMode.memory, userAgent: userAgent);
+      return CronetClient.fromCronetEngineFuture(engine!);
+    };
+  }
   await SentryFlutter.init(
     (options) {
       options.dsn =
@@ -38,28 +48,37 @@ Future<void> main() async {
       // We recommend adjusting this value in production.
       options.tracesSampleRate = 1.0;
     },
-    appRunner: () => runApp(MyApp()),
+    appRunner: () => runWithClient(() => runApp(MyApp()), clientFactory),
   );
 }
 
-@MaterialAutoRouter(
+@AutoRouterConfig(
   replaceInRouteName: 'Page,Route',
-  routes: <AutoRoute>[
-    AutoRoute(page: HomePage, initial: true),
-    AutoRoute(page: ExamPage),
-    AutoRoute(page: PaperPage),
-    AutoRoute(page: SettingsPage),
-  ],
 )
-class $AppRouter {}
+class AppRouter extends $AppRouter {
+  @override
+  RouteType get defaultRouteType => const RouteType.material();
+  @override
+  final List<AutoRoute> routes = [
+    AutoRoute(page: HomeRoute.page, path: '/'),
+    AutoRoute(page: ExamRoute.page),
+    AutoRoute(page: PaperRoute.page),
+    AutoRoute(page: SettingsRoute.page),
+  ];
+}
 
 Logger logger = Logger(
     printer: PrettyPrinter(
-        methodCount: 5, // number of method calls to be displayed
-        errorMethodCount: 8, // number of method calls if stacktrace is provided
-        lineLength: 120, // width of the output
-        colors: true, // Colorful log messages
-        printEmojis: true, // Print an emoji for each log message
+        methodCount: 5,
+        // number of method calls to be displayed
+        errorMethodCount: 8,
+        // number of method calls if stacktrace is provided
+        lineLength: 120,
+        // width of the output
+        colors: true,
+        // Colorful log messages
+        printEmojis: true,
+        // Print an emoji for each log message
         printTime: true // Should each log print contain a timestamp
         ));
 
@@ -97,6 +116,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
+@RoutePage()
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
 
@@ -112,7 +132,7 @@ class HomePageState extends State<HomePage> {
   bool isRequestDialogShown = false;
 
   void setLoggedIn(bool value) {
-    setState(() => {isLoggedIn = value});
+    setState(() => isLoggedIn = value);
   }
 
   Future<void> showUpgradeAlert(BuildContext context) async {
@@ -122,37 +142,42 @@ class HomePageState extends State<HomePage> {
     AppcastItem? item = appcast.bestItem();
     if (item != null) {
       PackageInfo packageInfo = await PackageInfo.fromPlatform();
-      if (Version.parse(packageInfo.version) <
-          Version.parse(item.versionString)) {
-        logger.i("got update: ${item.fileURL!}");
-        if (isUpgradeDialogShown) {
-          return;
+      if (context.mounted) {
+        String? versionString = item.versionString;
+        if (versionString != null) {
+          if (Version.parse(packageInfo.version) <
+              Version.parse(versionString)) {
+            logger.i("got update: ${item.fileURL!}");
+            if (isUpgradeDialogShown) {
+              return;
+            }
+            isUpgradeDialogShown = true;
+            await showDialog<String>(
+              context: context,
+              builder: (BuildContext dialogContext) => AlertDialog(
+                title: const Text('现在要更新吗？'),
+                content: Text(
+                    '获取到最新版本${versionString}，然而当前版本是${packageInfo.version}\n\n你需要更新吗？\n\n更新日志：\n${item.itemDescription}'),
+                actions: <Widget>[
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(dialogContext, '但是我拒绝');
+                    },
+                    child: const Text('但是我拒绝'),
+                  ),
+                  TextButton(
+                    onPressed: () async {
+                      RUpgrade.upgrade(item.fileURL!,
+                          fileName: 'app-release.apk');
+                      Navigator.pop(dialogContext, '当然是更新啦');
+                    },
+                    child: const Text('当然是更新啦'),
+                  ),
+                ],
+              ),
+            );
+          }
         }
-        isUpgradeDialogShown = true;
-        await showDialog<String>(
-          context: context,
-          builder: (BuildContext dialogContext) => AlertDialog(
-            title: const Text('现在要更新吗？'),
-            content: Text(
-                '获取到最新版本${item.versionString}，然而当前版本是${packageInfo.version}\n\n你需要更新吗？\n\n更新日志：\n${item.itemDescription}'),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(dialogContext, '但是我拒绝');
-                },
-                child: const Text('但是我拒绝'),
-              ),
-              TextButton(
-                onPressed: () async {
-                  RUpgrade.upgrade(item.fileURL!,
-                      fileName: 'app-release.apk', isAutoRequestInstall: true);
-                  Navigator.pop(dialogContext, '当然是更新啦');
-                },
-                child: const Text('当然是更新啦'),
-              ),
-            ],
-          ),
-        );
       }
     }
   }
@@ -305,7 +330,6 @@ class BaseSingleton {
   late final CookieJar cookieJar;
   late final SharedPreferences sharedPreferences;
   late final PackageInfo packageInfo;
-  final cronetClient = HttpClient(userAgent: userAgent);
 
   static BaseSingleton get singleton => _singleton;
 
@@ -327,6 +351,10 @@ class BaseSingleton {
       });
     }
     dio.options.headers = commonHeaders;
+
+    if (Platform.isIOS || Platform.isMacOS || Platform.isAndroid) {
+      dio.httpClientAdapter = CronetAdapter(null);
+    }
 
     sharedPreferences = await SharedPreferences.getInstance();
     // SharedPreferences.getInstance().then((value) => sharedPreferences = value);

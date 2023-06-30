@@ -1,3 +1,4 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -10,6 +11,7 @@ import 'package:version/version.dart';
 import '../main.dart';
 import 'drawer.dart';
 
+@RoutePage()
 class SettingsPage extends StatefulWidget {
   const SettingsPage({Key? key}) : super(key: key);
 
@@ -25,33 +27,39 @@ class _SettingsPageState extends State<SettingsPage> {
     AppcastItem? item = appcast.bestItem();
     if (item != null) {
       PackageInfo packageInfo = await PackageInfo.fromPlatform();
-      if (Version.parse(packageInfo.version) <
-          Version.parse(item.versionString)) {
-        logger.i("got update: ${item.fileURL!}");
-        showDialog<String>(
-          context: context,
-          builder: (BuildContext dialogContext) => AlertDialog(
-            title: const Text('现在要更新吗？'),
-            content: Text(
-                '获取到最新版本${item.versionString}，然而当前版本是${packageInfo.version}\n\n你需要更新吗？\n\n更新日志：\n${item.itemDescription}'),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(dialogContext, '但是我拒绝');
-                },
-                child: const Text('但是我拒绝'),
+      if (context.mounted) {
+        String? versionString = item.versionString;
+        if (versionString != null) {
+          if (Version.parse(packageInfo.version) <
+              Version.parse(versionString)) {
+            logger.i("got update: ${item.fileURL!}");
+            showDialog<String>(
+              context: context,
+              builder: (BuildContext dialogContext) => AlertDialog(
+                title: const Text('现在要更新吗？'),
+                content: Text(
+                    '获取到最新版本$versionString，然而当前版本是${packageInfo.version}\n\n你需要更新吗？\n\n更新日志：\n${item.itemDescription}'),
+                actions: <Widget>[
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(dialogContext, '但是我拒绝');
+                    },
+                    child: const Text('但是我拒绝'),
+                  ),
+                  TextButton(
+                    onPressed: () async {
+                      RUpgrade.upgrade(item.fileURL!,
+                          fileName: 'app-release.apk',
+                      );
+                      Navigator.pop(dialogContext, '当然是更新啦');
+                    },
+                    child: const Text('当然是更新啦'),
+                  ),
+                ],
               ),
-              TextButton(
-                onPressed: () async {
-                  RUpgrade.upgrade(item.fileURL!,
-                      fileName: 'app-release.apk', isAutoRequestInstall: true);
-                  Navigator.pop(dialogContext, '当然是更新啦');
-                },
-                child: const Text('当然是更新啦'),
-              ),
-            ],
-          ),
-        );
+            );
+          }
+        }
       }
     }
   }

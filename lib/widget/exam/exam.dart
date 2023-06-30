@@ -1,3 +1,4 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -7,6 +8,7 @@ import '../../util/user_util.dart';
 import 'exam_dashboard.dart';
 import 'exam_detail.dart';
 
+@RoutePage()
 class ExamPage extends StatefulWidget {
   const ExamPage({Key? key, required this.uuid, required this.user})
       : super(key: key);
