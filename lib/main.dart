@@ -167,9 +167,51 @@ class HomePageState extends State<HomePage> {
                   ),
                   TextButton(
                     onPressed: () async {
-                      RUpgrade.upgrade(item.fileURL!,
-                          fileName: 'app-release.apk');
-                      Navigator.pop(dialogContext, '当然是更新啦');
+                      int? update = await RUpgrade.upgrade(item.fileURL!,
+                          fileName: 'app-release.apk', installType: RUpgradeInstallType.normal);
+                      if (update != null) {
+                        bool? isSuccess= await RUpgrade.install(update);
+                        if (isSuccess != true) {
+                          if (mounted) {
+                            await showDialog<String>(
+                                context: context,
+                                builder: (BuildContext dialogContext) => AlertDialog(
+                                  title: const Text('更新失败'),
+                                  content: const Text(
+                                      '新版本更新失败，或许可以再试一次？'),
+                                  actions: <Widget>[
+                                    TextButton(
+                                      onPressed: () async {
+                                        Navigator.pop(dialogContext, '好哦');
+                                      },
+                                      child: const Text('好哦'),
+                                    ),
+                                  ],
+                                ));
+                          }
+                        }
+                      } else {
+                        if (mounted) {
+                          await showDialog<String>(
+                              context: context,
+                              builder: (BuildContext dialogContext) => AlertDialog(
+                                title: const Text('更新失败'),
+                                content: const Text(
+                                    '新版本更新失败，或许可以再试一次？'),
+                                actions: <Widget>[
+                                  TextButton(
+                                    onPressed: () async {
+                                      Navigator.pop(dialogContext, '好哦');
+                                    },
+                                    child: const Text('好哦'),
+                                  ),
+                                ],
+                              ));
+                        }
+                      }
+                      if (mounted) {
+                        Navigator.pop(dialogContext, '当然是更新啦');
+                      }
                     },
                     child: const Text('当然是更新啦'),
                   ),
