@@ -10,9 +10,9 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:auto_route/auto_route.dart' as _i5;
 import 'package:flutter/material.dart' as _i6;
-import 'package:prescore_flutter/main.dart' as _i1;
+import 'package:prescore_flutter/main.dart' as _i2;
 import 'package:prescore_flutter/util/user_util.dart' as _i7;
-import 'package:prescore_flutter/widget/exam/exam.dart' as _i2;
+import 'package:prescore_flutter/widget/exam/exam.dart' as _i1;
 import 'package:prescore_flutter/widget/paper/paper_page.dart' as _i3;
 import 'package:prescore_flutter/widget/settings.dart' as _i4;
 
@@ -21,21 +21,21 @@ abstract class $AppRouter extends _i5.RootStackRouter {
 
   @override
   final Map<String, _i5.PageFactory> pagesMap = {
-    HomeRoute.name: (routeData) {
-      return _i5.AutoRoutePage<dynamic>(
-        routeData: routeData,
-        child: const _i1.HomePage(),
-      );
-    },
     ExamRoute.name: (routeData) {
       final args = routeData.argsAs<ExamRouteArgs>();
       return _i5.AutoRoutePage<dynamic>(
         routeData: routeData,
-        child: _i2.ExamPage(
+        child: _i1.ExamPage(
           key: args.key,
           uuid: args.uuid,
           user: args.user,
         ),
+      );
+    },
+    HomeRoute.name: (routeData) {
+      return _i5.AutoRoutePage<dynamic>(
+        routeData: routeData,
+        child: const _i2.HomePage(),
       );
     },
     PaperRoute.name: (routeData) {
@@ -60,21 +60,7 @@ abstract class $AppRouter extends _i5.RootStackRouter {
 }
 
 /// generated route for
-/// [_i1.HomePage]
-class HomeRoute extends _i5.PageRouteInfo<void> {
-  const HomeRoute({List<_i5.PageRouteInfo>? children})
-      : super(
-          HomeRoute.name,
-          initialChildren: children,
-        );
-
-  static const String name = 'HomeRoute';
-
-  static const _i5.PageInfo<void> page = _i5.PageInfo<void>(name);
-}
-
-/// generated route for
-/// [_i2.ExamPage]
+/// [_i1.ExamPage]
 class ExamRoute extends _i5.PageRouteInfo<ExamRouteArgs> {
   ExamRoute({
     _i6.Key? key,
@@ -114,6 +100,20 @@ class ExamRouteArgs {
   String toString() {
     return 'ExamRouteArgs{key: $key, uuid: $uuid, user: $user}';
   }
+}
+
+/// generated route for
+/// [_i2.HomePage]
+class HomeRoute extends _i5.PageRouteInfo<void> {
+  const HomeRoute({List<_i5.PageRouteInfo>? children})
+      : super(
+          HomeRoute.name,
+          initialChildren: children,
+        );
+
+  static const String name = 'HomeRoute';
+
+  static const _i5.PageInfo<void> page = _i5.PageInfo<void>(name);
 }
 
 /// generated route for

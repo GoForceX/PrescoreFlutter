@@ -24,6 +24,19 @@ class _PaperDistributionPhotoState extends State<PaperDistributionPhoto> {
   Widget build(BuildContext context) {
     List<Widget> photos = [];
 
+    photos.add(
+        const SizedBox(
+          height: 20,
+        )
+    );
+    photos.add(
+      const Center(child: Text("加载可能需要较长时间，请耐心等待~"),)
+    );
+    photos.add(
+        const SizedBox(
+          height: 20,
+        )
+    );
     photos.add(PaperDistributionPhotoWidget(url: "https://matrix.bjbybbs.com/api/img/paper/triple/${widget.paperId}", tag: const Uuid().v4()));
 
     return ListView(
@@ -142,9 +155,20 @@ class _PaperDistributionPhotoWidgetState extends State<PaperDistributionPhotoWid
           tag: widget.tag,
           child: RepaintBoundary(
             key: globalKey,
-            child: Image.network(
-              widget.url,
-              width: 350.0,
+            child: Stack(
+              children: <Widget>[
+                const Center(child: Column(
+                  children: [
+                    SizedBox(height: 20,),
+                    CircularProgressIndicator(),
+                    SizedBox(height: 20,),
+                  ],
+                )),
+                Image.network(
+                  widget.url,
+                  // width: 350.0,
+                ),
+              ],
             ),
           ),
         ));
