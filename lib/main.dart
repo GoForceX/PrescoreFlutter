@@ -23,7 +23,7 @@ import 'package:upgrader/upgrader.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:version/version.dart';
 import 'package:r_upgrade/r_upgrade.dart';
-import 'package:http/http.dart';
+import 'package:http/http.dart' hide Response;
 
 import 'constants.dart';
 import 'model/login_model.dart';
@@ -336,6 +336,22 @@ class BaseSingleton {
   init() async {
     // private constructor that creates the singleton instance
     dio.options.responseType = ResponseType.plain;
+
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onResponse: (Response response, ResponseInterceptorHandler handler) {
+          logger.d(response.headers.map.entries.toList());
+          String? c = response.headers.value('set-cookie');
+          if (c != null) {
+            if (c.contains('SameSite=Nonetlsysapp')) {
+              response.headers.remove('set-cookie', c);
+            }
+          }
+          return handler.next(response);
+        },
+      ),
+    );
+
     if (kIsWeb) {
       cookieJar = CookieJar();
       dio.interceptors.add(CookieManager(cookieJar));
@@ -350,6 +366,7 @@ class BaseSingleton {
         dio.interceptors.add(CookieManager(cookieJar));
       });
     }
+
     dio.options.headers = commonHeaders;
 
     if (Platform.isIOS || Platform.isMacOS || Platform.isAndroid) {
