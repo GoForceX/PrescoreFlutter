@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:prescore_flutter/widget/paper/paper_detail.dart';
+import 'package:prescore_flutter/widget/paper/paper_distrib.dart';
 import 'package:prescore_flutter/widget/paper/paper_photo.dart';
 import 'package:provider/provider.dart';
 
@@ -52,6 +53,10 @@ class _PaperPageState extends State<PaperPage> {
               chosenWidget =
                   PaperDetail(examId: widget.examId, paperId: widget.paperId);
               break;
+            case 2:
+              chosenWidget =
+                  PaperDistributionPhoto(examId: widget.examId, paperId: widget.paperId);
+              break;
             default:
               chosenWidget = Container();
           }
@@ -69,6 +74,10 @@ class _PaperPageState extends State<PaperPage> {
           BottomNavigationBarItem(
             icon: Icon(Icons.list_alt_rounded),
             label: '小分',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.line_axis),
+            label: '分布',
           ),
         ],
         currentIndex: _selectedIndex,
