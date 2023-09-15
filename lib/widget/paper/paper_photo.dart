@@ -319,12 +319,18 @@ class _PaperPhotoEnlargedState extends State<PaperPhotoEnlarged> {
         onPressed: () async {
           if (Platform.isAndroid) {
             PermissionStatus storageStatus = await Permission.storage.status;
-            if (!storageStatus.isGranted) {
+            PermissionStatus photoStatus = await Permission.photos.status;
+            if (!storageStatus.isGranted | !photoStatus.isGranted) {
+              logger.d('req');
               await Permission.storage.request();
+              await Permission.photos.request();
             }
 
             storageStatus = await Permission.storage.status;
-            if (storageStatus.isGranted) {
+            photoStatus = await Permission.photos.status;
+            logger.d([storageStatus, photoStatus]);
+
+            if (storageStatus.isGranted | photoStatus.isGranted) {
               final result = await ImageGallerySaver.saveImage(
                   widget.memoryImage!,
                   name:

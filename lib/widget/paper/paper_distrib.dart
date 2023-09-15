@@ -72,12 +72,19 @@ class _PaperDistributionPhotoWidgetState extends State<PaperDistributionPhotoWid
                     floatingActionButton: FloatingActionButton(
                       onPressed: () async {
                         if (Platform.isAndroid) {
-                          PermissionStatus storageStatus =
-                          await Permission.storage.status;
-                          if (!storageStatus.isGranted) {
+                          PermissionStatus storageStatus = await Permission.storage.status;
+                          PermissionStatus photoStatus = await Permission.photos.status;
+                          if (!storageStatus.isGranted | !photoStatus.isGranted) {
+                            logger.d('req');
                             await Permission.storage.request();
+                            await Permission.photos.request();
                           }
-                          if (storageStatus.isGranted) {
+
+                          storageStatus = await Permission.storage.status;
+                          photoStatus = await Permission.photos.status;
+                          logger.d([storageStatus, photoStatus]);
+
+                          if (storageStatus.isGranted | photoStatus.isGranted) {
                             Dio dio = BaseSingleton.singleton.dio;
                             dio
                                 .get(widget.url,
