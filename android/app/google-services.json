@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "658973573585",
+    "project_id": "prescore-a782f",
+    "storage_bucket": "prescore-a782f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:658973573585:android:f1e9b650962f627c9920f0",
+        "android_client_info": {
+          "package_name": "com.bjbybbs.prescore_flutter"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCDoFq7Yk7IznP4TP62D5Uq4W4BjxReyIA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

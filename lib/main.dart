@@ -5,6 +5,7 @@ import 'package:cronet_http_embedded/cronet_http.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:easy_refresh/easy_refresh.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
@@ -24,6 +25,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:version/version.dart';
 import 'package:r_upgrade/r_upgrade.dart';
 import 'package:http/http.dart' hide Response;
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
 import 'constants.dart';
 import 'model/login_model.dart';
@@ -40,6 +43,9 @@ Future<void> main() async {
       return CronetClient.fromCronetEngineFuture(engine!);
     };
   }
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   await SentryFlutter.init(
     (options) {
       options.dsn =
@@ -103,7 +109,11 @@ class MyApp extends StatelessWidget {
 
     return MaterialApp.router(
         routeInformationParser: _appRouter.defaultRouteParser(),
-        routerDelegate: _appRouter.delegate(),
+        routerDelegate: _appRouter.delegate(
+          navigatorObservers: () => [
+            FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance),
+          ],
+        ),
         title: '出分啦',
         theme: ThemeData(
           useMaterial3: true,
