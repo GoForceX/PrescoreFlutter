@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:prescore_flutter/widget/exam/dashboard_list.dart';
 import 'package:prescore_flutter/widget/exam/dashboard_score_info.dart';
 import 'package:provider/provider.dart';
 
@@ -75,6 +76,9 @@ class _DashboardCardState extends State<DashboardCard> {
     if (Provider.of<ExamModel>(context, listen: false).isPaperLoaded) {
       List<Paper> papers =
           Provider.of<ExamModel>(context, listen: false).papers;
+
+      List<Widget> infoChildren = [];
+
       double userScore = 0;
       for (var element in papers) {
         userScore += element.userScore;
@@ -99,20 +103,31 @@ class _DashboardCardState extends State<DashboardCard> {
           fullScore: fullScore,
           assignScore: assignScore,
         );
-        children.add(chart);
+        infoChildren.add(chart);
       } else {
         Widget chart = DashboardInfo(
           userScore: userScore,
           fullScore: fullScore,
         );
-        children.add(chart);
+        infoChildren.add(chart);
       }
+
+      Widget lst = DashboardList(papers: papers);
+      infoChildren.add(lst);
+
+      children.add(ListView(
+        padding: const EdgeInsets.all(8),
+        shrinkWrap: true,
+        children: infoChildren,
+      ));
     } else {
       FutureBuilder futureBuilder = FutureBuilder(
         future: Provider.of<ExamModel>(context, listen: false)
             .user
             .fetchPaper(widget.examId),
         builder: (BuildContext context, AsyncSnapshot snapshot) {
+          List<Widget> infoChildren = [];
+
           if (snapshot.hasData) {
             if (snapshot.data.state) {
               Future.delayed(Duration.zero, () {
@@ -145,14 +160,23 @@ class _DashboardCardState extends State<DashboardCard> {
                   fullScore: fullScore,
                   assignScore: assignScore,
                 );
-                return chart;
+                children.insert(0, chart);
               } else {
                 Widget chart = DashboardInfo(
                   userScore: userScore,
                   fullScore: fullScore,
                 );
-                return chart;
+                infoChildren.add(chart);
               }
+
+              Widget lst = DashboardList(papers: snapshot.data.result);
+              infoChildren.add(lst);
+
+              return ListView(
+                padding: const EdgeInsets.all(8),
+                shrinkWrap: true,
+                children: infoChildren,
+              );
             } else {
               return Container();
             }

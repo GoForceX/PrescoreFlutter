@@ -27,9 +27,9 @@ class DashboardInfo extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Column(
+                      const Column(
                         mainAxisAlignment: MainAxisAlignment.end,
-                        children: const [
+                        children: [
                           Text(
                             "得分：",
                             style: TextStyle(fontSize: 16),
@@ -46,9 +46,9 @@ class DashboardInfo extends StatelessWidget {
                       const SizedBox(
                         width: 16,
                       ),
-                      Column(
+                      const Column(
                         mainAxisAlignment: MainAxisAlignment.end,
-                        children: const [
+                        children: [
                           Text(
                             "/",
                             style: TextStyle(fontSize: 16),
@@ -77,9 +77,9 @@ class DashboardInfo extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.start,
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Column(
+                          const Column(
                             mainAxisAlignment: MainAxisAlignment.end,
-                            children: const [
+                            children: [
                               Text(
                                 "赋分得分：",
                                 style: TextStyle(fontSize: 16),
@@ -96,9 +96,9 @@ class DashboardInfo extends StatelessWidget {
                           const SizedBox(
                             width: 16,
                           ),
-                          Column(
+                          const Column(
                             mainAxisAlignment: MainAxisAlignment.end,
-                            children: const [
+                            children: [
                               Text(
                                 "/",
                                 style: TextStyle(fontSize: 16),
