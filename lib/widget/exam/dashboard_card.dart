@@ -118,6 +118,7 @@ class _DashboardCardState extends State<DashboardCard> {
       children.add(ListView(
         padding: const EdgeInsets.all(8),
         shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
         children: infoChildren,
       ));
     } else {
@@ -160,7 +161,7 @@ class _DashboardCardState extends State<DashboardCard> {
                   fullScore: fullScore,
                   assignScore: assignScore,
                 );
-                children.insert(0, chart);
+                infoChildren.add(chart);
               } else {
                 Widget chart = DashboardInfo(
                   userScore: userScore,
@@ -175,6 +176,7 @@ class _DashboardCardState extends State<DashboardCard> {
               return ListView(
                 padding: const EdgeInsets.all(8),
                 shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
                 children: infoChildren,
               );
             } else {
