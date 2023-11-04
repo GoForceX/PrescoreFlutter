@@ -525,6 +525,7 @@ class User {
       }
       questions.add(Question(
         questionId: element["dispTitle"],
+        topicNumber: element["topicNumber"],
         fullScore: element["standardScore"],
         userScore: element["score"],
         isSelected: (element as Map<String, dynamic>).containsKey("isSelected")
@@ -544,6 +545,9 @@ class User {
         Result parseResult = parseMarkers(sheetMarkersSheets, questions);
         if (parseResult.state) {
           markers = parseResult.result;
+          logger.e("parseMarkers, end: ${parseResult.message}");
+        } else {
+          logger.e("parseMarkers, fail end: ${parseResult.message}");
         }
       } on Exception catch (e) {
         logger.e("parseMarkers: $e");
@@ -684,7 +688,7 @@ class User {
                 for (var i = 0; i < numList.length; i++) {
                   int qid = numList[i];
                   Question question = questions.firstWhere(
-                      (element) => element.questionId == qid.toString());
+                      (element) => element.topicNumber == qid);
                   if (!parsedQuestionIds.contains(qid)) {
                     parsedQuestionIds.add(qid);
                     if (question.isSelected) {
@@ -736,6 +740,7 @@ class User {
         }
       }
     }
+    logger.d("question parse");
     return Result(state: true, message: "", result: markers);
   }
 

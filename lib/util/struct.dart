@@ -112,6 +112,7 @@ class ExamDiagnosis {
 
 class Question {
   String questionId;
+  int topicNumber;
   double userScore;
   double fullScore;
   bool isSelected;
@@ -119,6 +120,7 @@ class Question {
 
   Question({
     required this.questionId,
+    required this.topicNumber,
     required this.userScore,
     required this.fullScore,
     required this.isSelected,
