@@ -63,11 +63,13 @@ class MainAppbarRowWidget extends StatelessWidget {
   final Widget image;
   final String title;
   final String subtitle;
+  final bool showTip;
   const MainAppbarRowWidget(
       {Key? key,
       required this.image,
       required this.title,
-      required this.subtitle})
+      required this.subtitle,
+      this.showTip = true})
       : super(key: key);
 
   @override
@@ -110,11 +112,23 @@ class MainAppbarRowWidget extends StatelessWidget {
             )
           ],
         ),
-        const Text("你知道吗，长按可以退出登录",
-            style: TextStyle(fontSize: 16, color: Colors.grey)),
-        const SizedBox(
-          height: 16,
-        ),
+        Builder(builder: (ctx) {
+          if (showTip) {
+            return const Text("你知道吗，长按可以退出登录",
+                style: TextStyle(fontSize: 16, color: Colors.grey));
+          } else {
+            return Container();
+          }
+        }),
+        Builder(builder: (ctx) {
+          if (showTip) {
+            return const SizedBox(
+              height: 16,
+            );
+          } else {
+            return Container();
+          }
+        }),
       ],
     );
   }
@@ -144,6 +158,7 @@ class MainAppbarWidget extends StatelessWidget {
                 TextButton(
                   onPressed: () async {
                     Navigator.pop(dialogContext, '果断退出');
+                    BaseSingleton.singleton.currentUser = null;
                     Provider.of<LoginModel>(context, listen: false)
                         .setLoggedIn(false);
                     Provider.of<LoginModel>(context, listen: false)
@@ -322,6 +337,7 @@ class _FallbackAppbarWidgetState extends State<FallbackAppbarWidget> {
                               if (result.state) {
                                 Provider.of<LoginModel>(context, listen: false)
                                     .setLoggedIn(true);
+                                BaseSingleton.singleton.currentUser = user;
                                 logger.d(user.session?.xToken);
                                 /*
                                 Provider.of<LoginModel>(context, listen: false)
@@ -332,9 +348,9 @@ class _FallbackAppbarWidgetState extends State<FallbackAppbarWidget> {
                                 SnackBar snackBar = SnackBar(
                                   content: Text(
                                       '呜呜呜，登录失败了……\n失败原因：${result.message}'),
-                                  backgroundColor:
-                                      Colors.grey.withOpacity(0.5),
+                                  backgroundColor: Colors.grey.withOpacity(0.5),
                                 );
+                                BaseSingleton.singleton.currentUser = null;
                                 ScaffoldMessenger.of(context)
                                     .showSnackBar(snackBar);
                                 Provider.of<LoginModel>(context, listen: false)

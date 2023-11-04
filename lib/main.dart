@@ -12,6 +12,7 @@ import 'package:logger/logger.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:prescore_flutter/util/cronet_adapter.dart';
+import 'package:prescore_flutter/util/user_util.dart';
 import 'package:prescore_flutter/widget/drawer.dart';
 import 'package:prescore_flutter/main.gr.dart';
 import 'package:auto_route/auto_route.dart';
@@ -70,6 +71,7 @@ class AppRouter extends $AppRouter {
     AutoRoute(page: ExamRoute.page),
     AutoRoute(page: PaperRoute.page),
     AutoRoute(page: SettingsRoute.page),
+    AutoRoute(page: SkillRoute.page),
   ];
 }
 
@@ -382,6 +384,7 @@ class BaseSingleton {
   late final CookieJar cookieJar;
   late final SharedPreferences sharedPreferences;
   late final PackageInfo packageInfo;
+  User? currentUser;
 
   static BaseSingleton get singleton => _singleton;
 

@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:prescore_flutter/main.dart';
 
 import '../main.gr.dart';
 
@@ -27,6 +28,13 @@ class MainDrawer extends StatelessWidget {
             onTap: () {
               Navigator.pop(context);
               context.router.navigateNamed("/");
+            },
+          ),
+          ListTile(
+            title: const Text('能力'),
+            onTap: () {
+              Navigator.pop(context);
+              context.router.navigate(SkillRoute(user: BaseSingleton.singleton.currentUser));
             },
           ),
           ListTile(
