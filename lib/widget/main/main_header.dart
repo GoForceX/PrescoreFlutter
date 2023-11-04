@@ -171,7 +171,8 @@ class MainAppbarWidget extends StatelessWidget {
                 String subtitle = "";
                 if (snapshot.hasData) {
                   logger.d("basicInfo: ${snapshot.data}");
-                  if (snapshot.data.avatar != "") {
+                  if (snapshot.data.avatar != "" &&
+                      !(snapshot.data.avatar as String).contains('default')) {
                     image = FadeInImage.assetNetwork(
                         image: snapshot.data.avatar,
                         placeholder: 'assets/akarin.webp');
@@ -332,8 +333,7 @@ class _FallbackAppbarWidgetState extends State<FallbackAppbarWidget> {
                                 SnackBar snackBar = SnackBar(
                                   content: Text(
                                       '呜呜呜，登录失败了……\n失败原因：${result.message}'),
-                                  backgroundColor:
-                                      Colors.grey.withOpacity(0.5),
+                                  backgroundColor: Colors.grey.withOpacity(0.5),
                                 );
                                 ScaffoldMessenger.of(context)
                                     .showSnackBar(snackBar);

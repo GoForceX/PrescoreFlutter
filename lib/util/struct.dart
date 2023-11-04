@@ -165,6 +165,11 @@ class Marker {
     required this.color,
     required this.message,
   });
+
+  @override
+  String toString() {
+    return 'Marker{type: $type, sheetId: $sheetId, top: $top, left: $left, topOffset: $topOffset, leftOffset: $leftOffset, height: $height, width: $width, color: $color, message: $message}';
+  }
 }
 
 class PaperData {

@@ -545,7 +545,7 @@ class User {
         Result parseResult = parseMarkers(sheetMarkersSheets, questions);
         if (parseResult.state) {
           markers = parseResult.result;
-          logger.e("parseMarkers, end: ${parseResult.message}");
+          logger.d("parseMarkers, success: $markers");
         } else {
           logger.e("parseMarkers, fail end: ${parseResult.message}");
         }
@@ -575,16 +575,24 @@ class User {
     for (var sheetId = 0; sheetId < sheetMarkersSheets.length; sheetId++) {
       Map sheet = sheetMarkersSheets[sheetId];
       for (var section in sheet["sections"]) {
-        if (section["enabled"]) {
+        logger.d("section parse, start, $section");
+        if (section["enabled"] || true) {
           double fullScore = 0;
           double userScore = 0;
           switch (section["type"]) {
             case "SingleChoice":
               for (var branch in section["contents"]["branch"]) {
+                logger.d("branch parse, start, $branch");
                 List choices = branch["chooses"];
-                List numList = branch["numList"];
-                double top = branch["position"]["top"].toDouble();
-                double left = branch["position"]["left"].toDouble();
+                List numList = branch["ixList"];
+                double top = branch["position"]["top"].toDouble() +
+                    (branch["position"]["top"].toDouble() == 0
+                        ? section["contents"]["position"]["top"].toDouble()
+                        : 0);
+                double left = branch["position"]["left"].toDouble() +
+                    (branch["position"]["top"].toDouble() == 0
+                        ? section["contents"]["position"]["left"].toDouble()
+                        : 0);
                 double topOffset =
                     (branch["firstOption"]["top"] + 3).toDouble();
                 double leftOffset =
@@ -596,8 +604,14 @@ class User {
                 logger.d("branch parse, start");
                 for (var i = 0; i < numList.length; i++) {
                   int qid = numList[i];
-                  Question question = questions.firstWhere(
-                      (element) => element.questionId == qid.toString());
+                  late Question question;
+                  try {
+                    question = questions
+                        .firstWhere((element) => element.topicNumber == qid);
+                  } catch (e) {
+                    logger.e("parseMarkers: $e");
+                    continue;
+                  }
                   if (question.selectedAnswer != null) {
                     if (!parsedQuestionIds.contains(qid)) {
                       parsedQuestionIds.add(qid);
@@ -609,6 +623,11 @@ class User {
 
                     int ix = choices.indexOf(question.selectedAnswer!);
                     if (ix != -1) {
+                      if (question.topicNumber == 1) {
+                        logger.d(
+                            "branch parse, $qid, $ix, $top, $left, $topOffset, $leftOffset, $width, $height, $colOffset, $rowOffset");
+                      }
+
                       markers.add(Marker(
                         type: MarkerType.singleChoice,
                         sheetId: sheetId,
@@ -631,7 +650,7 @@ class User {
             case "Object":
               for (var branch in section["contents"]["branch"]) {
                 List choices = branch["chooses"];
-                List numList = branch["numList"];
+                List numList = branch["ixList"];
                 double top = branch["position"]["top"].toDouble();
                 double left = branch["position"]["left"].toDouble();
                 double topOffset =
@@ -645,8 +664,14 @@ class User {
                 logger.d("branch parse, start");
                 for (var i = 0; i < numList.length; i++) {
                   int qid = numList[i];
-                  Question question = questions.firstWhere(
-                      (element) => element.questionId == qid.toString());
+                  late Question question;
+                  try {
+                    question = questions
+                        .firstWhere((element) => element.topicNumber == qid);
+                  } catch (e) {
+                    logger.e("parseMarkers: $e");
+                    continue;
+                  }
                   if (question.selectedAnswer != null) {
                     if (!parsedQuestionIds.contains(qid)) {
                       parsedQuestionIds.add(qid);
@@ -684,11 +709,17 @@ class User {
               break;
             case "AnswerQuestion":
               for (var branch in section["contents"]["branch"]) {
-                List numList = branch["numList"];
+                List numList = branch["ixList"];
                 for (var i = 0; i < numList.length; i++) {
                   int qid = numList[i];
-                  Question question = questions.firstWhere(
-                      (element) => element.topicNumber == qid);
+                  late Question question;
+                  try {
+                    question = questions
+                        .firstWhere((element) => element.topicNumber == qid);
+                  } catch (e) {
+                    logger.e("parseMarkers: $e");
+                    continue;
+                  }
                   if (!parsedQuestionIds.contains(qid)) {
                     parsedQuestionIds.add(qid);
                     if (question.isSelected) {
@@ -792,7 +823,7 @@ class User {
     Dio client = BaseSingleton.singleton.dio;
 
     Response response =
-    await client.get('$telemetryExamPredictUrl/$examId/$score');
+        await client.get('$telemetryExamPredictUrl/$examId/$score');
     logger.d("fetchExamPredict: cronet, response: $response.data");
 
     Map<String, dynamic> result = jsonDecode(response.data);
@@ -809,7 +840,7 @@ class User {
     Dio client = BaseSingleton.singleton.dio;
 
     Response response =
-    await client.get('$telemetryPaperPredictUrl/$paperId/$score');
+        await client.get('$telemetryPaperPredictUrl/$paperId/$score');
     logger.d("fetchPaperPredict: cronet, response: ${response.data}");
 
     Map<String, dynamic> result = jsonDecode(response.data);
@@ -827,8 +858,7 @@ class User {
     Dio client = BaseSingleton.singleton.dio;
 
     logger.d("fetchExamScoreInfo: start, $examId");
-    Response response =
-    await client.get('$telemetryExamScoreInfoUrl/$examId');
+    Response response = await client.get('$telemetryExamScoreInfoUrl/$examId');
     Map<String, dynamic> result = jsonDecode(response.data);
     logger.d("fetchExamScoreInfo: end, $result");
 
@@ -850,7 +880,7 @@ class User {
 
     logger.d("fetchPaperScoreInfo: start, $paperId");
     Response response =
-    await client.get('$telemetryPaperScoreInfoUrl/$paperId');
+        await client.get('$telemetryPaperScoreInfoUrl/$paperId');
     Map<String, dynamic> result = jsonDecode(response.data);
     logger.d("fetchPaperScoreInfo: end, $result");
     if (result["code"] == 0) {
@@ -870,10 +900,8 @@ class User {
     Dio client = BaseSingleton.singleton.dio;
 
     logger.d("fetchExamClassInfo: start, $examId");
-    Response response =
-    await client.get('$telemetryExamClassInfoUrl/$examId');
+    Response response = await client.get('$telemetryExamClassInfoUrl/$examId');
     Map<String, dynamic> result = jsonDecode(response.data);
-
 
     logger.d("fetchExamClassInfo: end, $result");
     if (result["code"] == 0) {
@@ -900,8 +928,7 @@ class User {
     Dio client = BaseSingleton.singleton.dio;
 
     logger.d("fetchPaperClassInfo: start, $examId");
-    Response response =
-    await client.get('$telemetryPaperClassInfoUrl/$examId');
+    Response response = await client.get('$telemetryPaperClassInfoUrl/$examId');
     Map<String, dynamic> result = jsonDecode(response.data);
 
     logger.d("fetchPaperClassInfo: end, $result");
