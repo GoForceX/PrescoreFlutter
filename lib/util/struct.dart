@@ -112,6 +112,7 @@ class ExamDiagnosis {
 
 class Question {
   String questionId;
+  int topicNumber;
   double userScore;
   double fullScore;
   bool isSelected;
@@ -119,6 +120,7 @@ class Question {
 
   Question({
     required this.questionId,
+    required this.topicNumber,
     required this.userScore,
     required this.fullScore,
     required this.isSelected,
@@ -163,6 +165,11 @@ class Marker {
     required this.color,
     required this.message,
   });
+
+  @override
+  String toString() {
+    return 'Marker{type: $type, sheetId: $sheetId, top: $top, left: $left, topOffset: $topOffset, leftOffset: $leftOffset, height: $height, width: $width, color: $color, message: $message}';
+  }
 }
 
 class PaperData {

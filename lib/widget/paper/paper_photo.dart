@@ -158,6 +158,13 @@ class _PaperPhotoWidgetState extends State<PaperPhotoWidget> {
     double heightRate = 297 / frameInfo.image.height;
 
     for (var marker in markers) {
+      if (marker.left > 420) {
+        widthRate = 1;
+        heightRate = 1;
+      }
+    }
+
+    for (var marker in markers) {
       if (marker.sheetId == widget.sheetId) {
         switch (marker.type) {
           case MarkerType.singleChoice:

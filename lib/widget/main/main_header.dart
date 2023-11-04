@@ -186,7 +186,8 @@ class MainAppbarWidget extends StatelessWidget {
                 String subtitle = "";
                 if (snapshot.hasData) {
                   logger.d("basicInfo: ${snapshot.data}");
-                  if (snapshot.data.avatar != "") {
+                  if (snapshot.data.avatar != "" &&
+                      !(snapshot.data.avatar as String).contains('default')) {
                     image = FadeInImage.assetNetwork(
                         image: snapshot.data.avatar,
                         placeholder: 'assets/akarin.webp');
