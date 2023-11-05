@@ -68,6 +68,7 @@ dependencies:
   http: ^1.1.0
   firebase_core: ^2.16.0
   firebase_analytics: ^10.5.0
+  syncfusion_flutter_charts: ^23.1.43
 
 dev_dependencies:
   flutter_test:

@@ -26,7 +26,9 @@ class _SkillPartnerState extends State<SkillPartner> {
             shrinkWrap: false,
             children: const [
               SkillHeader(),
-              SizedBox(height: 20,),
+              SizedBox(
+                height: 20,
+              ),
               SkillMatch()
             ],
           ),
@@ -46,11 +48,29 @@ class SkillMatch extends StatefulWidget {
 class _SkillMatchState extends State<SkillMatch> {
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Flex(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       mainAxisSize: MainAxisSize.max,
+      direction: Axis.horizontal,
       children: [
-        Column(
+        Flex(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          direction: Axis.vertical,
+          children: [
+            const Text("比赛"),
+            const Text("0"),
+          ],
+        ),
+        Expanded(child: DecoratedBox(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey),
+          ),
+        )),
+        Flex(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          direction: Axis.vertical,
           children: [
             const Text("比赛"),
             const Text("0"),

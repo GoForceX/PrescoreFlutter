@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import '../../main.dart';
 import '../../util/user_util.dart';
+import '../drawer.dart';
 
 @RoutePage()
 class SkillPage extends StatefulWidget {
@@ -25,8 +26,17 @@ class _SkillPageState extends State<SkillPage> {
     logger.d("skill system: init");
 
     if (widget.user == null) {
-      return const Center(
-        child: Text('请先在主页登录哦~', style: TextStyle(fontSize: 18),),
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('出分啦'),
+        ),
+        drawer: const MainDrawer(),
+        body: const Center(
+          child: Text(
+            '请先在主页登录哦~',
+            style: TextStyle(fontSize: 18),
+          ),
+        ),
       );
     }
 
@@ -34,6 +44,7 @@ class _SkillPageState extends State<SkillPage> {
       appBar: AppBar(
         title: const Text('出分啦'),
       ),
+      drawer: const MainDrawer(),
       body: ChangeNotifierProvider(
         create: (_) => SkillModel(),
         builder: (BuildContext context, Widget? child) {

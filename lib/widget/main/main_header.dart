@@ -226,6 +226,8 @@ class _FallbackAppbarWidgetState extends State<FallbackAppbarWidget> {
 
   void callback() {
     logger.d("get callback");
+    BaseSingleton.singleton.currentUser =
+        Provider.of<LoginModel>(context, listen: false).user;
     Provider.of<LoginModel>(context, listen: false).setLoggedIn(true);
     Provider.of<LoginModel>(context, listen: false).user.telemetryLogin();
   }
@@ -349,7 +351,10 @@ class _FallbackAppbarWidgetState extends State<FallbackAppbarWidget> {
                                 SnackBar snackBar = SnackBar(
                                   content: Text(
                                       '呜呜呜，登录失败了……\n失败原因：${result.message}'),
-                                  backgroundColor: Colors.grey.withOpacity(0.5),
+                                  backgroundColor:
+                                      ThemeMode.system == ThemeMode.dark
+                                          ? Colors.grey[900]
+                                          : Colors.grey[200],
                                 );
                                 BaseSingleton.singleton.currentUser = null;
                                 ScaffoldMessenger.of(context)
