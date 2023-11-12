@@ -49,9 +49,9 @@ class DetailCard extends StatelessWidget {
                       const SizedBox(
                         width: 16,
                       ),
-                      Column(
+                      const Column(
                         mainAxisAlignment: MainAxisAlignment.end,
-                        children: const [
+                        children: [
                           Text(
                             "/",
                             style: TextStyle(fontSize: 16),
@@ -91,36 +91,22 @@ class DetailCard extends StatelessWidget {
             FutureBuilder(
               future: Provider.of<ExamModel>(context, listen: false)
                   .user
-                  .fetchPaperPredict(paper.paperId, paper.userScore),
-              builder: (BuildContext context, AsyncSnapshot snapshot) {
+                  .fetchPaperPercentile(
+                      paper.examId, paper.paperId, paper.userScore),
+              builder: (BuildContext context,
+                  AsyncSnapshot<Result<PaperPercentile>> snapshot) {
                 logger.d("DetailPredict: ${snapshot.data}");
                 if (snapshot.hasData) {
-                  if (snapshot.data.state) {
-                    if (snapshot.data.result[1] < 0) {
-                      Widget predict = DetailPredict(
-                          subjectId: paper.subjectId,
-                          subjectName: paper.name,
-                          version: snapshot.data.result[0],
-                          percentage: 0,
-                          assignScore: paper.assignScore);
-                      return predict;
-                    } else if (snapshot.data.result[1] > 1) {
-                      Widget predict = DetailPredict(
-                          subjectId: paper.subjectId,
-                          subjectName: paper.name,
-                          version: snapshot.data.result[0],
-                          percentage: 1,
-                          assignScore: paper.assignScore);
-                      return predict;
-                    } else {
-                      Widget predict = DetailPredict(
-                          subjectId: paper.subjectId,
-                          subjectName: paper.name,
-                          version: snapshot.data.result[0],
-                          percentage: snapshot.data.result[1],
-                          assignScore: paper.assignScore);
-                      return predict;
-                    }
+                  if (snapshot.data!.state) {
+                    Widget predict = DetailPredict(
+                        subjectId: paper.subjectId,
+                        subjectName: paper.name,
+                        version: snapshot.data!.result!.version,
+                        percentage: snapshot.data!.result!.percentile,
+                        official: snapshot.data!.result!.official,
+                        count: snapshot.data!.result!.count,
+                        assignScore: paper.assignScore);
+                    return predict;
                   } else {
                     return Container();
                   }
@@ -130,6 +116,8 @@ class DetailCard extends StatelessWidget {
                       subjectName: paper.name,
                       version: -1,
                       percentage: -1,
+                      official: false,
+                      count: -1,
                       assignScore: paper.assignScore);
                 }
               },
@@ -188,12 +176,16 @@ class DetailPredict extends StatelessWidget {
   final int version;
   final double percentage;
   final double? assignScore;
+  final bool official;
+  final int count;
   const DetailPredict(
       {Key? key,
       required this.subjectId,
       required this.subjectName,
       required this.version,
       required this.percentage,
+      required this.official,
+      required this.count,
       this.assignScore})
       : super(key: key);
 
@@ -216,19 +208,23 @@ class DetailPredict extends StatelessWidget {
                     children: [
                       Container(
                         height: 20,
-                        width: 32,
+                        width: official ? 56 : 32,
                         decoration: BoxDecoration(
                           color: Colors.grey.withOpacity(0.5),
                           borderRadius: const BorderRadius.all(
                             Radius.circular(4),
                           ),
                         ),
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
                         child: Center(
+                            child: FittedBox(
                           child: Text(
-                            'v$version',
+                            official
+                                ? '${(percentage * count).ceil()} / $count'
+                                : 'v$version',
                             style: const TextStyle(fontSize: 12),
                           ),
-                        ),
+                        )),
                       ),
                       const SizedBox(
                         width: 16,
@@ -241,9 +237,9 @@ class DetailPredict extends StatelessWidget {
                   fit: BoxFit.scaleDown,
                   child: Row(
                     children: [
-                      const Text(
-                        "预测年排百分比：",
-                        style: TextStyle(fontSize: 24),
+                      Text(
+                        official ? "实际年排百分比：" : "预测年排百分比：",
+                        style: const TextStyle(fontSize: 24),
                       ),
                       Text(
                         percentage != -1
@@ -254,9 +250,9 @@ class DetailPredict extends StatelessWidget {
                       const SizedBox(
                         width: 16,
                       ),
-                      Column(
+                      const Column(
                         mainAxisAlignment: MainAxisAlignment.end,
-                        children: const [
+                        children: [
                           Text(
                             "%",
                             style: TextStyle(fontSize: 24),
@@ -286,42 +282,51 @@ class DetailPredict extends StatelessWidget {
                   return Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Container(
-                        height: 20,
-                        width: 32,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.withOpacity(0.5),
-                          borderRadius: const BorderRadius.all(
-                            Radius.circular(4),
-                          ),
-                        ),
-                        child: Center(
-                          child: Text(
-                            'v$version',
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(
-                        width: 16,
-                      ),
+                      Builder(builder: (BuildContext ctx) {
+                        if (official) {
+                          return Container();
+                        }
+                        return Row(
+                          children: [
+                            Container(
+                              height: 20,
+                              width: 32,
+                              decoration: BoxDecoration(
+                                color: Colors.grey.withOpacity(0.5),
+                                borderRadius: const BorderRadius.all(
+                                  Radius.circular(4),
+                                ),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'v$version',
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(
+                              width: 16,
+                            ),
+                          ],
+                        );
+                      }),
                       Flexible(
                           child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Text(
-                                  "预测赋分：",
-                                  style: TextStyle(fontSize: 24),
-                                ),
-                                Text(
-                                  "${getScoringResult(percentage).toInt()}",
-                                  style: const TextStyle(fontSize: 32),
-                                ),
-                              ],
+                        fit: BoxFit.scaleDown,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text(
+                              "预测赋分：",
+                              style: TextStyle(fontSize: 24),
                             ),
-                          ))
+                            Text(
+                              "${getScoringResult(percentage).toInt()}",
+                              style: const TextStyle(fontSize: 32),
+                            ),
+                          ],
+                        ),
+                      ))
                     ],
                   );
                 }),
@@ -338,21 +343,21 @@ class DetailPredict extends StatelessWidget {
                     children: [
                       Flexible(
                           child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Text(
-                                  "实际赋分：",
-                                  style: TextStyle(fontSize: 24),
-                                ),
-                                Text(
-                                  "$assignScore",
-                                  style: const TextStyle(fontSize: 32),
-                                ),
-                              ],
+                        fit: BoxFit.scaleDown,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text(
+                              "实际赋分：",
+                              style: TextStyle(fontSize: 24),
                             ),
-                          ))
+                            Text(
+                              "$assignScore",
+                              style: const TextStyle(fontSize: 32),
+                            ),
+                          ],
+                        ),
+                      ))
                     ],
                   );
                 }),

@@ -775,6 +775,83 @@ class User {
     return Result(state: true, message: "", result: markers);
   }
 
+  // fetch paper actual percentile
+  Future<Result<PaperPercentile>> fetchPaperOfficialPercentile(
+      String examId, String paperId) async {
+    Dio client = BaseSingleton.singleton.dio;
+
+    if (session == null) {
+      return Result(state: false, message: "未登录");
+    }
+    logger.d("fetchPaperPercentile, xToken: ${session?.xToken}");
+    Response response =
+        await client.get("$zhixueTrendUrl?examId=$examId&paperId=$paperId");
+    logger.d("paperPercentile: ${response.data}");
+    Map<String, dynamic> json = jsonDecode(response.data);
+    logger.d("paperPercentile: $json");
+    if (json["errorCode"] != 0) {
+      logger.d("paperPercentile: failed");
+      return Result(state: false, message: json["errorInfo"]);
+    }
+
+    try {
+      Map<String, dynamic> data = json["result"]["list"][0];
+      Map<String, dynamic> improveBar = data["improveBar"];
+
+      String scale = improveBar["levelScale"];
+      int offset = improveBar["offset"];
+
+      String tagCode = data["tag"]["code"];
+      int count = data["statTotalNum"];
+
+      if (scale.startsWith("G") && tagCode == "grade") {
+        int numeralScale = (int.parse(scale.substring(1)) - 1);
+
+        double percentile = numeralScale * 10 + (offset / 10);
+        percentile = 1 - percentile / 100;
+
+        logger.d("paperPercentile: success, $percentile");
+        return Result(
+            state: true,
+            message: "",
+            result: PaperPercentile(
+                percentile: percentile,
+                count: count,
+                version: 0,
+                official: true));
+      } else {
+        logger.d("paperPercentile: success, no data");
+        return Result(state: false, message: "无数据");
+      }
+    } catch (e) {
+      logger.e("paperPercentile: $e");
+      return Result(state: false, message: "获取失败");
+    }
+  }
+
+  Future<Result<PaperPercentile>> fetchPaperPercentile(
+      String examId, String paperId, double score) async {
+    Result<PaperPercentile> officialResult =
+        await fetchPaperOfficialPercentile(examId, paperId);
+    if (officialResult.state) {
+      return officialResult;
+    } else {
+      Result<List<dynamic>> pred = await fetchPaperPredict(paperId, score);
+      if (pred.state) {
+        return Result(
+            state: true,
+            message: "",
+            result: PaperPercentile(
+                percentile: pred.result![1],
+                count: 1,
+                version: pred.result![0],
+                official: false));
+      } else {
+        return Result(state: false, message: pred.message);
+      }
+    }
+  }
+
   Future<Result<String>> uploadPaperData(Paper paper) async {
     SharedPreferences shared = await SharedPreferences.getInstance();
     bool? allowed = shared.getBool("allowTelemetry");

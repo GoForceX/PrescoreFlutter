@@ -247,3 +247,21 @@ class ClassInfo {
     return 'ClassInfo{classId: $classId, className: $className, count: $count, max: $max, min: $min, avg: $avg, med: $med}';
   }
 }
+
+class PaperPercentile {
+  double percentile;
+  int count;
+  int version;
+  bool official;
+
+  PaperPercentile(
+      {required this.percentile,
+      required this.count,
+      required this.version,
+      required this.official});
+
+  @override
+  String toString() {
+    return 'PaperPercentile{percentile: $percentile, count: $count, version: $version, official: $official}';
+  }
+}
