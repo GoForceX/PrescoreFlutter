@@ -62,7 +62,10 @@ class _SkillPageState extends State<SkillPage> {
               chosenWidget = Container();
           }
           return Center(
-            child: chosenWidget,
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              child: chosenWidget,
+            ),
           );
         },
       ),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:prescore_flutter/widget/skill/skill_detail.dart';
 import 'package:prescore_flutter/widget/skill/skill_header.dart';
 import 'package:provider/provider.dart';
+import 'package:syncfusion_flutter_charts/charts.dart';
 
 import '../../model/skill_model.dart';
 import '../../util/user_util.dart';
@@ -24,13 +26,7 @@ class _SkillPartnerState extends State<SkillPartner> {
           child: ListView(
             padding: const EdgeInsets.all(8),
             shrinkWrap: false,
-            children: const [
-              SkillHeader(),
-              SizedBox(
-                height: 20,
-              ),
-              SkillMatch()
-            ],
+            children: const [SkillMatch()],
           ),
         )
       ],
@@ -46,35 +42,96 @@ class SkillMatch extends StatefulWidget {
 }
 
 class _SkillMatchState extends State<SkillMatch> {
+  List<ChartData> p1 = [
+    ChartData("语文", -3.055),
+    ChartData("数学", 2.325),
+    ChartData("英语", -3.417),
+    ChartData("物理", -2.773),
+    ChartData("化学", 4.125),
+    ChartData("生物", 1.844)
+  ];
+  List<ChartData> p2 = [
+    ChartData("语文", 2.055),
+    ChartData("数学", 7.325),
+    ChartData("英语", -1.841),
+    ChartData("物理", 2.483),
+    ChartData("化学", -4.125),
+    ChartData("生物", 1.844)
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Flex(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       mainAxisSize: MainAxisSize.max,
+      crossAxisAlignment: CrossAxisAlignment.center,
       direction: Axis.horizontal,
       children: [
-        Flex(
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          direction: Axis.vertical,
-          children: [
-            const Text("比赛"),
-            const Text("0"),
-          ],
-        ),
-        Expanded(child: DecoratedBox(
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey),
+        Expanded(
+          child: Column(
+            children: [
+              const Text("你的能力"),
+              const SizedBox(
+                height: 8,
+              ),
+              const CircleAvatar(
+                radius: 40,
+                backgroundImage: AssetImage('assets/akarin.webp'),
+              ),
+              const SizedBox(
+                height: 8,
+              ),
+              const Text("P1"),
+              SfCartesianChart(
+                primaryXAxis: CategoryAxis(),
+                series: <ChartSeries>[
+                  BarSeries<ChartData, String>(
+                    dataSource: p1,
+                    xValueMapper: (ChartData data, _) => data.x,
+                    yValueMapper: (ChartData data, _) => data.y,
+                    pointColorMapper: (ChartData data, int index) =>
+                        p1[index].y > p2[index].y
+                            ? Colors.yellow
+                            : Colors.blueGrey,
+                    dataLabelSettings: const DataLabelSettings(isVisible: true),
+                  )
+                ],
+              )
+            ],
           ),
-        )),
-        Flex(
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          direction: Axis.vertical,
-          children: [
-            const Text("比赛"),
-            const Text("0"),
-          ],
+        ),
+        Expanded(
+          child: Column(
+            children: [
+              const Text("对方能力"),
+              const SizedBox(
+                height: 8,
+              ),
+              const CircleAvatar(
+                radius: 40,
+                backgroundImage: AssetImage('assets/akarin.webp'),
+              ),
+              const SizedBox(
+                height: 8,
+              ),
+              const Text("P2"),
+              SfCartesianChart(
+                primaryXAxis: CategoryAxis(),
+                series: <ChartSeries>[
+                  BarSeries<ChartData, String>(
+                    dataSource: p2,
+                    xValueMapper: (ChartData data, _) => data.x,
+                    yValueMapper: (ChartData data, _) => data.y,
+                    pointColorMapper: (ChartData data, int index) =>
+                        p2[index].y > p1[index].y
+                            ? Colors.yellow
+                            : Colors.blueGrey,
+                    dataLabelSettings: const DataLabelSettings(isVisible: true),
+                  )
+                ],
+              )
+            ],
+          ),
         ),
       ],
     );
