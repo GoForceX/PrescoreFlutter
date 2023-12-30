@@ -22,6 +22,7 @@ const String zhixueDiagnosisUrl =
     "$zhixueServiceUrl/report/exam/getSubjectDiagnosis";
 const String zhixueChecksheetUrl = "$zhixueServiceUrl/report/checksheet/";
 const String zhixueTrendUrl = "$zhixueServiceUrl/report/paper/getLevelTrend";
+const String zhixueTranscriptUrl = "$zhixueServiceUrl/zhixuebao/transcript/analysis/main/";
 
 const String telemetryBaseUrl = "https://matrix.bjbybbs.com/api";
 

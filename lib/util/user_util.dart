@@ -1,6 +1,7 @@
 import 'dart:convert';
-import 'dart:io';
 
+import 'package:html/parser.dart';
+import 'package:html/dom.dart' as dom;
 import 'package:dio/dio.dart';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:encrypt/encrypt.dart';
@@ -486,6 +487,53 @@ class User {
         result: ExamDiagnosis(tips: tips, subTips: subTips, diagnoses: diags));
   }
 
+  Future<Result<List<Question>>> fetchTranscriptData(String subjectId,
+      String examId, String paperId, List<Question> questions) async {
+    Dio client = BaseSingleton.singleton.dio;
+
+    if (session == null) {
+      return Result(state: false, message: "未登录");
+    }
+    logger.d(
+        "fetchTranscriptData, url: $zhixueTranscriptUrl?subjectCode=$subjectId&examId=$examId&paperId=$paperId&token=${session?.xToken}");
+    Response response = await client.get(
+        "$zhixueTranscriptUrl?subjectCode=$subjectId&examId=$examId&paperId=$paperId&token=${session?.xToken}");
+    logger.d("transcriptData: ${response.data}");
+
+    dom.Document document = parse(response.data);
+    List<dom.Element> elements = document.getElementsByTagName('script');
+    String transcriptData = "";
+    for (var element in elements) {
+      transcriptData = "$transcriptData${element.innerHtml}\n";
+    }
+
+    RegExp regExp = RegExp(r'var hisQueParseDetail = (.*);');
+    if (regExp.hasMatch(transcriptData)) {
+      transcriptData = regExp.firstMatch(transcriptData)!.group(1)!;
+      logger.d("transcriptData: $transcriptData");
+
+      List<dynamic> transcriptDataDynamic = jsonDecode(transcriptData);
+      for (var section in transcriptDataDynamic) {
+        List<dynamic> topicAnalysisDTOs = section["topicAnalysisDTOs"];
+        for (var data in topicAnalysisDTOs) {
+          try {
+            logger.d("fetchTranscriptData, data: $data");
+            Question question = questions.firstWhere(
+                (element2) => element2.topicNumber == data["topicNumber"]);
+            question.classScoreRate = data["classScoreRate"];
+            logger.d("fetchTranscriptData, data: $question");
+          } catch (e) {
+            logger.e("fetchTranscriptData: $e");
+            return Result(state: false, message: "解析失败");
+          }
+        }
+      }
+      return Result(state: true, message: "", result: questions);
+    } else {
+      return Result(state: false, message: "解析失败");
+    }
+  }
+
   Future<Result<PaperData>> fetchPaperData(
       String examId, String paperId) async {
     Dio client = BaseSingleton.singleton.dio;
@@ -552,6 +600,19 @@ class User {
       } on Exception catch (e) {
         logger.e("parseMarkers: $e");
       }
+    }
+
+    try {
+      Result transcriptResult =
+          await fetchTranscriptData("00", examId, paperId, questions);
+      if (transcriptResult.state) {
+        questions = transcriptResult.result;
+        logger.d("fetchTranscriptData, success: $questions");
+      } else {
+        logger.e("fetchTranscriptData, fail end: ${transcriptResult.message}");
+      }
+    } catch (e) {
+      logger.e("fetchTranscriptData: $e");
     }
 
     logger.d("paperData: success, $sheetImages");

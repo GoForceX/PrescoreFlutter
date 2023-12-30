@@ -117,6 +117,7 @@ class Question {
   double fullScore;
   bool isSelected;
   String? selectedAnswer;
+  double? classScoreRate;
 
   Question({
     required this.questionId,
@@ -125,11 +126,12 @@ class Question {
     required this.fullScore,
     required this.isSelected,
     this.selectedAnswer,
+    this.classScoreRate,
   });
 
   @override
   String toString() {
-    return 'Question{questionId: $questionId, userScore: $userScore, fullScore: $fullScore, isSelected: $isSelected, selectedAnswer: $selectedAnswer}';
+    return 'Question{questionId: $questionId, userScore: $userScore, fullScore: $fullScore, isSelected: $isSelected, selectedAnswer: $selectedAnswer, classScoreRate: $classScoreRate}';
   }
 }
 
@@ -263,5 +265,21 @@ class PaperPercentile {
   @override
   String toString() {
     return 'PaperPercentile{percentile: $percentile, count: $count, version: $version, official: $official}';
+  }
+}
+
+class ExamPercentile {
+  double percentile;
+  int count;
+  bool official;
+
+  ExamPercentile(
+      {required this.percentile,
+        required this.count,
+        required this.official});
+
+  @override
+  String toString() {
+    return 'ExamPercentile{percentile: $percentile, count: $count, official: $official}';
   }
 }

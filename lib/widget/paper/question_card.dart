@@ -41,9 +41,9 @@ class QuestionCard extends StatelessWidget {
                       const SizedBox(
                         width: 16,
                       ),
-                      Column(
+                      const Column(
                         mainAxisAlignment: MainAxisAlignment.end,
-                        children: const [
+                        children: [
                           Text(
                             "/",
                             style: TextStyle(fontSize: 16),
@@ -77,6 +77,133 @@ class QuestionCard extends StatelessWidget {
               ),
               barRadius: const Radius.circular(4),
             ),
+            Builder(builder: (BuildContext context) {
+              if (question.classScoreRate != null) {
+                return Container(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      FittedBox(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            const Column(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Text(
+                                  "班级得分率：",
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                                SizedBox(
+                                  height: 12,
+                                )
+                              ],
+                            ),
+                            Text(
+                              ((question.classScoreRate ?? 0) * 100)
+                                  .toStringAsFixed(2),
+                              style: const TextStyle(fontSize: 48),
+                            ),
+                            const SizedBox(
+                              width: 16,
+                            ),
+                            const Column(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Text(
+                                  "%",
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                                SizedBox(
+                                  height: 12,
+                                )
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      FittedBox(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            const Column(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Text(
+                                  "班级平均分：",
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                                SizedBox(
+                                  height: 12,
+                                )
+                              ],
+                            ),
+                            Text(
+                              ((question.classScoreRate ?? 0) *
+                                      question.fullScore)
+                                  .toStringAsFixed(2),
+                              style: const TextStyle(fontSize: 48),
+                            ),
+                            const SizedBox(
+                              width: 16,
+                            ),
+                            const Column(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Text(
+                                  "/",
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                                SizedBox(
+                                  height: 12,
+                                )
+                              ],
+                            ),
+                            const SizedBox(
+                              width: 16,
+                            ),
+                            Text(
+                              "${question.fullScore}",
+                              style: const TextStyle(fontSize: 48),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 16,
+                      ),
+                    ],
+                  ),
+                );
+              } else {
+                return const SizedBox.shrink();
+              }
+            }),
+            Builder(builder: (BuildContext context) {
+              if (question.classScoreRate != null) {
+                return LinearPercentIndicator(
+                  lineHeight: 8.0,
+                  percent: question.classScoreRate ?? 0,
+                  backgroundColor: Colors.grey,
+                  linearGradient: const LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    colors: [
+                      Colors.lightBlueAccent,
+                      Colors.lightBlue,
+                      Colors.blue
+                    ],
+                  ),
+                  barRadius: const Radius.circular(4),
+                );
+              } else {
+                return const SizedBox.shrink();
+              }
+            }),
           ],
         ));
 
