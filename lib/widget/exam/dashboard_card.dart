@@ -20,8 +20,6 @@ class DashboardCard extends StatefulWidget {
 }
 
 class _DashboardCardState extends State<DashboardCard> {
-
-
   @override
   Widget build(BuildContext context) {
     List<Widget> children = [];
@@ -133,18 +131,24 @@ class _DashboardCardState extends State<DashboardCard> {
             if (snapshot.data.state) {
               Future.delayed(Duration.zero, () {
                 Provider.of<ExamModel>(context, listen: false)
-                    .setPapers(snapshot.data.result);
+                    .setPapers(snapshot.data.result[0]);
+                Provider.of<ExamModel>(context, listen: false)
+                    .setAbsentPapers(snapshot.data.result[1]);
                 Provider.of<ExamModel>(context, listen: false)
                     .setPaperLoaded(true);
               });
               double userScore = 0;
-              for (var element in snapshot.data.result) {
+
+              List<Paper> papers = snapshot.data.result[0];
+              // List<Paper> absentPapers = snapshot.data.result[1];
+
+              for (var element in papers) {
                 userScore += element.userScore;
               }
 
               double assignScore = 0;
               int noAssignCount = 0;
-              for (var element in snapshot.data.result) {
+              for (var element in papers) {
                 if (element.assignScore == null) {
                   noAssignCount += 1;
                 }
@@ -152,10 +156,10 @@ class _DashboardCardState extends State<DashboardCard> {
               }
 
               double fullScore = 0;
-              for (var element in snapshot.data.result) {
+              for (var element in papers) {
                 fullScore += element.fullScore;
               }
-              if (noAssignCount != snapshot.data.result.length) {
+              if (noAssignCount != papers.length) {
                 Widget chart = DashboardInfo(
                   userScore: userScore,
                   fullScore: fullScore,
@@ -170,7 +174,7 @@ class _DashboardCardState extends State<DashboardCard> {
                 infoChildren.add(chart);
               }
 
-              Widget lst = DashboardList(papers: snapshot.data.result);
+              Widget lst = DashboardList(papers: papers);
               infoChildren.add(lst);
 
               return ListView(
@@ -265,63 +269,81 @@ class _DashboardCardState extends State<DashboardCard> {
       );
     }));
 
-    if (Provider.of<ExamModel>(context, listen: false).isDiagLoaded) {
-      Widget chart = DashboardChart(
-        diagnoses: Provider.of<ExamModel>(context, listen: false).diagnoses,
-        tips: Provider.of<ExamModel>(context, listen: false).tips,
-        subTips: Provider.of<ExamModel>(context, listen: false).subTips,
-      );
-      children.add(chart);
+    Future.delayed(Duration.zero, () async {
+      Result<ExamDiagnosis> result = await Provider.of<ExamModel>(context, listen: false)
+          .user
+          .fetchPaperDiagnosis(widget.examId);
 
-      Widget ranking = DashboardRanking(
-          diagnoses: Provider.of<ExamModel>(context, listen: false).diagnoses);
-      children.add(ranking);
-    } else {
-      FutureBuilder futureBuilder = FutureBuilder(
-        future: Provider.of<ExamModel>(context, listen: false)
-            .user
-            .fetchPaperDiagnosis(widget.examId),
-        builder: (BuildContext context, AsyncSnapshot snapshot) {
-          if (snapshot.hasData) {
-            if (snapshot.data.state) {
-              Future.delayed(Duration.zero, () {
-                Provider.of<ExamModel>(context, listen: false)
-                    .setDiagnoses(snapshot.data.result.diagnoses);
-                Provider.of<ExamModel>(context, listen: false)
-                    .setTips(snapshot.data.result.tips);
-                Provider.of<ExamModel>(context, listen: false)
-                    .setSubTips(snapshot.data.result.subTips);
-                Provider.of<ExamModel>(context, listen: false)
-                    .setDiagFetched(true);
-                Provider.of<ExamModel>(context, listen: false)
-                    .setDiagLoaded(true);
-              });
-              return Column(
-                children: [
-                  DashboardChart(
-                      diagnoses: snapshot.data.result.diagnoses,
-                      tips: snapshot.data.result.tips,
-                      subTips: snapshot.data.result.subTips),
-                  DashboardRanking(diagnoses: snapshot.data.result.diagnoses),
-                ],
-              );
-            } else {
-              Future.delayed(Duration.zero, () {
-                Provider.of<ExamModel>(context, listen: false)
-                    .setDiagFetched(true);
-              });
-              return Container();
-            }
-          } else {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+      if (result.state && context.mounted) {
+        Provider.of<ExamModel>(context, listen: false)
+            .setDiagnoses(result.result!.diagnoses);
+        Provider.of<ExamModel>(context, listen: false)
+            .setTips(result.result!.tips);
+        Provider.of<ExamModel>(context, listen: false)
+            .setSubTips(result.result!.subTips);
+        Provider.of<ExamModel>(context, listen: false)
+            .setDiagFetched(true);
+        Provider.of<ExamModel>(context, listen: false)
+            .setDiagLoaded(true);
+      } else if (context.mounted) {
+        Provider.of<ExamModel>(context, listen: false)
+            .setDiagFetched(true);
+      }
+    });
+
+    children.add(Consumer(builder:
+        (BuildContext consumerContext, ExamModel examModel, Widget? child) {
+      if (examModel.isPaperLoaded && examModel.isDiagLoaded) {
+
+        List<PaperDiagnosis> diagnoses = [];
+        bool absentFlag = false;
+        for (var element in examModel.diagnoses) {
+          if (examModel.absentPapers
+              .where((paper) => paper.subjectId == element.subjectId)
+              .isEmpty) {
+            diagnoses.add(element);
+            absentFlag = true;
           }
-        },
-      );
+        }
 
-      children.add(futureBuilder);
-    }
+        String tips = examModel.tips;
+        if (absentFlag) {
+          String bestSubject = diagnoses
+              .reduce((curr, next) =>
+                  curr.diagnosticScore < next.diagnosticScore ? curr : next)
+              .subjectName;
+          double bestScore = diagnoses
+              .reduce((curr, next) =>
+                  curr.diagnosticScore < next.diagnosticScore ? curr : next)
+              .diagnosticScore;
+          String worstSubject = diagnoses
+              .reduce((curr, next) =>
+                  curr.diagnosticScore > next.diagnosticScore ? curr : next)
+              .subjectName;
+          double worstScore = diagnoses
+              .reduce((curr, next) =>
+                  curr.diagnosticScore > next.diagnosticScore ? curr : next)
+              .diagnosticScore;
+          if (worstScore - bestScore > 30) {
+            tips = "尽管${bestSubject}成绩不错，但${worstSubject}有些偏科哦";
+          } else {
+            tips = "你的各科成绩相差不大，继续努力哦";
+          }
+        }
+
+        return Column(
+          children: [
+            DashboardChart(
+                diagnoses: diagnoses,
+                tips: tips,
+                subTips: examModel.subTips),
+            DashboardRanking(diagnoses: diagnoses),
+          ],
+        );
+      } else {
+        return Container();
+      }
+    }));
 
     ListView listView = ListView(
       padding: const EdgeInsets.all(8),

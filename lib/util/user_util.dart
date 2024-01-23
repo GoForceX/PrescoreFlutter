@@ -380,7 +380,7 @@ class User {
   }
 
   /// Fetch exam report from [zhixueReportUrl].
-  Future<Result<List<Paper>>> fetchPaper(String examId) async {
+  Future<Result<List<List<Paper>>>> fetchPaper(String examId) async {
     Dio client = BaseSingleton.singleton.dio;
 
     if (session == null) {
@@ -397,7 +397,56 @@ class User {
     }
 
     List<Paper> papers = [];
+    List<Paper> absentPapers = [];
     dynamic paperList = json["result"]["paperList"];
+    dynamic absentPaperList = [];
+    if (json["result"].containsKey("absentPaperList")) {
+      absentPaperList = json["result"]["absentPaperList"];
+    }
+    logger.d("absentPaperList: $absentPaperList");
+
+    for (int i = 0; i < absentPaperList.length; i++) {
+      Map<String, dynamic> element = absentPaperList[i];
+      if (element.containsKey("userScore")) {
+        if (element.containsKey("hasAssignScore")) {
+          if (element["hasAssignScore"]) {
+            absentPapers.add(Paper(
+                examId: examId,
+                paperId: element["paperId"],
+                name: element["subjectName"],
+                subjectId: element["subjectCode"],
+                userScore: element["preAssignScore"],
+                fullScore: element["standardScore"],
+                assignScore: element["userScore"]));
+          } else {
+            absentPapers.add(Paper(
+                examId: examId,
+                paperId: element["paperId"],
+                name: element["subjectName"],
+                subjectId: element["subjectCode"],
+                userScore: element["preAssignScore"],
+                fullScore: element["standardScore"]));
+          }
+        } else {
+          absentPapers.add(Paper(
+              examId: examId,
+              paperId: element["paperId"],
+              name: element["subjectName"],
+              subjectId: element["subjectCode"],
+              userScore: element["userScore"],
+              fullScore: element["standardScore"]));
+        }
+      } else {
+        absentPapers.add(Paper(
+            examId: examId,
+            paperId: element["paperId"],
+            name: element["subjectName"],
+            subjectId: element["subjectCode"],
+            userScore: 0,
+            fullScore: element["standardScore"]));
+      }
+    }
+
     for (int i = 0; i < paperList.length; i++) {
       Map<String, dynamic> element = paperList[i];
       if (element.containsKey("userScore")) {
@@ -450,7 +499,7 @@ class User {
       }
     }
     logger.d("paper: success, $papers");
-    return Result(state: true, message: "", result: papers);
+    return Result(state: true, message: "", result: [papers, absentPapers]);
   }
 
   Future<Result<ExamDiagnosis>> fetchPaperDiagnosis(String examId) async {

@@ -44,11 +44,16 @@ class _ExamDetailState extends State<ExamDetail> {
             if (snapshot.data.state) {
               List<Widget> children = [];
               Provider.of<ExamModel>(context, listen: false)
-                  .setPapers(snapshot.data.result);
+                  .setPapers(snapshot.data.result[0]);
+              Provider.of<ExamModel>(context, listen: false)
+                  .setAbsentPapers(snapshot.data.result[1]);
               Provider.of<ExamModel>(context, listen: false)
                   .setPaperLoaded(true);
 
-              for (var element in snapshot.data.result) {
+              List<Paper> papers = snapshot.data.result[0];
+              // List<Paper> absentPapers = snapshot.data.result[1];
+
+              for (var element in papers) {
                 Widget chart = DetailCard(examId: widget.examId, paper: element);
                 children.add(chart);
               }
