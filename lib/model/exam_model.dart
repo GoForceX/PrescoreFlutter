@@ -14,6 +14,7 @@ class ExamModel extends ChangeNotifier {
 
   bool isPaperLoaded = false;
   List<Paper> papers = [];
+  List<Paper> absentPapers = [];
 
   void setUser(User value) {
     user = value;
@@ -52,6 +53,11 @@ class ExamModel extends ChangeNotifier {
 
   void setPapers(List<Paper> value) {
     papers = value;
+    notifyListeners();
+  }
+
+  void setAbsentPapers(List<Paper> value) {
+    absentPapers = value;
     notifyListeners();
   }
 }

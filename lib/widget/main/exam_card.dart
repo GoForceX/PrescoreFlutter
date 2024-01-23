@@ -91,7 +91,7 @@ class ExamCard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.all(12.0),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-      elevation: 8,
+      elevation: 4,
       child: InkWell(
           onTap: () {
             context.router.navigate(ExamRoute(uuid: uuid, user: user));

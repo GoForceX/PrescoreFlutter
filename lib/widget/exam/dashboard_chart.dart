@@ -86,16 +86,22 @@ class _DashboardChartState extends State<DashboardChart> {
                       )
                     ],
                     tickCount: 5,
-                    radarBorderData: const BorderSide(
-                      color: Colors.black,
+                    radarBorderData: BorderSide(
+                      color: ThemeMode.system == ThemeMode.dark
+                          ? Colors.grey.shade900
+                          : Colors.grey.shade500,
                       width: 1,
                     ),
-                    tickBorderData: const BorderSide(
-                      color: Colors.black,
+                    tickBorderData: BorderSide(
+                      color: ThemeMode.system == ThemeMode.dark
+                          ? Colors.grey.shade900
+                          : Colors.grey.shade500,
                       width: 1,
                     ),
-                    gridBorderData: const BorderSide(
-                      color: Colors.black,
+                    gridBorderData: BorderSide(
+                      color: ThemeMode.system == ThemeMode.dark
+                          ? Colors.grey.shade900
+                          : Colors.grey.shade500,
                       width: 1,
                     ),
                     titlePositionPercentageOffset: 0.1,
@@ -110,6 +116,7 @@ class _DashboardChartState extends State<DashboardChart> {
                   swapAnimationCurve: Curves.linear,
                 ),
               ),
+              const SizedBox(height: 8),
               Text(widget.tips, style: const TextStyle(fontSize: 16)),
               Text(widget.subTips, style: const TextStyle(fontSize: 12)),
             ],
@@ -119,7 +126,7 @@ class _DashboardChartState extends State<DashboardChart> {
         margin: const EdgeInsets.all(12.0),
         shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-        elevation: 8,
+        elevation: 4,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
