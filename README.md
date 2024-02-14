@@ -6,6 +6,7 @@
 
 > [!CAUTION]
 > 目前项目正处于无期限功能冻结 (Feature Freeze) 期。
+> This project might be DISCONTINUED any time. Use with caution. 
 
 ## 项目说明
 
