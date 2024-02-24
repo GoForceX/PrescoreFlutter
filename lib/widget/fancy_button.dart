@@ -29,9 +29,8 @@ class FancyButton extends StatelessWidget {
           FittedBox(
             child: TextButton(
               style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
+                foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(
                     vertical: 20.0, horizontal: 32.0),
-                primary: Colors.white,
                 textStyle: const TextStyle(fontSize: 20),
               ),
               onPressed: callback,
