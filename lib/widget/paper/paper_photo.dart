@@ -199,6 +199,22 @@ class _PaperPhotoWidgetState extends State<PaperPhotoWidget> {
                 Offset(marker.left / widthRate + marker.leftOffset,
                     marker.top / heightRate + marker.topOffset));
             break;
+          case MarkerType.detailScoreEnd:
+            ui.ParagraphBuilder pb = ui.ParagraphBuilder(ui.ParagraphStyle(
+                textAlign: TextAlign.right,
+                fontWeight: FontWeight.w400,
+                fontStyle: FontStyle.normal,
+                fontSize: 48.0));
+            pb.pushStyle(ui.TextStyle(color: marker.color));
+            pb.addText(marker.message);
+            ui.ParagraphConstraints pc =
+            const ui.ParagraphConstraints(width: 300);
+            ui.Paragraph paragraph = pb.build()..layout(pc);
+            canvas.drawParagraph(
+                paragraph,
+                Offset(marker.left / widthRate + marker.leftOffset,
+                    marker.top / heightRate + marker.topOffset));
+            break;
           case MarkerType.svgPicture:
             logger.d("svg: ${marker.type}, ${marker.message}");
             switch (marker.message) {

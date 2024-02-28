@@ -547,7 +547,7 @@ class User {
         "fetchTranscriptData, url: $zhixueTranscriptUrl?subjectCode=$subjectId&examId=$examId&paperId=$paperId&token=${session?.xToken}");
     Response response = await client.get(
         "$zhixueTranscriptUrl?subjectCode=$subjectId&examId=$examId&paperId=$paperId&token=${session?.xToken}");
-    logger.d("transcriptData: ${response.data}");
+    // logger.d("transcriptData: ${response.data}");
 
     dom.Document document = parse(response.data);
     List<dom.Element> elements = document.getElementsByTagName('script');
@@ -620,6 +620,30 @@ class User {
       if (element["answerType"] == "s01Text") {
         selectedAnswer = element["answer"];
       }
+      List<MapEntry<String, double>> stepRecords = [];
+      try {
+        if (element["subTopics"] != null) {
+          List<dynamic> subTopics = element["subTopics"];
+          logger.d("subTopics: $subTopics");
+          if (subTopics.length != 1) {
+            for (var subTopic in subTopics) {
+              stepRecords.add(
+                  MapEntry("${subTopic["subTopicIndex"]}", subTopic["score"]));
+            }
+          } else {
+            for (var subTopic in subTopics) {
+              if (subTopic["stepRecords"] != null) {
+                for (var stepRecord in subTopic["stepRecords"]) {
+                  stepRecords.add(
+                      MapEntry(stepRecord["stepTitle"], stepRecord["score"]));
+                }
+              }
+            }
+          }
+        }
+      } catch (e) {
+        logger.e("fetchPaperData: $e");
+      }
       questions.add(Question(
         questionId: element["dispTitle"],
         topicNumber: element["topicNumber"],
@@ -629,6 +653,7 @@ class User {
             ? element["isSelected"]
             : true,
         selectedAnswer: selectedAnswer,
+        stepRecords: stepRecords,
       ));
     }
 
@@ -689,6 +714,8 @@ class User {
         if (section["enabled"] || true) {
           double fullScore = 0;
           double userScore = 0;
+
+          List<MapEntry> stepRecords = [];
           switch (section["type"]) {
             case "SingleChoice":
               for (var branch in section["contents"]["branch"]) {
@@ -835,6 +862,9 @@ class User {
                     if (question.isSelected) {
                       fullScore += question.fullScore;
                       userScore += question.userScore;
+                      stepRecords.addAll(question.stepRecords
+                          .map((e) => MapEntry("$qid(${e.key})", e.value))
+                          .toList());
                     }
                   }
                 }
@@ -857,6 +887,21 @@ class User {
               height: 0,
               color: Colors.red.shade700,
               message: "-${fullScore - userScore}",
+            ));
+          }
+          if (stepRecords.isNotEmpty) {
+            markers.add(Marker(
+              type: MarkerType.detailScoreEnd,
+              sheetId: sheetId,
+              top: top,
+              left: left + width,
+              topOffset: 60,
+              leftOffset: -300,
+              width: 0,
+              height: 0,
+              color: Colors.red.shade700,
+              message:
+                  stepRecords.map((e) => "${e.key}: ${e.value}").join("\n"),
             ));
           }
           if (!["SingleChoice", "Object"].contains(section["type"]) &&

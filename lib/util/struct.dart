@@ -118,6 +118,7 @@ class Question {
   bool isSelected;
   String? selectedAnswer;
   double? classScoreRate;
+  List<MapEntry<String, double>> stepRecords;
 
   Question({
     required this.questionId,
@@ -127,11 +128,12 @@ class Question {
     required this.isSelected,
     this.selectedAnswer,
     this.classScoreRate,
+    required this.stepRecords,
   });
 
   @override
   String toString() {
-    return 'Question{questionId: $questionId, userScore: $userScore, fullScore: $fullScore, isSelected: $isSelected, selectedAnswer: $selectedAnswer, classScoreRate: $classScoreRate}';
+    return 'Question{questionId: $questionId, userScore: $userScore, fullScore: $fullScore, isSelected: $isSelected, selectedAnswer: $selectedAnswer, classScoreRate: $classScoreRate, stepRecords: $stepRecords}';
   }
 }
 
@@ -140,6 +142,7 @@ enum MarkerType {
   multipleChoice,
   shortAnswer,
   sectionEnd,
+  detailScoreEnd,
   svgPicture,
 }
 
