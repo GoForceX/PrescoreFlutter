@@ -55,7 +55,18 @@ class StudentInfo {
   String classId = "";
   String schoolName = "";
 
-  StudentInfo(this.id, this.loginName, this.name, this.role, this.avatar, this.studentNo, this.gradeName, this.className, this.classId, this.schoolName);
+  StudentInfo({
+    required this.id, 
+    required this.loginName, 
+    required this.name, 
+    required this.role, 
+    required this.avatar, 
+    required this.studentNo, 
+    required this.gradeName, 
+    required this.className, 
+    required this.classId, 
+    required this.schoolName
+  });
 
   @override
   String toString() {
@@ -70,11 +81,17 @@ class Classmate {
   String gender = "";
   String mobile = "";
 
-  Classmate(this.name, this.id, this.code, this.gender, this.mobile);
+  Classmate({
+    required this.name, 
+    required this.id, 
+    required this.code, 
+    required this.gender, 
+    required this.mobile
+  });
 
   @override
   String toString() {
-    return 'StudentInfo{name: $name, id: $id, code: $code, gender: $gender, mobile: $mobile}';
+    return 'Classmate{name: $name, id: $id, code: $code, gender: $gender, mobile: $mobile}';
   }
 }
 

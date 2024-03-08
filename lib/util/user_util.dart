@@ -521,16 +521,16 @@ class User {
     String avatar = json["student"]["avatar"] ?? "";
 
     StudentInfo studentInfo = StudentInfo(
-      json["student"]["id"],
-      json["student"]["loginName"],
-      json["student"]["name"],
-      json["student"]["roles"][0]["eName"],
-      avatar,
-      json["student"]["studentNo"],
-      json["student"]["clazz"]["grade"]["name"],
-      json["student"]["clazz"]["name"],
-      json["student"]["clazz"]["id"],
-      json["student"]["clazz"]["school"]["name"],
+      id: json["student"]["id"],
+      loginName: json["student"]["loginName"],
+      name: json["student"]["name"],
+      role: json["student"]["roles"][0]["eName"],
+      avatar: avatar,
+      studentNo: json["student"]["studentNo"],
+      gradeName: json["student"]["clazz"]["grade"]["name"],
+      className: json["student"]["clazz"]["name"],
+      classId: json["student"]["clazz"]["id"],
+      schoolName: json["student"]["clazz"]["school"]["name"],
     );
     this.studentInfo = studentInfo;
     logger.d("fetchStudentInfo: $studentInfo");
@@ -554,11 +554,11 @@ class User {
     List<Classmate> classmates = [];
     for(var classmate in json) {
       classmates.add(Classmate(
-        classmate["name"],
-        classmate["id"],
-        classmate["code"],
-        classmate["gender"] == 1 ? "女" : "男",
-        classmate["mobile"],
+        name: classmate["name"],
+        id: classmate["id"],
+        code: classmate["code"],
+        gender: classmate["gender"] == 1 ? "女" : "男",
+        mobile: classmate["mobile"],
       ));
     }
     logger.d("fetchClassmate: $classmates");
