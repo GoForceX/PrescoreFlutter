@@ -12,7 +12,8 @@ class ExamCard extends StatelessWidget {
       required this.uuid,
       required this.examName,
       required this.examType,
-      required this.examTime})
+      required this.examTime,
+      required this.isFinal})
       : super(key: key);
 
   final User user;
@@ -20,6 +21,7 @@ class ExamCard extends StatelessWidget {
   final String examName;
   final String examType;
   final DateTime examTime;
+  final bool isFinal;
 
   @override
   Widget build(BuildContext context) {
@@ -78,21 +80,39 @@ class ExamCard extends StatelessWidget {
           const SizedBox(
             height: 8,
           ),
-          Text(
-            DateFormat('yyyy-MM-dd').format(examTime),
-            style: const TextStyle(
-              fontSize: 16,
-            ),
-          ),
+          Row(
+            children: [
+              Text(
+                DateFormat('yyyy-MM-dd').format(examTime),
+                style: const TextStyle(
+                  fontSize: 16,
+                ),
+              ),
+              Expanded(child: Container()),
+              Icon(isFinal ? Icons.public_off : Icons.public, size: 10),
+              Text(
+                isFinal ? " 已结束" : " 正在进行",
+                style: const TextStyle(
+                  fontSize: 10,
+                )
+              ),
+              const SizedBox(width: 6)
+            ]
+          )
         ],
       ),
     );
-
     return Card(
-      margin: const EdgeInsets.all(12.0),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-      elevation: 4,
+      elevation: 2,
+      margin: const EdgeInsets.all(8.0),
+      shape: RoundedRectangleBorder(
+        side: BorderSide(
+          color: Theme.of(context).colorScheme.outlineVariant,
+        ),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
+      ),
       child: InkWell(
+          borderRadius:BorderRadius.circular(12.0),
           onTap: () {
             context.router.navigate(ExamRoute(uuid: uuid, user: user));
           },

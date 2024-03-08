@@ -11,12 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:prescore_flutter/util/cronet_adapter.dart';
-import 'package:prescore_flutter/widget/drawer.dart';
-import 'package:prescore_flutter/main.gr.dart';
 import 'package:auto_route/auto_route.dart';
-import 'package:prescore_flutter/widget/main/exams.dart';
-import 'package:prescore_flutter/widget/main/main_header.dart';
 import 'package:provider/provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -28,9 +23,37 @@ import 'package:http/http.dart' hide Response;
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
+import 'package:prescore_flutter/service.dart';
+import 'package:prescore_flutter/util/cronet_adapter.dart';
+import 'package:prescore_flutter/widget/drawer.dart';
+import 'package:prescore_flutter/main.gr.dart';
+import 'package:prescore_flutter/widget/main/exams.dart';
+import 'package:prescore_flutter/widget/main/login.dart';
+import 'package:dynamic_color/dynamic_color.dart';
 import 'constants.dart';
 import 'model/login_model.dart';
 
+@pragma('vm:entry-point')
+serviceEntry() async {
+  if (kReleaseMode){
+    await SentryFlutter.init(
+      (options) {
+        options.dsn = 
+            'https://baab724bcf3cc8b40759a031edd478eb@o4506218740776960.ingest.sentry.io/4506218743857152';
+        // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
+        // We recommend adjusting this value in production.
+        options.tracesSampleRate = 1.0;
+      },
+      appRunner: () => serviceMain()
+    );
+  } else {
+      serviceMain();
+  }
+  
+}
+
+bool firebaseAnalyseEnable = false;
+bool sentryAnalyseEnable = true;
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await BaseSingleton.singleton.init();
@@ -38,24 +61,37 @@ Future<void> main() async {
   if (Platform.isAndroid) {
     Future<CronetEngine>? engine;
     clientFactory = () {
-      engine ??= CronetEngine.build(
-          cacheMode: CacheMode.memory, userAgent: userAgent);
+      engine ??=
+          CronetEngine.build(cacheMode: CacheMode.memory, userAgent: userAgent);
       return CronetClient.fromCronetEngineFuture(engine!);
     };
   }
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  await SentryFlutter.init(
-    (options) {
-      options.dsn =
-          'https://dea0fae8a2ec43f788c16534b902b4c4@o1288716.ingest.sentry.io/6506171';
-      // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
-      // We recommend adjusting this value in production.
-      options.tracesSampleRate = 1.0;
-    },
-    appRunner: () => runWithClient(() => runApp(MyApp()), clientFactory),
-  );
+  if (firebaseAnalyseEnable) {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  }
+  if (sentryAnalyseEnable && kReleaseMode) {
+    await SentryFlutter.init(
+      (options) {
+        //options.dsn =
+        //    'https://dea0fae8a2ec43f788c16534b902b4c4@o1288716.ingest.sentry.io/6506171';
+        options.dsn = 
+            'https://baab724bcf3cc8b40759a031edd478eb@o4506218740776960.ingest.sentry.io/4506218743857152';
+        // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
+        // We recommend adjusting this value in production.
+        options.tracesSampleRate = 1.0;
+      },
+      appRunner: () => runWithClient(() => runApp(ChangeNotifierProvider(
+        create: (_) => LoginModel(),
+        child: MyApp())), clientFactory),
+    );
+  } else {
+    runApp(ChangeNotifierProvider(
+        create: (_) => LoginModel(),
+        child: MyApp()));
+    
+  }
 }
 
 @AutoRouterConfig(
@@ -70,6 +106,7 @@ class AppRouter extends $AppRouter {
     AutoRoute(page: ExamRoute.page),
     AutoRoute(page: PaperRoute.page),
     AutoRoute(page: SettingsRoute.page),
+    AutoRoute(page: ErrorBookRoute.page)
   ];
 }
 
@@ -79,7 +116,7 @@ Logger logger = Logger(
         // number of method calls to be displayed
         errorMethodCount: 8,
         // number of method calls if stacktrace is provided
-        lineLength: 120,
+        lineLength: 120 * 10,
         // width of the output
         colors: true,
         // Colorful log messages
@@ -95,34 +132,77 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (BaseSingleton.singleton.sharedPreferences.getInt("classCount") ==
-        null) {
-      BaseSingleton.singleton.sharedPreferences.setInt("classCount", 45);
-    }
+    Map<String, dynamic> defaultSetting = {
+      "keepLogin": true,
+      "localSessionExist": false,
+      "allowTelemetry": false,
+      "classCount": 45,
+      "useExperimentalDraw": true,
+      "defaultShowAllSubject": true,
+      "enableWearService": false,
+      "useWakeLock": false,
+      "checkUpdate": true,
+      "checkExams": false,
+      "checkExamsInterval": 15,
+      "brandColor": "天蓝色",
+      "useDynamicColor": true,
+      "showMarkingRecords": false,
+      "developMode": false,
 
-    if (BaseSingleton.singleton.sharedPreferences
-            .getBool("useExperimentalDraw") ==
-        null) {
-      BaseSingleton.singleton.sharedPreferences
-          .setBool("useExperimentalDraw", true);
-    }
-
-    return MaterialApp.router(
+    };
+    defaultSetting.forEach((key, value) {
+      if(value.runtimeType == int) {
+        if (BaseSingleton.singleton.sharedPreferences.getInt(key) == null) {
+          BaseSingleton.singleton.sharedPreferences.setInt(key, value);
+        }
+      } else if (value.runtimeType == bool) {
+        if (BaseSingleton.singleton.sharedPreferences.getBool(key) == null) {
+          BaseSingleton.singleton.sharedPreferences.setBool(key, value);
+        }
+      } else if (value.runtimeType == String) {
+        if (BaseSingleton.singleton.sharedPreferences.getString(key) == null) {
+          BaseSingleton.singleton.sharedPreferences.setString(key, value);
+        }
+      }
+    });
+    return DynamicColorBuilder(builder: (lightDynamic, darkDynamic) {
+      ColorScheme? lightColorScheme;
+      ColorScheme? darkColorScheme;
+      Color brandColor = brandColorMap[BaseSingleton.singleton.sharedPreferences.getString("brandColor")] ?? Colors.blue;
+      if (lightDynamic != null && darkDynamic != null && BaseSingleton.singleton.sharedPreferences.getBool("useDynamicColor") == true) {
+        lightColorScheme = lightDynamic.harmonized();
+        darkColorScheme = darkDynamic.harmonized();
+      } else {
+        lightColorScheme = ColorScheme.fromSeed(
+          seedColor: brandColor,
+          brightness: Brightness.light,
+        );
+        darkColorScheme = ColorScheme.fromSeed(
+          seedColor: brandColor,
+          brightness: Brightness.dark,
+        );
+      }
+      return MaterialApp.router(
         routeInformationParser: _appRouter.defaultRouteParser(),
         routerDelegate: _appRouter.delegate(
-          navigatorObservers: () => [
-            FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance),
-          ],
+          navigatorObservers: firebaseAnalyseEnable
+              ? (() => [
+                    FirebaseAnalyticsObserver(
+                        analytics: FirebaseAnalytics.instance),
+                  ])
+              : (() => []),
         ),
         title: '出分啦',
         theme: ThemeData(
+          colorScheme: lightColorScheme,
           useMaterial3: true,
         ),
-        darkTheme: ThemeData.dark().copyWith(
-            colorScheme: ColorScheme.fromSeed(
-                seedColor: Colors.lightBlueAccent, brightness: Brightness.dark),
-            useMaterial3: true),
+        darkTheme: ThemeData(
+          colorScheme: darkColorScheme,
+          useMaterial3: true,
+        ),
         themeMode: ThemeMode.system);
+    });
   }
 }
 
@@ -146,6 +226,9 @@ class HomePageState extends State<HomePage> {
   }
 
   Future<void> showUpgradeAlert(BuildContext context) async {
+    if(BaseSingleton.singleton.sharedPreferences.getBool('checkUpdate') == false) {
+      return;
+    }
     String appcastURL = 'https://matrix.bjbybbs.com/appcast.xml';
     final appcast = Appcast();
     await appcast.parseAppcastItemsFromUri(appcastURL);
@@ -167,7 +250,7 @@ class HomePageState extends State<HomePage> {
               builder: (BuildContext dialogContext) => AlertDialog(
                 title: const Text('现在要更新吗？'),
                 content: Text(
-                    '获取到最新版本${versionString}，然而当前版本是${packageInfo.version}\n\n你需要更新吗？\n\n更新日志：\n${item.itemDescription}'),
+                    '获取到最新版本$versionString，然而当前版本是${packageInfo.version}\n\n你需要更新吗？\n\n更新日志：\n${item.itemDescription}'),
                 actions: <Widget>[
                   TextButton(
                     onPressed: () {
@@ -178,45 +261,46 @@ class HomePageState extends State<HomePage> {
                   TextButton(
                     onPressed: () async {
                       int? update = await RUpgrade.upgrade(item.fileURL!,
-                          fileName: 'app-release.apk', installType: RUpgradeInstallType.normal);
+                          fileName: 'app-release.apk',
+                          installType: RUpgradeInstallType.normal);
                       if (update != null) {
-                        bool? isSuccess= await RUpgrade.install(update);
+                        bool? isSuccess = await RUpgrade.install(update);
                         if (isSuccess != true) {
                           if (mounted) {
                             await showDialog<String>(
                                 context: context,
-                                builder: (BuildContext dialogContext) => AlertDialog(
-                                  title: const Text('更新失败'),
-                                  content: const Text(
-                                      '新版本更新失败，或许可以再试一次？'),
-                                  actions: <Widget>[
-                                    TextButton(
-                                      onPressed: () async {
-                                        Navigator.pop(dialogContext, '好哦');
-                                      },
-                                      child: const Text('好哦'),
-                                    ),
-                                  ],
-                                ));
+                                builder: (BuildContext dialogContext) =>
+                                    AlertDialog(
+                                      title: const Text('更新失败'),
+                                      content: const Text('新版本更新失败，或许可以再试一次？'),
+                                      actions: <Widget>[
+                                        TextButton(
+                                          onPressed: () async {
+                                            Navigator.pop(dialogContext, '好哦');
+                                          },
+                                          child: const Text('好哦'),
+                                        ),
+                                      ],
+                                    ));
                           }
                         }
                       } else {
                         if (mounted) {
                           await showDialog<String>(
                               context: context,
-                              builder: (BuildContext dialogContext) => AlertDialog(
-                                title: const Text('更新失败'),
-                                content: const Text(
-                                    '新版本更新失败，或许可以再试一次？'),
-                                actions: <Widget>[
-                                  TextButton(
-                                    onPressed: () async {
-                                      Navigator.pop(dialogContext, '好哦');
-                                    },
-                                    child: const Text('好哦'),
-                                  ),
-                                ],
-                              ));
+                              builder: (BuildContext dialogContext) =>
+                                  AlertDialog(
+                                    title: const Text('更新失败'),
+                                    content: const Text('新版本更新失败，或许可以再试一次？'),
+                                    actions: <Widget>[
+                                      TextButton(
+                                        onPressed: () async {
+                                          Navigator.pop(dialogContext, '好哦');
+                                        },
+                                        child: const Text('好哦'),
+                                      ),
+                                    ],
+                                  ));
                         }
                       }
                       if (mounted) {
@@ -257,10 +341,7 @@ class HomePageState extends State<HomePage> {
                 actions: <Widget>[
                   TextButton(
                     onPressed: () {
-                      SnackBar snackBar = SnackBar(
-                          content:
-                              const Text('拒绝之后小部分功能可能无法使用哦，在侧边栏设置中可以手动授权！'),
-                          backgroundColor: Colors.grey.withOpacity(0.5));
+                      SnackBar snackBar = const SnackBar(content: Text('拒绝之后小部分功能可能无法使用哦，在侧边栏设置中可以手动授权！'));
                       ScaffoldMessenger.of(context).showSnackBar(snackBar);
                       Navigator.pop(dialogContext, '不要');
                     },
@@ -284,17 +365,15 @@ class HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-        create: (_) => LoginModel(),
-        child: Scaffold(
-          appBar: AppBar(
+    return Scaffold(
+          /*appBar: AppBar(
             title: const Text('出分啦'),
             actions: [
               IconButton(
                   onPressed: onNavigatingForum,
                   icon: const Icon(Icons.insert_comment))
             ],
-          ),
+          ),*/
           body: FutureBuilder(
               future: Future.delayed(Duration.zero, () {
                 showRequestDialog(context);
@@ -302,75 +381,88 @@ class HomePageState extends State<HomePage> {
               }),
               builder: (BuildContext context, AsyncSnapshot snapshot) {
                 return Consumer<LoginModel>(builder: (context, model, child) {
-                  List<Widget> slivers = [];
-
-                  EasyRefreshController controller = EasyRefreshController(
-                    controlFinishRefresh: true,
-                    controlFinishLoad: true,
-                  );
-
-                  slivers.add(const SliverHeader());
-
-                  slivers.add(const HeaderLocator.sliver());
-
-                  GlobalKey<ExamsState> key = GlobalKey();
-                  Exams exams = Exams(key: key, controller: controller);
-
-                  if (model.isLoggedIn && !prevLoginState) {
-                    slivers.add(exams);
+                  if(!(model.isLoggedIn && !prevLoginState)) {
+                    return const Center(child: LoginWidget());
                   } else {
-                    slivers.add(const SliverFillRemaining(
-                      hasScrollBody: false,
+                    List<Widget> slivers = [];
+                    EasyRefreshController controller = EasyRefreshController(
+                      controlFinishRefresh: true,
+                      controlFinishLoad: true,
+                    );
+                    //slivers.add(const SliverHeader());
+                    slivers.add(SliverAppBar(
+                      //title: Text("考试列表"),
+                      forceElevated: true,
+                      flexibleSpace: FlexibleSpaceBar(
+                        title: Text("考试列表", style: Theme.of(context).textTheme.titleLarge),
+                        titlePadding: const EdgeInsetsDirectional.only(start: 56, bottom: 14),
+                        expandedTitleScale: 1.8,
+                      ),
+                      actions: [IconButton(
+                        onPressed: onNavigatingForum,
+                        icon: const Icon(Icons.insert_comment))],
+                      expandedHeight: 200.0,
+                      floating: false,
+                      pinned: true,
+                      snap: false,
+                      
                     ));
-                  }
+                    slivers.add(const HeaderLocator.sliver());
+                    GlobalKey<ExamsState> key = GlobalKey();
+                    Exams exams = Exams(key: key, controller: controller);
+                    slivers.add(exams);
+                    slivers.add(const FooterLocator.sliver());
 
-                  slivers.add(const FooterLocator.sliver());
-
-                  return EasyRefresh.builder(
-                      controller: controller,
-                      header: const ClassicHeader(
-                        position: IndicatorPosition.locator,
-                        dragText: '下滑刷新 (´ρ`)',
-                        armedText: '松开刷新 (´ρ`)',
-                        readyText: '获取数据中... (›´ω`‹)',
-                        processingText: '获取数据中... (›´ω`‹)',
-                        processedText: '成功！(`ヮ´)',
-                        noMoreText: '太多啦 TwT',
-                        failedText: '失败了 TwT',
-                        messageText: '上次更新于 %T',
-                      ),
-                      footer: const ClassicFooter(
-                        infiniteOffset: 0,
-                        position: IndicatorPosition.locator,
-                        dragText: '下滑刷新 (´ρ`)',
-                        armedText: '松开刷新 (´ρ`)',
-                        readyText: '获取数据中... (›´ω`‹)',
-                        processingText: '获取数据中... (›´ω`‹)',
-                        processedText: '成功！(`ヮ´)',
-                        noMoreText: '我一点都没有了... TwT',
-                        failedText: '失败了 TwT',
-                        messageText: '上次更新于 %T',
-                      ),
-                      onRefresh: (model.isLoggedIn && !prevLoginState)
-                          ? () async {
-                              await key.currentState?.refresh();
-                            }
-                          : null,
-                      onLoad: (model.isLoggedIn && !prevLoginState)
-                          ? () async {
-                              await key.currentState?.load();
-                            }
-                          : null,
-                      childBuilder: (BuildContext ct, ScrollPhysics sp) =>
+                    return EasyRefresh.builder(
+                        controller: controller,
+                        header: const ClassicHeader(
+                          position: IndicatorPosition.locator,
+                          dragText: '下滑刷新 (´ρ`)',
+                          armedText: '松开刷新 (´ρ`)',
+                          readyText: '获取数据中... (›´ω`‹)',
+                          processingText: '获取数据中... (›´ω`‹)',
+                          processedText: '成功！(`ヮ´)',
+                          noMoreText: '太多啦 TwT',
+                          failedText: '失败了 TwT',
+                          messageText: '上次更新于 %T',
+                        ),
+                        footer: const ClassicFooter(
+                          infiniteOffset: 0,
+                          position: IndicatorPosition.locator,
+                          dragText: '下滑刷新 (´ρ`)',
+                          armedText: '松开刷新 (´ρ`)',
+                          readyText: '获取数据中... (›´ω`‹)',
+                          processingText: '获取数据中... (›´ω`‹)',
+                          processedText: '成功！(`ヮ´)',
+                          noMoreText: '我一点都没有了... TwT',
+                          failedText: '失败了 TwT',
+                          messageText: '上次更新于 %T',
+                        ),
+                        onRefresh: (model.isLoggedIn && !prevLoginState)
+                            ? () async {
+                                await key.currentState?.refresh();
+                              }
+                            : null,
+                        onLoad: (model.isLoggedIn && !prevLoginState)
+                            ? () async {
+                                await key.currentState?.load();
+                              }
+                            : null,
+                        childBuilder: (BuildContext ct, ScrollPhysics sp) =>
                           CustomScrollView(
                             physics: sp,
-                            shrinkWrap: true,
                             slivers: slivers,
                           ));
+                          /*  CustomScrollView(
+                              physics: sp,
+                              shrinkWrap: true,
+                              slivers: slivers,
+                            ));*/
+                  }
                 });
               }),
           drawer: const MainDrawer(),
-        ));
+        );
   }
 }
 

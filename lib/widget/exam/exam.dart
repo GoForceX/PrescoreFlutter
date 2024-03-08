@@ -28,7 +28,8 @@ class _ExamPageState extends State<ExamPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('出分啦'),
+        title: const Text('考试细则'),
+        titleSpacing: 0,
       ),
       body: ChangeNotifierProvider(
         create: (_) => ExamModel(),
@@ -38,12 +39,12 @@ class _ExamPageState extends State<ExamPage> {
           Widget chosenWidget = Container();
           switch (_selectedIndex) {
             case 0:
+              chosenWidget = ExamDetail(examId: widget.uuid);
+              break;
+            case 1:
               chosenWidget = ExamDashboard(
                 examId: widget.uuid,
               );
-              break;
-            case 1:
-              chosenWidget = ExamDetail(examId: widget.uuid);
               break;
             default:
               chosenWidget = Container();
@@ -53,23 +54,28 @@ class _ExamPageState extends State<ExamPage> {
           );
         },
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
-            label: '全科预览',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.library_books_rounded),
-            label: '单科查看',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        onTap: (int index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
+      bottomNavigationBar: BottomNavigationBarTheme(
+        data: BottomNavigationBarThemeData(
+          elevation: _selectedIndex == 0 ? 0 : 8,
+        ),
+        child: NavigationBar(
+          destinations: const [
+            NavigationDestination(
+              icon: Icon(Icons.library_books_rounded),
+              label: '单科查看',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.dashboard),
+              label: '全科预览',
+            ),
+          ],
+          selectedIndex: _selectedIndex,
+          onDestinationSelected: (int index) {
+            setState(() {
+              _selectedIndex = index;
+            });
+          },
+        ),
       ),
     );
   }

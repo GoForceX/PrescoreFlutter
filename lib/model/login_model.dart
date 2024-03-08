@@ -6,11 +6,16 @@ import '../util/struct.dart';
 class LoginModel extends ChangeNotifier {
   bool isLoggedIn = false;
   bool isLoading = false;
-  bool isLoggedOff = false;
+  bool isAutoLogging = false;
   String username = "";
   String password = "";
   User user = User();
   BasicInfo basicInfo = BasicInfo("", "", "", "", "");
+
+  void setAutoLogging(bool value) {
+    isAutoLogging = value;
+    notifyListeners();
+  }
 
   void setLoggedIn(bool value) {
     isLoggedIn = value;
@@ -19,11 +24,6 @@ class LoginModel extends ChangeNotifier {
 
   void setLoading(bool value) {
     isLoading = value;
-    notifyListeners();
-  }
-
-  void setLoggedOff(bool value) {
-    isLoggedOff = value;
     notifyListeners();
   }
 

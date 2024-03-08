@@ -41,6 +41,7 @@ dependencies:
   pointycastle: ^3.6.0
   provider: ^6.0.3
   sentry_flutter: ^7.8.0
+  sentry_dart_plugin: ^1.0.0
   shared_preferences: ^2.0.15
   dio: ^5.0.0
   dio_http2_adapter: ^2.0.0
@@ -68,7 +69,18 @@ dependencies:
   http: ^1.1.0
   firebase_core: ^2.16.0
   firebase_analytics: ^10.5.0
+  flutter_background: ^1.2.0
+  sqflite: ^2.3.0
+  path: ^1.8.3
   html: ^0.15.4
+  common_utils: ^2.1.0
+  scrollview_observer: ^1.19.0
+  throttling: ^2.0.1
+  mutex: ^3.1.0
+  archive: ^3.4.10
+  dynamic_color: ^1.6.9
+  flutter_html: ^3.0.0-beta.2
+  flutter_html_all: ^3.0.0-alpha.6
 
 dev_dependencies:
   flutter_test:
@@ -127,3 +139,15 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+sentry:
+  upload_debug_symbols: true
+  upload_source_maps: true
+  upload_sources: true
+  project: prescoreflutter
+  org: cmwoan
+  auth_token: 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
+  #url: https://baab724bcf3cc8b40759a031edd478eb@o4506218740776960.ingest.sentry.io/
+  wait_for_processing: false
+  log_level: error
+  commits: auto
+  ignore_missing: true

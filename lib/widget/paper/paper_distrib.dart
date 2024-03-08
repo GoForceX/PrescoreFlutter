@@ -19,9 +19,13 @@ class PaperDistributionPhoto extends StatefulWidget {
   State<PaperDistributionPhoto> createState() => _PaperDistributionPhotoState();
 }
 
-class _PaperDistributionPhotoState extends State<PaperDistributionPhoto> {
+class _PaperDistributionPhotoState extends State<PaperDistributionPhoto>  with AutomaticKeepAliveClientMixin{
+  @override
+  bool get wantKeepAlive => true;
+  
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     List<Widget> photos = [];
 
     photos.add(
@@ -122,13 +126,14 @@ class _PaperDistributionPhotoWidgetState extends State<PaperDistributionPhotoWid
                             });
                           } else {
                             SnackBar snackBar = SnackBar(
-                              content: Text(
+                              content: const Text(
                                   '呜呜呜，失败了……\n失败原因：无保存权限……'),
                               backgroundColor:
                               ThemeMode.system == ThemeMode.dark
                                   ? Colors.grey[900]
                                   : Colors.grey[200],
                             );
+                            if(!context.mounted) return;
                             ScaffoldMessenger.of(context)
                                 .showSnackBar(snackBar);
                           }
@@ -173,7 +178,6 @@ class _PaperDistributionPhotoWidgetState extends State<PaperDistributionPhotoWid
                 )),
                 Image.network(
                   widget.url,
-                  // width: 350.0,
                 ),
               ],
             ),

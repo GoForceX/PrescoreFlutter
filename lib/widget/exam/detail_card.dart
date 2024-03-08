@@ -78,10 +78,11 @@ class DetailCard extends StatelessWidget {
               lineHeight: 8.0,
               percent: paper.userScore / paper.fullScore,
               backgroundColor: Colors.grey,
-              linearGradient: const LinearGradient(
+              linearGradient: LinearGradient(
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,
-                colors: [Colors.lightBlueAccent, Colors.lightBlue, Colors.blue],
+                //colors: [Colors.lightBlueAccent, Colors.lightBlue, Colors.blue],
+                colors: [Theme.of(context).colorScheme.primary, Theme.of(context).colorScheme.primary.withOpacity(0.6)]
               ),
               barRadius: const Radius.circular(4),
             ),
@@ -154,10 +155,16 @@ class DetailCard extends StatelessWidget {
         ));
 
     return Card(
-      margin: const EdgeInsets.all(12.0),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-      elevation: 4,
+      elevation: 2,
+      margin: const EdgeInsets.all(8.0),
+      shape: RoundedRectangleBorder(
+        side: BorderSide(
+          color: Theme.of(context).colorScheme.outlineVariant,
+        ),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
+      ),
       child: InkWell(
+        borderRadius:BorderRadius.circular(12.0),
         onTap: () {
           context.router.navigate(PaperRoute(
               examId: examId,
@@ -238,27 +245,27 @@ class DetailPredict extends StatelessWidget {
                   child: Row(
                     children: [
                       Text(
-                        official ? "实际年排百分比：" : "预测年排百分比：",
-                        style: const TextStyle(fontSize: 24),
+                        official ? "实际年排：" : "预测年排：",
+                        style: const TextStyle(fontSize: 16),
                       ),
                       Text(
                         percentage != -1
                             ? (percentage * 100).toStringAsFixed(2)
                             : "-",
-                        style: const TextStyle(fontSize: 48),
+                        style: const TextStyle(fontSize: 32),
                       ),
                       const SizedBox(
-                        width: 16,
+                        width: 6,
                       ),
-                      const Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Text(
+                      //const Column(
+                      //  mainAxisAlignment: MainAxisAlignment.end,
+                      //  children: [
+                          const Text(
                             "%",
                             style: TextStyle(fontSize: 24),
                           ),
-                        ],
-                      ),
+                     //   ],
+                      //),
                     ],
                   ),
                 ))
@@ -318,7 +325,7 @@ class DetailPredict extends StatelessWidget {
                           children: [
                             const Text(
                               "预测赋分：",
-                              style: TextStyle(fontSize: 24),
+                              style: TextStyle(fontSize: 16),
                             ),
                             Text(
                               "${getScoringResult(percentage).toInt()}",
@@ -392,100 +399,110 @@ class DetailScoreInfo extends StatefulWidget {
 class _DetailScoreInfoState extends State<DetailScoreInfo> {
   String dropdownValue = "full";
   ClassInfo? chosenClass;
+  num? classInfoNum;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         FittedBox(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              const SizedBox(
-                width: 16,
-              ),
-              const Text("当前选择的是："),
-              const SizedBox(
-                width: 16,
-              ),
-              FutureBuilder(
-                  future: Provider.of<ExamModel>(context, listen: false)
-                      .user
-                      .fetchPaperClassInfo(widget.paperId),
-                  builder:
-                      (BuildContext futureContext, AsyncSnapshot snapshot) {
-                    if (snapshot.hasData) {
-                      if (snapshot.data.state == false) {
-                        return const Text("全年级",
-                            style: TextStyle(fontSize: 16));
-                      }
+          child:
+            FutureBuilder(
+              future: Provider.of<ExamModel>(context, listen: false)
+                  .user
+                  .fetchPaperClassInfo(widget.paperId),
+              builder:
+                  (BuildContext futureContext, AsyncSnapshot snapshot) {
+                if (snapshot.hasData) {
+                  if (snapshot.data.state == false) {
+                    return const Text("全年级",
+                        style: TextStyle(fontSize: 16));
+                  }
+                  num tempClassInfoNum = 0;
+                  for(var i in snapshot.data.result) {
+                    tempClassInfoNum = tempClassInfoNum + (i.count ?? 0);
+                  }
+                  classInfoNum = tempClassInfoNum;
+                  /*setState(() {
+                  });*/
+                  if (dropdownValue == "") {
+                    dropdownValue = snapshot.data.result[0].classId;
+                    chosenClass = snapshot.data.result[0];
+                  }
 
-                      if (dropdownValue == "") {
-                        dropdownValue = snapshot.data.result[0].classId;
-                        chosenClass = snapshot.data.result[0];
-                      }
-
-                      List<DropdownMenuItem<String>> items = snapshot
-                          .data.result
-                          .map<DropdownMenuItem<String>>((ClassInfo value) {
-                        return DropdownMenuItem<String>(
-                          value: value.classId,
-                          child: Text(value.className),
-                        );
-                      }).toList();
-                      items.insert(
-                          0,
-                          const DropdownMenuItem<String>(
-                            value: "full",
-                            child: Text("全年级"),
-                          ));
-
-                      return Row(
-                        children: [
-                          DropdownButton<String>(
-                            value: dropdownValue,
-                            // elevation: 16,
-                            underline: Container(
-                              height: 2,
-                              color: Colors.blueAccent,
-                            ),
-                            onChanged: (String? newValue) {
-                              logger.d(newValue);
-                              setState(() {
-                                dropdownValue = newValue!;
-                                if (dropdownValue == "full") {
-                                  chosenClass = null;
-                                } else {
-                                  chosenClass = snapshot.data.result.firstWhere(
-                                      (element) =>
-                                          element.classId == dropdownValue);
-                                }
-                              });
-                            },
-                            items: items,
-                          ),
-                        ],
-                      );
-                    } else {
-                      return const Text("全年级", style: TextStyle(fontSize: 16));
-                    }
-                  }),
-              const SizedBox(
-                width: 16,
-              ),
-              Builder(builder: (BuildContext context) {
-                if (["", "full"].contains(dropdownValue)) {
-                  return Container();
+                  List<DropdownMenuItem<String>> items = snapshot
+                      .data.result
+                      .map<DropdownMenuItem<String>>((ClassInfo value) {
+                    return DropdownMenuItem<String>(
+                      value: value.classId,
+                      child: Text(value.className),
+                    );
+                  }).toList();
+                  items.insert(
+                      0,
+                      const DropdownMenuItem<String>(
+                        value: "full",
+                        child: Text("全年级"),
+                      ));
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      const SizedBox(
+                        width: 16,
+                      ),
+                      /*const Text("当前选择的是："),
+                      const SizedBox(
+                        width: 16,
+                      ),*/
+                      DropdownButton<String>(
+                        value: dropdownValue,
+                        // elevation: 16,
+                        underline: Container(
+                          height: 2,
+                          color: Theme.of(context).colorScheme.outlineVariant,
+                        ),
+                        onChanged: (String? newValue) {
+                          logger.d(newValue);
+                          setState(() {
+                            dropdownValue = newValue!;
+                            if (dropdownValue == "full") {
+                              chosenClass = null;
+                            } else {
+                              chosenClass = snapshot.data.result.firstWhere(
+                                  (element) =>
+                                      element.classId == dropdownValue);
+                            }
+                          });
+                        },
+                        items: items,
+                      ),
+                      Builder(builder: (BuildContext context) {
+                        if (["", "full"].contains(dropdownValue)) {
+                          //return Container();
+                          return Row(children: [
+                            const SizedBox(width: 8),
+                            const Icon(Icons.people),
+                            Text(" $classInfoNum 条",
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold))
+                          ]);
+                        } else {
+                          return Row(children: [
+                            const SizedBox(width: 8),
+                            const Icon(Icons.people),
+                            Text(" ${chosenClass?.count ?? 0} 条",
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold))
+                          ]);
+                        }
+                      }),
+                      const SizedBox(
+                        width: 16,
+                      ),
+                    ],
+                  );
                 } else {
-                  return Text("该班级数据条数: ${chosenClass?.count}",
-                      style: const TextStyle(fontSize: 16));
+                  return const Text("全年级", style: TextStyle(fontSize: 16));
                 }
               }),
-              const SizedBox(
-                width: 16,
-              ),
-            ],
-          ),
         ),
         Builder(builder: (BuildContext bc) {
           if (["", "full"].contains(dropdownValue) || chosenClass == null) {

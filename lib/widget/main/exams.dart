@@ -7,8 +7,8 @@ import 'package:provider/provider.dart';
 import '../../util/struct.dart';
 import 'exam_card.dart';
 
-List<ExamCard> generateCardsFromExams(BuildContext context, List<Exam> exams) {
-  List<ExamCard> cards = [];
+List<Widget> generateCardsFromExams(BuildContext context, List<Exam> exams) {
+  List<Widget> cards = [const SizedBox(height: 5)];
   for (Exam exam in exams) {
     cards.add(ExamCard(
       user: Provider.of<LoginModel>(context, listen: false).user,
@@ -16,6 +16,7 @@ List<ExamCard> generateCardsFromExams(BuildContext context, List<Exam> exams) {
       examName: exam.examName,
       examType: exam.examType,
       examTime: exam.examTime,
+      isFinal: exam.isFinal,
     ));
   }
   return cards;
@@ -97,11 +98,9 @@ class ExamsState extends State<Exams> {
       result = value.result;
       setState(() {});
     });
-    return const SliverFillRemaining(
+    return SliverFillRemaining(
       hasScrollBody: false,
-      child: Center(
-        child: CircularProgressIndicator(),
-      ),
+      child: Center(child: Container(margin: const EdgeInsets.all(10) ,child: const CircularProgressIndicator())),
     );
   }
 }
@@ -120,7 +119,7 @@ class ExamsBuilder extends StatelessWidget {
             if (!snapshot.data.state) {
               SnackBar snackBar = SnackBar(
                 content: Text('呜呜呜，考试数据获取失败了……\n失败原因：${snapshot.data.message}'),
-                backgroundColor: Colors.grey.withOpacity(0.5),
+                //backgroundColor: Colors.grey.withOpacity(0.5),
               );
               ScaffoldMessenger.of(context).showSnackBar(snackBar);
               return SliverList(
@@ -134,7 +133,11 @@ class ExamsBuilder extends StatelessWidget {
             return const SliverFillRemaining(
               hasScrollBody: false,
               child: Center(
-                child: CircularProgressIndicator(),
+                child: SizedBox(
+                  height: 40,
+                  width: 40,
+                  child: CircularProgressIndicator(),
+                )
               ),
             );
           }

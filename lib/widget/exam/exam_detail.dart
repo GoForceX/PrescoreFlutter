@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../model/exam_model.dart';
 import '../../util/struct.dart';
 import 'detail_card.dart';
+import '../../main.dart';
 
 class ExamDetail extends StatefulWidget {
   final String examId;
@@ -14,25 +15,56 @@ class ExamDetail extends StatefulWidget {
 }
 
 class _ExamDetailState extends State<ExamDetail> {
+  Map<String, bool> selectedSubject = {};
   @override
   Widget build(BuildContext context) {
     if (Provider.of<ExamModel>(context, listen: false).isPaperLoaded) {
       List<Widget> children = [];
       List<Paper> papers =
           Provider.of<ExamModel>(context, listen: false).papers;
-
-      for (var element in papers) {
-        Widget chart = DetailCard(paper: element, examId: widget.examId,);
+      List<Widget> subjectList = [];
+      for (Paper element in papers) {
+        subjectList.add(const SizedBox(width: 6));
+        subjectList.add(ChoiceChip(
+          label: Text(element.name),
+          selected: selectedSubject[element.subjectId] ??
+              BaseSingleton.singleton.sharedPreferences
+                  .getBool("defaultShowAllSubject") ??
+              false,
+          onSelected: (bool selected) {
+            setState(() {
+              selectedSubject[element.subjectId] = selected;
+            });
+          },
+        ));
+      }
+      subjectList.add(const SizedBox(width: 6));
+      for (Paper element in papers) {
+        Widget chart = Visibility(
+            visible: selectedSubject[element.subjectId] ??
+                (BaseSingleton.singleton.sharedPreferences
+                        .getBool("defaultShowAllSubject") ??
+                    false),
+            child: DetailCard(paper: element, examId: widget.examId));
         children.add(chart);
       }
 
-      return Column(children: [
-        Expanded(
-            child: ListView(
+      return Stack(children: [
+        ListView(
           padding: const EdgeInsets.all(8),
           shrinkWrap: false,
           children: children,
-        ))
+        ),
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Card(
+              margin: const EdgeInsets.all(7),
+              child: Row(children: subjectList),
+            )
+          ),
+        ),
       ]);
     } else {
       FutureBuilder futureBuilder = FutureBuilder(
@@ -53,33 +85,60 @@ class _ExamDetailState extends State<ExamDetail> {
               List<Paper> papers = snapshot.data.result[0];
               // List<Paper> absentPapers = snapshot.data.result[1];
 
-              for (var element in papers) {
-                Widget chart = DetailCard(examId: widget.examId, paper: element);
+              List<Widget> subjectList = [];
+              for (Paper element in papers) {
+                subjectList.add(const SizedBox(width: 6));
+                subjectList.add(ChoiceChip(
+                  label: Text(element.name),
+                  selected: selectedSubject[element.subjectId] ??
+                      BaseSingleton.singleton.sharedPreferences
+                          .getBool("defaultShowAllSubject") ??
+                      false,
+                  onSelected: (bool selected) {
+                    setState(() {
+                      selectedSubject[element.subjectId] = selected;
+                    });
+                  },
+                ));
+              }
+              subjectList.add(const SizedBox(width: 6));
+              for (Paper element in papers) {
+                Widget chart = Visibility(
+                    visible: selectedSubject[element.subjectId] ??
+                        (BaseSingleton.singleton.sharedPreferences
+                                .getBool("defaultShowAllSubject") ??
+                            false),
+                    child: DetailCard(paper: element, examId: widget.examId));
                 children.add(chart);
               }
-
-              ListView listView = ListView(
-                padding: const EdgeInsets.all(8),
-                shrinkWrap: false,
-                children: children,
-              );
-
-              return listView;
+              return Stack(children: [
+                ListView(
+                  padding: const EdgeInsets.all(8),
+                  shrinkWrap: false,
+                  children: children,
+                ),
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Card(
+                      child: Row(children: subjectList),
+                    )
+                  ),
+                ),
+              ]);
             } else {
               return Container();
             }
           } else {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+            return Center(
+                child: Container(
+                    margin: const EdgeInsets.all(10),
+                    child: const CircularProgressIndicator()));
           }
         },
       );
-      return Column(children: [
-        Expanded(
-          child: futureBuilder,
-        )
-      ]);
+      return futureBuilder;
     }
   }
 }

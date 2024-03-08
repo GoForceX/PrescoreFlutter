@@ -123,10 +123,14 @@ class _DashboardChartState extends State<DashboardChart> {
           ));
 
       return Card(
-        margin: const EdgeInsets.all(12.0),
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-        elevation: 4,
+        elevation: 2,
+        margin: const EdgeInsets.all(8.0),
+        shape: RoundedRectangleBorder(
+          side: BorderSide(
+            color: Theme.of(context).colorScheme.outlineVariant,
+          ),
+          borderRadius: const BorderRadius.all(Radius.circular(12)),
+        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,

@@ -27,6 +27,13 @@ class PaperPage extends StatefulWidget {
 
 class _PaperPageState extends State<PaperPage> {
   int _selectedIndex = 0;
+  late PageController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = PageController();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,56 +41,55 @@ class _PaperPageState extends State<PaperPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('出分啦'),
+        title: const Text('分数细则'),
+        titleSpacing: 0,
       ),
       body: ChangeNotifierProvider(
         create: (_) => PaperModel(),
         builder: (BuildContext context, Widget? child) {
           PaperModel model = Provider.of<PaperModel>(context, listen: false);
           model.user = widget.user;
-          Widget chosenWidget = Container();
-          switch (_selectedIndex) {
-            case 0:
-              chosenWidget = PaperPhoto(
-                examId: widget.examId,
-                paperId: widget.paperId,
-              );
-              break;
-            case 1:
-              chosenWidget =
-                  PaperDetail(examId: widget.examId, paperId: widget.paperId);
-              break;
-            case 2:
-              chosenWidget =
-                  PaperDistributionPhoto(examId: widget.examId, paperId: widget.paperId);
-              break;
-            default:
-              chosenWidget = Container();
-          }
-          return Center(
-            child: chosenWidget,
+          return PageView(
+            controller: _controller,
+            children: [
+              Center(
+                child: PaperPhoto(examId: widget.examId, paperId: widget.paperId),
+              ),
+              Center(
+                child: PaperDetail(examId: widget.examId, paperId: widget.paperId),
+              ),
+              Center(
+                child: PaperDistributionPhoto(examId: widget.examId, paperId: widget.paperId),
+              ),
+            ],
+            onPageChanged: (value) {
+              setState(() {
+                _selectedIndex = value;
+              });
+            },
           );
         },
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const [
-          BottomNavigationBarItem(
+      bottomNavigationBar: NavigationBar(
+        destinations: const [
+          NavigationDestination(
             icon: Icon(Icons.photo_album),
             label: '原卷',
           ),
-          BottomNavigationBarItem(
+          NavigationDestination(
             icon: Icon(Icons.list_alt_rounded),
             label: '小分',
           ),
-          BottomNavigationBarItem(
+          NavigationDestination(
             icon: Icon(Icons.line_axis),
             label: '分布',
           ),
         ],
-        currentIndex: _selectedIndex,
-        onTap: (int index) {
+        selectedIndex: _selectedIndex,
+        onDestinationSelected: (int index) {
           setState(() {
             _selectedIndex = index;
+            _controller.jumpToPage(_selectedIndex);
           });
         },
       ),
