@@ -16,6 +16,18 @@ class Session {
   }
 }
 
+class LoginCredential {
+  String? userName;
+  String? password;
+
+  LoginCredential(this.userName, this.password);
+
+  @override
+  String toString() {
+    return 'LoginCredential{userName: $userName, password: $password';
+  }
+}
+
 class BasicInfo {
   String id = "";
   String loginName = "";
@@ -31,21 +43,85 @@ class BasicInfo {
   }
 }
 
+class StudentInfo {
+  String id = "";
+  String loginName = "";
+  String name = "";
+  String role = "";
+  String avatar = "";
+  String studentNo = "";
+  String gradeName = "";
+  String className = "";
+  String classId = "";
+  String schoolName = "";
+
+  StudentInfo({
+    required this.id, 
+    required this.loginName, 
+    required this.name, 
+    required this.role, 
+    required this.avatar, 
+    required this.studentNo, 
+    required this.gradeName, 
+    required this.className, 
+    required this.classId, 
+    required this.schoolName
+  });
+
+  @override
+  String toString() {
+    return 'StudentInfo{id: $id, loginName: $loginName, name: $name, role: $role, avatar: $avatar, studentNo: $studentNo, gradeName: $gradeName, className: $className, classId: $classId, schoolName: $schoolName}';
+  }
+}
+
+class Classmate {
+  String name = "";
+  String id = "";
+  String code = "";
+  String gender = "";
+  String mobile = "";
+
+  Classmate({
+    required this.name, 
+    required this.id, 
+    required this.code, 
+    required this.gender, 
+    required this.mobile
+  });
+
+  @override
+  String toString() {
+    return 'Classmate{name: $name, id: $id, code: $code, gender: $gender, mobile: $mobile}';
+  }
+}
+
 class Exam {
   final String uuid;
   final String examName;
   final String examType;
   final DateTime examTime;
+  final bool isFinal;
 
   Exam(
       {required this.uuid,
       required this.examName,
       required this.examType,
-      required this.examTime});
+      required this.examTime,
+      required this.isFinal});
+
+  Map<String, dynamic> toMap() {
+    return {
+      'uuid': uuid,
+      'examName': examName,
+      'examType': examType,
+      'examTime': examTime.toString(),
+      'isFinal': isFinal
+    };
+  }
 
   @override
   String toString() {
-    return 'Exam{uuid: $uuid, examName: $examName, examType: $examType, examTime: $examTime}';
+    return 'Exam{uuid: $uuid, examName: $examName, examType: $examType, examTime: $examTime, isFinal: $isFinal}';
   }
 }
 
@@ -73,6 +149,16 @@ class Paper {
   @override
   String toString() {
     return 'Paper{examId: $examId, paperId: $paperId, name: $name, subjectId: $subjectId, userScore: $userScore, fullScore: $fullScore, assignScore: $assignScore, diagnosticScore: $diagnosticScore}';
+  }
+  Map<String, dynamic> toMap() {
+    return {
+      "examId": examId,
+      "paperId": paperId,
+      "name": name,
+      "subjectId": subjectId,
+      "userScore": userScore,
+      "fullScore": fullScore,
+    };
   }
 }
 
@@ -110,13 +196,72 @@ class ExamDiagnosis {
   }
 }
 
+class TeacherMarking {
+  String role;
+  double score;
+  String teacherId;
+  String teacherName;
+  TeacherMarking({
+    required this.role,
+    required this.score,
+    required this.teacherId,
+    required this.teacherName,
+  });
+
+  @override
+  String toString() {
+    return 'TeacherMarking{role: $role, score: $score, teacherId: $teacherId, teacherName: $teacherName}';
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      "role": role,
+      "score": score,
+      "teacherId": teacherId,
+      "teacherName": teacherName,
+    };
+  }
+}
+class QuestionSubTopic {
+  double score;
+  double? standradScore;
+  String? scoreSource;
+  String subQuestionId;
+  List<TeacherMarking> teacherMarkingRecords;
+  QuestionSubTopic({
+    required this.score,
+    required this.standradScore,
+    required this.scoreSource,
+    required this.subQuestionId,
+    required this.teacherMarkingRecords,
+  });
+
+  @override
+  String toString() {
+    return 'QuestionSubTopic{score: $score, standradScore: $standradScore, scoreSource: $scoreSource, subQuestionId: $subQuestionId, teacherMarkingRecords: $teacherMarkingRecords}';
+  }
+
+  Map<String, dynamic> toMap() {
+    List<Map<String, dynamic>> teacherMarkingRecordsJsonList = teacherMarkingRecords.map((element) => element.toMap()).toList();
+    return {
+      "score": score,
+      "standradScore": standradScore,
+      "scoreSource": scoreSource,
+      "subQuestionId": subQuestionId,
+      "teacherMarkingRecords": teacherMarkingRecordsJsonList,
+    };
+  }
+}
+
 class Question {
   String questionId;
   int topicNumber;
   double userScore;
   double fullScore;
   bool isSelected;
+  bool isSubjective;
   String? selectedAnswer;
+  List<QuestionSubTopic> subTopic;
   double? classScoreRate;
   List<MapEntry<String, double>> stepRecords;
 
@@ -126,6 +271,8 @@ class Question {
     required this.userScore,
     required this.fullScore,
     required this.isSelected,
+    required this.isSubjective,
+    required this.subTopic,
     this.selectedAnswer,
     this.classScoreRate,
     required this.stepRecords,
@@ -133,7 +280,19 @@ class Question {
 
   @override
   String toString() {
-    return 'Question{questionId: $questionId, userScore: $userScore, fullScore: $fullScore, isSelected: $isSelected, selectedAnswer: $selectedAnswer, classScoreRate: $classScoreRate, stepRecords: $stepRecords}';
+    return 'Question{questionId: $questionId, userScore: $userScore, fullScore: $fullScore, isSelected: $isSelected, selectedAnswer: $selectedAnswer, isSubjective: $isSubjective, subTopic: $subTopic, classScoreRate: $classScoreRate, stepRecords: $stepRecords}';
+  }
+  Map<String, dynamic> toMap() {
+    List<Map<String, dynamic>> subTopicJsonList = subTopic.map((element) => element.toMap()).toList();
+
+    return {
+      "questionId": questionId,
+      "userScore": userScore,
+      "fullScore": fullScore,
+      "isSubjective" : isSubjective ? "true" : "false",
+      "selectedAnswer" : selectedAnswer,
+      "subTopic" : subTopicJsonList,
+    };
   }
 }
 
@@ -144,6 +303,7 @@ enum MarkerType {
   sectionEnd,
   detailScoreEnd,
   svgPicture,
+  cutBlock,
 }
 
 class Marker {
@@ -177,6 +337,49 @@ class Marker {
   }
 }
 
+class Subject {
+  String code;
+  String name;
+  Subject({
+    required this.code,
+    required this.name,
+  });
+  @override
+  String toString() {
+    return 'Subject{code: $code, name: $name}';
+  }
+}
+
+class ErrorQuestion {
+  dynamic data;
+  ErrorQuestion({
+    required this.data
+  });
+  @override
+  String toString() {
+    return 'ErrorQuestion{data: $data}';
+  }
+}
+
+class ErrorBookData {
+  String subjectCode;
+  int currentPageIndex;
+  int totalPage;
+  int totalQuestion;
+  List<ErrorQuestion> errorQuestion;
+  ErrorBookData({
+    required this.subjectCode,
+    required this.currentPageIndex,
+    required this.totalPage,
+    required this.totalQuestion,
+    required this.errorQuestion
+  });
+  @override
+  String toString() {
+    return 'ErrorBookData{subjectCode: $subjectCode, currentPageIndex: $currentPageIndex, totalPage: $totalPage, totalQuestion: $totalQuestion, errorQuestion: $errorQuestion}';
+  }
+}
+
 class PaperData {
   String examId;
   String paperId;
@@ -195,6 +398,14 @@ class PaperData {
   @override
   String toString() {
     return 'PaperData{examId: $examId, paperId: $paperId, sheetImages: $sheetImages, questions: $questions, markers: $markers}';
+  }
+  Map<String, dynamic> toMap() {
+    List<Map<String, dynamic>> jsonList = questions.map((element) => element.toMap()).toList();
+    return {
+      "examId": examId,
+      "paperId": paperId,
+      "questions": jsonList,
+    };
   }
 }
 
@@ -251,6 +462,17 @@ class ClassInfo {
   String toString() {
     return 'ClassInfo{classId: $classId, className: $className, count: $count, max: $max, min: $min, avg: $avg, med: $med}';
   }
+  Map<String, dynamic> toMap() {
+    return {
+      "classId": classId,
+      "className": className,
+      "count": count,
+      "max": max,
+      "min": min,
+      "avg": avg,
+      "med": med,
+    };
+  }
 }
 
 class PaperPercentile {
@@ -268,6 +490,17 @@ class PaperPercentile {
   @override
   String toString() {
     return 'PaperPercentile{percentile: $percentile, count: $count, version: $version, official: $official}';
+  }
+
+  Map<String, dynamic> toMap({Map<String, dynamic> extraMap = const {}}) {
+    Map<String, dynamic> originMap = {
+      "percentile": percentile,
+      "count": count,
+      "version": version,
+      "official": official
+    };
+    originMap.addAll(extraMap);
+    return originMap;
   }
 }
 

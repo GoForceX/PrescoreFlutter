@@ -134,13 +134,13 @@ class DashboardInfo extends StatelessWidget {
                     child: SvgPicture.asset(
                       "assets/running_person.svg",
                       height: 32,
-                      color: Colors.lightBlueAccent,
+                      colorFilter: ColorFilter.mode(Theme.of(context).colorScheme.primary, BlendMode.srcIn)
                     ),
                   ),
                   SvgPicture.asset(
                     "assets/triangle_down_fill.svg",
                     height: 8,
-                    color: Colors.lightBlueAccent,
+                    colorFilter: ColorFilter.mode(Theme.of(context).colorScheme.primary, BlendMode.srcIn)
                   ),
                 ],
               ),
@@ -154,14 +154,10 @@ class DashboardInfo extends StatelessWidget {
                     lineHeight: 8.0,
                     percent: userScore / fullScore,
                     backgroundColor: Colors.grey,
-                    linearGradient: const LinearGradient(
+                    linearGradient: LinearGradient(
                       begin: Alignment.centerLeft,
                       end: Alignment.centerRight,
-                      colors: [
-                        Colors.lightBlueAccent,
-                        Colors.lightBlue,
-                        Colors.blue
-                      ],
+                      colors: [Theme.of(context).colorScheme.primary, Theme.of(context).colorScheme.primary.withOpacity(0.6)]
                     ),
                     barRadius: const Radius.circular(4),
                   ),
@@ -204,9 +200,14 @@ class DashboardInfo extends StatelessWidget {
         ));
 
     return Card(
-      margin: const EdgeInsets.all(12.0),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-      elevation: 4,
+      elevation: 2,
+      margin: const EdgeInsets.all(8.0),
+      shape: RoundedRectangleBorder(
+        side: BorderSide(
+          color: Theme.of(context).colorScheme.outlineVariant,
+        ),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
+      ),
       child: infoCard,
     );
   }

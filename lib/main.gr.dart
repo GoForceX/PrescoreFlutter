@@ -8,24 +8,31 @@
 // coverage:ignore-file
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'package:auto_route/auto_route.dart' as _i5;
-import 'package:flutter/material.dart' as _i6;
-import 'package:prescore_flutter/main.dart' as _i2;
-import 'package:prescore_flutter/util/user_util.dart' as _i7;
-import 'package:prescore_flutter/widget/exam/exam.dart' as _i1;
-import 'package:prescore_flutter/widget/paper/paper_page.dart' as _i3;
-import 'package:prescore_flutter/widget/settings.dart' as _i4;
+import 'package:auto_route/auto_route.dart' as _i6;
+import 'package:flutter/material.dart' as _i7;
+import 'package:prescore_flutter/main.dart' as _i3;
+import 'package:prescore_flutter/util/user_util.dart' as _i8;
+import 'package:prescore_flutter/widget/errorbook/errorbook_page.dart' as _i1;
+import 'package:prescore_flutter/widget/exam/exam.dart' as _i2;
+import 'package:prescore_flutter/widget/paper/paper_page.dart' as _i4;
+import 'package:prescore_flutter/widget/settings.dart' as _i5;
 
-abstract class $AppRouter extends _i5.RootStackRouter {
+abstract class $AppRouter extends _i6.RootStackRouter {
   $AppRouter({super.navigatorKey});
 
   @override
-  final Map<String, _i5.PageFactory> pagesMap = {
+  final Map<String, _i6.PageFactory> pagesMap = {
+    ErrorBookRoute.name: (routeData) {
+      return _i6.AutoRoutePage<dynamic>(
+        routeData: routeData,
+        child: const _i1.ErrorBookPage(),
+      );
+    },
     ExamRoute.name: (routeData) {
       final args = routeData.argsAs<ExamRouteArgs>();
-      return _i5.AutoRoutePage<dynamic>(
+      return _i6.AutoRoutePage<dynamic>(
         routeData: routeData,
-        child: _i1.ExamPage(
+        child: _i2.ExamPage(
           key: args.key,
           uuid: args.uuid,
           user: args.user,
@@ -33,16 +40,16 @@ abstract class $AppRouter extends _i5.RootStackRouter {
       );
     },
     HomeRoute.name: (routeData) {
-      return _i5.AutoRoutePage<dynamic>(
+      return _i6.AutoRoutePage<dynamic>(
         routeData: routeData,
-        child: const _i2.HomePage(),
+        child: const _i3.HomePage(),
       );
     },
     PaperRoute.name: (routeData) {
       final args = routeData.argsAs<PaperRouteArgs>();
-      return _i5.AutoRoutePage<dynamic>(
+      return _i6.AutoRoutePage<dynamic>(
         routeData: routeData,
-        child: _i3.PaperPage(
+        child: _i4.PaperPage(
           key: args.key,
           user: args.user,
           examId: args.examId,
@@ -51,22 +58,36 @@ abstract class $AppRouter extends _i5.RootStackRouter {
       );
     },
     SettingsRoute.name: (routeData) {
-      return _i5.AutoRoutePage<dynamic>(
+      return _i6.AutoRoutePage<dynamic>(
         routeData: routeData,
-        child: const _i4.SettingsPage(),
+        child: const _i5.SettingsPage(),
       );
     },
   };
 }
 
 /// generated route for
-/// [_i1.ExamPage]
-class ExamRoute extends _i5.PageRouteInfo<ExamRouteArgs> {
+/// [_i1.ErrorBookPage]
+class ErrorBookRoute extends _i6.PageRouteInfo<void> {
+  const ErrorBookRoute({List<_i6.PageRouteInfo>? children})
+      : super(
+          ErrorBookRoute.name,
+          initialChildren: children,
+        );
+
+  static const String name = 'ErrorBookRoute';
+
+  static const _i6.PageInfo<void> page = _i6.PageInfo<void>(name);
+}
+
+/// generated route for
+/// [_i2.ExamPage]
+class ExamRoute extends _i6.PageRouteInfo<ExamRouteArgs> {
   ExamRoute({
-    _i6.Key? key,
+    _i7.Key? key,
     required String uuid,
-    required _i7.User user,
-    List<_i5.PageRouteInfo>? children,
+    required _i8.User user,
+    List<_i6.PageRouteInfo>? children,
   }) : super(
           ExamRoute.name,
           args: ExamRouteArgs(
@@ -79,8 +100,8 @@ class ExamRoute extends _i5.PageRouteInfo<ExamRouteArgs> {
 
   static const String name = 'ExamRoute';
 
-  static const _i5.PageInfo<ExamRouteArgs> page =
-      _i5.PageInfo<ExamRouteArgs>(name);
+  static const _i6.PageInfo<ExamRouteArgs> page =
+      _i6.PageInfo<ExamRouteArgs>(name);
 }
 
 class ExamRouteArgs {
@@ -90,11 +111,11 @@ class ExamRouteArgs {
     required this.user,
   });
 
-  final _i6.Key? key;
+  final _i7.Key? key;
 
   final String uuid;
 
-  final _i7.User user;
+  final _i8.User user;
 
   @override
   String toString() {
@@ -103,9 +124,9 @@ class ExamRouteArgs {
 }
 
 /// generated route for
-/// [_i2.HomePage]
-class HomeRoute extends _i5.PageRouteInfo<void> {
-  const HomeRoute({List<_i5.PageRouteInfo>? children})
+/// [_i3.HomePage]
+class HomeRoute extends _i6.PageRouteInfo<void> {
+  const HomeRoute({List<_i6.PageRouteInfo>? children})
       : super(
           HomeRoute.name,
           initialChildren: children,
@@ -113,18 +134,18 @@ class HomeRoute extends _i5.PageRouteInfo<void> {
 
   static const String name = 'HomeRoute';
 
-  static const _i5.PageInfo<void> page = _i5.PageInfo<void>(name);
+  static const _i6.PageInfo<void> page = _i6.PageInfo<void>(name);
 }
 
 /// generated route for
-/// [_i3.PaperPage]
-class PaperRoute extends _i5.PageRouteInfo<PaperRouteArgs> {
+/// [_i4.PaperPage]
+class PaperRoute extends _i6.PageRouteInfo<PaperRouteArgs> {
   PaperRoute({
-    _i6.Key? key,
-    required _i7.User user,
+    _i7.Key? key,
+    required _i8.User user,
     required String examId,
     required String paperId,
-    List<_i5.PageRouteInfo>? children,
+    List<_i6.PageRouteInfo>? children,
   }) : super(
           PaperRoute.name,
           args: PaperRouteArgs(
@@ -138,8 +159,8 @@ class PaperRoute extends _i5.PageRouteInfo<PaperRouteArgs> {
 
   static const String name = 'PaperRoute';
 
-  static const _i5.PageInfo<PaperRouteArgs> page =
-      _i5.PageInfo<PaperRouteArgs>(name);
+  static const _i6.PageInfo<PaperRouteArgs> page =
+      _i6.PageInfo<PaperRouteArgs>(name);
 }
 
 class PaperRouteArgs {
@@ -150,9 +171,9 @@ class PaperRouteArgs {
     required this.paperId,
   });
 
-  final _i6.Key? key;
+  final _i7.Key? key;
 
-  final _i7.User user;
+  final _i8.User user;
 
   final String examId;
 
@@ -165,9 +186,9 @@ class PaperRouteArgs {
 }
 
 /// generated route for
-/// [_i4.SettingsPage]
-class SettingsRoute extends _i5.PageRouteInfo<void> {
-  const SettingsRoute({List<_i5.PageRouteInfo>? children})
+/// [_i5.SettingsPage]
+class SettingsRoute extends _i6.PageRouteInfo<void> {
+  const SettingsRoute({List<_i6.PageRouteInfo>? children})
       : super(
           SettingsRoute.name,
           initialChildren: children,
@@ -175,5 +196,5 @@ class SettingsRoute extends _i5.PageRouteInfo<void> {
 
   static const String name = 'SettingsRoute';
 
-  static const _i5.PageInfo<void> page = _i5.PageInfo<void>(name);
+  static const _i6.PageInfo<void> page = _i6.PageInfo<void>(name);
 }

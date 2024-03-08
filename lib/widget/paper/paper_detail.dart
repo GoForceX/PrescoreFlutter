@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:prescore_flutter/util/struct.dart';
 import 'package:prescore_flutter/widget/paper/question_card.dart';
 import 'package:provider/provider.dart';
+import 'package:scrollview_observer/scrollview_observer.dart';
 
 import '../../model/paper_model.dart';
 
@@ -15,11 +16,39 @@ class PaperDetail extends StatefulWidget {
   State<PaperDetail> createState() => _PaperDetailState();
 }
 
-class _PaperDetailState extends State<PaperDetail> {
+class _PaperDetailState extends State<PaperDetail> with AutomaticKeepAliveClientMixin{
+  @override
+  bool get wantKeepAlive => true;
+  
+  late ScrollController scrollController;
+  late ListObserverController observerController;
+  bool showToTop = false;
+  @override
+  void dispose() {
+    scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    scrollController = ScrollController();
+    observerController = ListObserverController(controller: scrollController);
+    scrollController.addListener(() {
+      if(scrollController.offset > MediaQuery.of(context).size.height * 0.4 && !showToTop) {
+        showToTop = true;
+        setState(() {});
+      } else if(scrollController.offset <= MediaQuery.of(context).size.height * 0.4 && showToTop){
+        showToTop = false;
+        setState(() {});
+      }
+    });
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     Widget main = Container();
-
     if (Provider.of<PaperModel>(context, listen: false).isDataLoaded) {
       List<Widget> questionCards = [];
 
@@ -57,21 +86,31 @@ class _PaperDetailState extends State<PaperDetail> {
                   } else {
                     indicatorColor = Colors.redAccent;
                   }
-
+                  var currentIndex = questionIndicators.length;
                   questionIndicators.add(
-                    Container(
-                      margin: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: indicatorColor,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Center(
-                        child: FittedBox(
-                          child: Text(
-                            element.questionId,
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 24,
+                    InkWell(
+                      borderRadius:BorderRadius.circular(4.0),
+                      onTap: () {
+                        observerController.animateTo(
+                          index: currentIndex,
+                          duration: const Duration(milliseconds: 500),
+                          curve: Curves.ease,
+                        );
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: indicatorColor,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Center(
+                          child: FittedBox(
+                            child: Text(
+                              element.questionId,
+                              style: const TextStyle(
+                                color: Colors.black,
+                                fontSize: 24,
+                              ),
                             ),
                           ),
                         ),
@@ -80,34 +119,46 @@ class _PaperDetailState extends State<PaperDetail> {
                   );
                 }
               });
-
-              return CustomScrollView(
-                slivers: [
-                  SliverGrid.extent(
-                    maxCrossAxisExtent: 72,
-                    children: questionIndicators,
-                  ),
-                  SliverList(
-                    delegate: SliverChildListDelegate(questionCards),
-                  ),
-                ],
+              return ListViewObserver(
+                controller: observerController,
+                child: CustomScrollView(
+                  slivers: [
+                    SliverGrid.extent(
+                      maxCrossAxisExtent: 72,
+                      children: questionIndicators,
+                    ),
+                    SliverList(
+                      delegate: SliverChildListDelegate(questionCards),
+                    ),
+                  ],
+                  controller: scrollController,
+                ),
               );
             } else {
               return Container();
             }
           } else {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+            return Center(child: Container(margin: const EdgeInsets.all(10) ,child: const CircularProgressIndicator()));
           }
         },
       );
     }
-
-    return Column(children: [
-      Expanded(
-        child: main,
-      )
+    return Stack(children: [
+      main,
+      Positioned(
+          bottom: 20,
+          right: 20,
+          child: AnimatedOpacity(
+            opacity: showToTop ? 1 : 0,
+            duration: const Duration(milliseconds: 200),
+            child: FloatingActionButton(onPressed: () {
+              scrollController.animateTo(0.0,
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.ease);
+            },
+            child: const Icon(Icons.arrow_upward))
+          )
+        )
     ]);
   }
 }

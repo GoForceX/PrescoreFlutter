@@ -32,7 +32,7 @@ class _DashboardCardState extends State<DashboardCard> {
         for (var paper
             in Provider.of<ExamModel>(context, listen: false).papers) {
           try {
-            logger.d("DashboardInfo: ${paper}");
+            logger.d("DashboardInfo: $paper");
             bool noDiag = false;
             if (Provider.of<ExamModel>(context, listen: false)
                     .diagnoses
@@ -112,13 +112,7 @@ class _DashboardCardState extends State<DashboardCard> {
 
       Widget lst = DashboardList(papers: papers);
       infoChildren.add(lst);
-
-      children.add(ListView(
-        padding: const EdgeInsets.all(8),
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        children: infoChildren,
-      ));
+      children.addAll(infoChildren);
     } else {
       FutureBuilder futureBuilder = FutureBuilder(
         future: Provider.of<ExamModel>(context, listen: false)
@@ -187,9 +181,7 @@ class _DashboardCardState extends State<DashboardCard> {
               return Container();
             }
           } else {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+            return Center(child: Container(margin: const EdgeInsets.all(10) ,child: const CircularProgressIndicator()));
           }
         },
       );
@@ -228,9 +220,7 @@ class _DashboardCardState extends State<DashboardCard> {
                 return Container();
               }
             } else {
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
+              return Center(child: Container(margin: const EdgeInsets.all(10) ,child: const CircularProgressIndicator()));
             }
           },
         );
@@ -261,9 +251,7 @@ class _DashboardCardState extends State<DashboardCard> {
               return Container();
             }
           } else {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+            return Center(child: Container(margin: const EdgeInsets.all(10) ,child: const CircularProgressIndicator()));
           }
         },
       );
@@ -325,7 +313,7 @@ class _DashboardCardState extends State<DashboardCard> {
                   curr.diagnosticScore > next.diagnosticScore ? curr : next)
               .diagnosticScore;
           if (worstScore - bestScore > 30) {
-            tips = "尽管${bestSubject}成绩不错，但${worstSubject}有些偏科哦";
+            tips = "尽管$bestSubject成绩不错，但$worstSubject有些偏科哦";
           } else {
             tips = "你的各科成绩相差不大，继续努力哦";
           }

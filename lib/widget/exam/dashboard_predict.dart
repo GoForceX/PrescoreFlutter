@@ -24,9 +24,9 @@ class DashboardPredict extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          Column(
+                          const Column(
                             mainAxisAlignment: MainAxisAlignment.end,
-                            children: const [
+                            children: [
                               Text(
                                 "预测年排百分比：",
                                 style: TextStyle(fontSize: 24),
@@ -40,9 +40,9 @@ class DashboardPredict extends StatelessWidget {
                           const SizedBox(
                             width: 16,
                           ),
-                          Column(
+                          const Column(
                             mainAxisAlignment: MainAxisAlignment.end,
-                            children: const [
+                            children: [
                               Text(
                                 "%",
                                 style: TextStyle(fontSize: 24),
@@ -66,13 +66,14 @@ class DashboardPredict extends StatelessWidget {
                     child: SvgPicture.asset(
                       "assets/running_person.svg",
                       height: 32,
-                      color: Colors.lightBlueAccent,
+                      colorFilter: ColorFilter.mode(Theme.of(context).colorScheme.primary, BlendMode.srcIn)
                     ),
                   ),
                   SvgPicture.asset(
                     "assets/triangle_down_fill.svg",
                     height: 8,
-                    color: Colors.lightBlueAccent,
+                    //color: Colors.lightBlueAccent,
+                    colorFilter: ColorFilter.mode(Theme.of(context).colorScheme.primary, BlendMode.srcIn)
                   ),
                 ],
               ),
@@ -86,14 +87,15 @@ class DashboardPredict extends StatelessWidget {
                     lineHeight: 8.0,
                     percent: 1 - percentage,
                     backgroundColor: Colors.grey,
-                    linearGradient: const LinearGradient(
+                    linearGradient: LinearGradient(
                       begin: Alignment.centerLeft,
                       end: Alignment.centerRight,
-                      colors: [
+                      /*colors: [
                         Colors.lightBlueAccent,
                         Colors.lightBlue,
                         Colors.blue
-                      ],
+                      ],*/
+                      colors: [Theme.of(context).colorScheme.primary, Theme.of(context).colorScheme.primary.withOpacity(0.6)]
                     ),
                     barRadius: const Radius.circular(4),
                   ),
@@ -136,9 +138,14 @@ class DashboardPredict extends StatelessWidget {
         ));
 
     return Card(
-      margin: const EdgeInsets.all(12.0),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-      elevation: 4,
+      elevation: 2,
+      margin: const EdgeInsets.all(8.0),
+      shape: RoundedRectangleBorder(
+        side: BorderSide(
+          color: Theme.of(context).colorScheme.outlineVariant,
+        ),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
+      ),
       child: infoCard,
     );
   }

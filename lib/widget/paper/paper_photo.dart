@@ -25,13 +25,21 @@ class PaperPhoto extends StatefulWidget {
   State<PaperPhoto> createState() => _PaperPhotoState();
 }
 
-class _PaperPhotoState extends State<PaperPhoto> {
+class _PaperPhotoState extends State<PaperPhoto> with AutomaticKeepAliveClientMixin { //TODO
+  @override
+  bool get wantKeepAlive => true;
+  Widget mainWidget = Container();
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+    return mainWidget;
+  }
+
+  @override
+  void initState() {
+    super.initState();
     Widget main = Container();
-
     logger.d("exam id: ${widget.examId}");
-
     if (Provider.of<PaperModel>(context, listen: false).isDataLoaded) {
       List<Widget> photos = [];
 
@@ -60,7 +68,7 @@ class _PaperPhotoState extends State<PaperPhoto> {
         ));
       }
 
-      return ListView(
+      mainWidget = ListView(
         children: photos,
       );
     } else {
@@ -96,19 +104,16 @@ class _PaperPhotoState extends State<PaperPhoto> {
               return Container();
             }
           } else {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+            return Center(child: Container(margin: const EdgeInsets.all(10) ,child: const CircularProgressIndicator()));
           }
         },
       );
     }
-
-    return Center(child: Column(children: [Expanded(child: main)]));
+    mainWidget = Center(child: Column(children: [Expanded(child: main)]));
   }
 }
 
-class PaperPhotoWidget extends StatefulWidget {
+class PaperPhotoWidget extends StatelessWidget {
   final int sheetId;
   final String url;
   final String tag;
@@ -121,11 +126,6 @@ class PaperPhotoWidget extends StatefulWidget {
       required this.markers})
       : super(key: key);
 
-  @override
-  State<PaperPhotoWidget> createState() => _PaperPhotoWidgetState();
-}
-
-class _PaperPhotoWidgetState extends State<PaperPhotoWidget> {
   Future<Uint8List?> markerPainter(
       List<Marker> markers, Uint8List originalImage) async {
     if (BaseSingleton.singleton.sharedPreferences
@@ -165,7 +165,7 @@ class _PaperPhotoWidgetState extends State<PaperPhotoWidget> {
     }
 
     for (var marker in markers) {
-      if (marker.sheetId == widget.sheetId) {
+      if (marker.sheetId == sheetId) {
         switch (marker.type) {
           case MarkerType.singleChoice:
           case MarkerType.multipleChoice:
@@ -247,6 +247,43 @@ class _PaperPhotoWidgetState extends State<PaperPhotoWidget> {
                 break;
             }
             break;
+          case MarkerType.cutBlock:
+            linePaint.color = marker.color.withOpacity(0.1);
+            linePaint.style = PaintingStyle.fill;
+            canvas.drawRRect(
+                RRect.fromLTRBR(
+                    marker.left / widthRate + marker.leftOffset,
+                    marker.top / heightRate + marker.topOffset,
+                    marker.left / widthRate + marker.leftOffset + marker.width,
+                    marker.top / heightRate + marker.topOffset + marker.height,
+                    const Radius.circular(16)),
+                linePaint);
+            linePaint.color = marker.color.withOpacity(0.8);
+            linePaint.strokeWidth = 2;
+            linePaint.style = PaintingStyle.stroke;
+            canvas.drawRRect(
+                RRect.fromLTRBR(
+                    marker.left / widthRate + marker.leftOffset,
+                    marker.top / heightRate + marker.topOffset,
+                    marker.left / widthRate + marker.leftOffset + marker.width,
+                    marker.top / heightRate + marker.topOffset + marker.height,
+                    const Radius.circular(16)),
+                linePaint);
+            ui.ParagraphBuilder pb = ui.ParagraphBuilder(ui.ParagraphStyle(
+                textAlign: TextAlign.left,
+                fontWeight: FontWeight.w800,
+                fontStyle: FontStyle.normal,
+                fontSize: 32.0));
+            pb.pushStyle(ui.TextStyle(color: marker.color));
+            pb.addText(marker.message);
+            ui.ParagraphConstraints pc =
+                const ui.ParagraphConstraints(width: 200);
+            ui.Paragraph paragraph = pb.build()..layout(pc);
+            canvas.drawParagraph(
+                paragraph,
+                Offset(marker.left / widthRate + marker.leftOffset,
+                    marker.top / heightRate + marker.topOffset));
+            break;
         }
       }
     }
@@ -270,16 +307,16 @@ class _PaperPhotoWidgetState extends State<PaperPhotoWidget> {
   Widget build(BuildContext context) {
     Uint8List? memoryImage;
     Dio dio = BaseSingleton.singleton.dio;
-    logger.d(widget.url);
+    logger.d(url);
     return FutureBuilder(
-        future: dio.get(widget.url,
+        future: dio.get(url,
             options: Options(responseType: ResponseType.bytes)),
         builder: (BuildContext context, AsyncSnapshot snapshot) {
           if (snapshot.hasData) {
             memoryImage = Uint8List.fromList(snapshot.data.data);
 
             return FutureBuilder(
-                future: markerPainter(widget.markers, memoryImage!),
+                future: markerPainter(markers, memoryImage!),
                 builder: (BuildContext context, AsyncSnapshot snapshot) {
                   if (snapshot.hasData) {
                     memoryImage = snapshot.data;
@@ -295,12 +332,12 @@ class _PaperPhotoWidgetState extends State<PaperPhotoWidget> {
                                     },
                                     child: PaperPhotoEnlarged(
                                       memoryImage: memoryImage!,
-                                      tag: widget.tag,
+                                      tag: tag,
                                     ))),
                           );
                         },
                         child: Hero(
-                          tag: widget.tag,
+                          tag: tag,
                           child: RepaintBoundary(
                             child: Image.memory(
                               memoryImage!,
@@ -309,14 +346,14 @@ class _PaperPhotoWidgetState extends State<PaperPhotoWidget> {
                           ),
                         ));
                   } else {
-                    return const Center(
-                      child: CircularProgressIndicator(),
+                    return Center(
+                      child: Container(margin: const EdgeInsets.all(10) ,child: const CircularProgressIndicator()),
                     );
                   }
                 });
           } else {
-            return const Center(
-              child: CircularProgressIndicator(),
+            return Center(
+              child: Container(margin: const EdgeInsets.all(10) ,child: const CircularProgressIndicator()),
             );
           }
         });
@@ -360,32 +397,32 @@ class _PaperPhotoEnlargedState extends State<PaperPhotoEnlarged> {
                       "prescore_${(DateTime.now().millisecondsSinceEpoch / 100).round()}");
               if (mounted) {
                 if (result["isSuccess"]) {
-                  SnackBar snackBar = SnackBar(
-                    content: const Text('保存大成功！'),
-                    backgroundColor: Colors.grey.withOpacity(0.5),
+                  SnackBar snackBar = const SnackBar(
+                    content: Text('保存大成功！'),
+                    //backgroundColor: Colors.grey.withOpacity(0.5),
                   );
                   ScaffoldMessenger.of(context).showSnackBar(snackBar);
                 } else {
                   SnackBar snackBar = SnackBar(
                     content: Text('呜呜呜，失败了……\n失败原因：${result["errorMessage"]}'),
-                    backgroundColor: Colors.grey.withOpacity(0.5),
+                    //backgroundColor: Colors.grey.withOpacity(0.5),
                   );
                   ScaffoldMessenger.of(context).showSnackBar(snackBar);
                 }
               }
             } else {
               if (mounted) {
-                SnackBar snackBar = SnackBar(
-                  content: const Text('呜呜呜，失败了……\n失败原因：无保存权限……'),
-                  backgroundColor: Colors.grey.withOpacity(0.5),
+                SnackBar snackBar = const SnackBar(
+                  content: Text('呜呜呜，失败了……\n失败原因：无保存权限……'),
+                  //backgroundColor: Colors.grey.withOpacity(0.5),
                 );
                 ScaffoldMessenger.of(context).showSnackBar(snackBar);
               }
             }
           } else {
-            SnackBar snackBar = SnackBar(
-              content: const Text('呜呜呜，失败了……\n还不支持其他系统保存图片哦……'),
-              backgroundColor: Colors.grey.withOpacity(0.5),
+            SnackBar snackBar = const SnackBar(
+              content: Text('呜呜呜，失败了……\n还不支持其他系统保存图片哦……'),
+              //backgroundColor: Colors.grey.withOpacity(0.5),
             );
             ScaffoldMessenger.of(context).showSnackBar(snackBar);
           }
@@ -415,7 +452,7 @@ class ExperimentalDrawTips extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.all(16),
           child: Card(
-              elevation: 4,
+              elevation: 2,
               child: Container(
                   padding: const EdgeInsets.all(16),
                   child: const Text(

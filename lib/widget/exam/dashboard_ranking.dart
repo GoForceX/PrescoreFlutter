@@ -8,12 +8,6 @@ class DashboardRanking extends StatelessWidget {
   final List<PaperDiagnosis> diagnoses;
   const DashboardRanking({Key? key, required this.diagnoses}) : super(key: key);
 
-  final Gradient _barsGradient = const LinearGradient(
-    begin: Alignment.bottomCenter,
-    end: Alignment.topCenter,
-    colors: [Colors.lightBlueAccent, Colors.lightBlue, Colors.blue],
-  );
-
   @override
   Widget build(BuildContext context) {
     int classCount =
@@ -47,7 +41,11 @@ class DashboardRanking extends StatelessWidget {
                                           100 *
                                           classCount)
                                       .roundToDouble(),
-                                  gradient: _barsGradient,
+                                  gradient: LinearGradient(
+                                    begin: Alignment.bottomCenter,
+                                    end: Alignment.topCenter,
+                                    colors: [Theme.of(context).colorScheme.primary, Theme.of(context).colorScheme.primary.withOpacity(0.6)]
+                                  ),
                                 )
                               ],
                               showingTooltipIndicators: [0],
@@ -73,13 +71,13 @@ class DashboardRanking extends StatelessWidget {
                           },
                         ),
                       ),
-                      leftTitles: AxisTitles(
+                      leftTitles: const AxisTitles(
                         sideTitles: SideTitles(showTitles: false),
                       ),
-                      topTitles: AxisTitles(
+                      topTitles: const AxisTitles(
                         sideTitles: SideTitles(showTitles: false),
                       ),
-                      rightTitles: AxisTitles(
+                      rightTitles: const AxisTitles(
                         sideTitles: SideTitles(showTitles: false),
                       ),
                     ),
@@ -111,10 +109,17 @@ class DashboardRanking extends StatelessWidget {
           ));
 
       return Card(
-        margin: const EdgeInsets.all(12.0),
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-        elevation: 4,
+        /*margin: const EdgeInsets.all(12.0),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+        elevation: 8,*/
+        elevation: 2,
+        margin: const EdgeInsets.all(8.0),
+        shape: RoundedRectangleBorder(
+          side: BorderSide(
+            color: Theme.of(context).colorScheme.outlineVariant,
+          ),
+          borderRadius: const BorderRadius.all(Radius.circular(12)),
+        ),
         child: chartCard,
       );
     } else {

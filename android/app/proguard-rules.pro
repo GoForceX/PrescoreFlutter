@@ -12,3 +12,5 @@
 -keep class org.chromium.base.**  { *; }
 -keep class org.chromium.**  { *; }
 -keep class org.chromium.net.**  { *; }
+
+-keep class com.huawei.wearengine.**{*;}

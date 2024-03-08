@@ -31,9 +31,14 @@ class _DashboardScoreInfoState extends State<DashboardScoreInfo> {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.all(12.0),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-      elevation: 4,
+      elevation: 2,
+      margin: const EdgeInsets.all(8.0),
+      shape: RoundedRectangleBorder(
+        side: BorderSide(
+          color: Theme.of(context).colorScheme.outlineVariant,
+        ),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
+      ),
       child: Column(
         children: [
           const SizedBox(
@@ -47,7 +52,7 @@ class _DashboardScoreInfoState extends State<DashboardScoreInfo> {
                   width: 16,
                 ),
                 const Text(
-                  "当前选择的是：",
+                  "当前范围",
                   style: TextStyle(fontSize: 16),
                 ),
                 const SizedBox(
@@ -92,7 +97,7 @@ class _DashboardScoreInfoState extends State<DashboardScoreInfo> {
                               // elevation: 16,
                               underline: Container(
                                 height: 2,
-                                color: Colors.blueAccent,
+                                color: Theme.of(context).colorScheme.outlineVariant,
                               ),
                               onChanged: (String? newValue) {
                                 logger.d(newValue);
@@ -122,8 +127,11 @@ class _DashboardScoreInfoState extends State<DashboardScoreInfo> {
                   if (["", "full"].contains(dropdownValue)) {
                     return Container();
                   } else {
-                    return Text("该班级数据条数: ${chosenClass?.count}",
-                        style: const TextStyle(fontSize: 16));
+                    return Row(children: [
+                      const Icon(Icons.people),
+                      Text(" ${chosenClass?.count ?? 0} 条",
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold))
+                    ]);
                   }
                 }),
                 const SizedBox(
