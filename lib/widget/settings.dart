@@ -1,4 +1,5 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -502,6 +503,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 title: const Text('使用唤醒锁'),
                 description: const Text('当出分啦在后台运行时，保持 CPU 唤醒状态'),
               ),*/
+              if(!kReleaseMode)
               SettingsTile.switchTile(
                 onToggle: (value) async {
                   if (value &&
@@ -535,6 +537,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 title: const Text('考试变动推送'),
                 description: const Text('当发布新的成绩时通知，需后台定期查询数据，可能造成异常！'),
               ),
+              if(!kReleaseMode)
               SettingsTile.navigation(
                   leading: const Icon(Icons.timer),
                   title: const Text("后台轮询时间间隔"),

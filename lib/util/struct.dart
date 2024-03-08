@@ -238,7 +238,7 @@ class QuestionSubTopic {
 
   @override
   String toString() {
-    return 'teacherMarking{score: $score, standradScore: $standradScore, scoreSource: $scoreSource, subQuestionId: $subQuestionId, teacherMarkingRecords: $teacherMarkingRecords}';
+    return 'QuestionSubTopic{score: $score, standradScore: $standradScore, scoreSource: $scoreSource, subQuestionId: $subQuestionId, teacherMarkingRecords: $teacherMarkingRecords}';
   }
 
   Map<String, dynamic> toMap() {
