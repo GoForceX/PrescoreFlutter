@@ -4,11 +4,6 @@
 
 大概还算是测试版？这个代码质量我自己也绷不住（
 
-> [!CAUTION]
-> 目前项目正处于无期限功能冻结 (Feature Freeze) 期。
-> 
-> This project might be DISCONTINUED any time. Use with caution. 
-
 ## 项目说明
 
 - 由于某些学校在智学网系统中屏蔽了**成绩和排名的查看**，遂设计了本 App.
@@ -35,4 +30,4 @@
 
 © GoForceX | 2021 - 2024
 
-© 北京市八一学校 NPC 信息社 | 2023.2 - 2023.11
+© 北京市八一学校 NPC 信息社 | 2023 - 2024
