@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:prescore_flutter/widget/paper/paper_detail.dart';
 import 'package:prescore_flutter/widget/paper/paper_distrib.dart';
+import 'package:prescore_flutter/widget/paper/paper_marking.dart';
 import 'package:prescore_flutter/widget/paper/paper_photo.dart';
 import 'package:provider/provider.dart';
 
@@ -14,11 +15,13 @@ class PaperPage extends StatefulWidget {
   final String examId;
   final String paperId;
   final User user;
+  final bool preview;
   const PaperPage(
       {Key? key,
       required this.user,
       required this.examId,
-      required this.paperId})
+      required this.paperId,
+      required this.preview})
       : super(key: key);
 
   @override
@@ -49,50 +52,98 @@ class _PaperPageState extends State<PaperPage> {
         builder: (BuildContext context, Widget? child) {
           PaperModel model = Provider.of<PaperModel>(context, listen: false);
           model.user = widget.user;
-          return PageView(
-            controller: _controller,
-            children: [
-              Center(
-                child: PaperPhoto(examId: widget.examId, paperId: widget.paperId),
-              ),
-              Center(
-                child: PaperDetail(examId: widget.examId, paperId: widget.paperId),
-              ),
-              Center(
-                child: PaperDistributionPhoto(examId: widget.examId, paperId: widget.paperId),
-              ),
-            ],
-            onPageChanged: (value) {
-              setState(() {
-                _selectedIndex = value;
-              });
-            },
-          );
+          if (!widget.preview) {
+            return PageView(
+              controller: _controller,
+              children: [
+                Center(
+                  child: PaperPhoto(
+                      examId: widget.examId, paperId: widget.paperId),
+                ),
+                Center(
+                  child: PaperDetail(
+                      examId: widget.examId, paperId: widget.paperId),
+                ),
+                Center(
+                  child: PaperDistributionPhoto(
+                      examId: widget.examId, paperId: widget.paperId),
+                ),
+              ],
+              onPageChanged: (value) {
+                setState(() {
+                  _selectedIndex = value;
+                });
+              },
+            );
+          } else {
+            return PageView(
+              controller: _controller,
+              children: [
+                Center(
+                  child: PaperMarking(
+                      examId: widget.examId, paperId: widget.paperId),
+                ),
+                Center(
+                  child: PaperPhoto(
+                      examId: widget.examId, paperId: widget.paperId),
+                ),
+              ],
+              onPageChanged: (value) {
+                setState(() {
+                  _selectedIndex = value;
+                });
+              },
+            );
+          }
         },
       ),
-      bottomNavigationBar: NavigationBar(
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.photo_album),
-            label: '原卷',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.list_alt_rounded),
-            label: '小分',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.line_axis),
-            label: '分布',
-          ),
-        ],
-        selectedIndex: _selectedIndex,
-        onDestinationSelected: (int index) {
-          setState(() {
-            _selectedIndex = index;
-            _controller.jumpToPage(_selectedIndex);
-          });
-        },
-      ),
+      bottomNavigationBar: widget.preview
+          ? NavigationBar(
+              destinations: const [
+                NavigationDestination(
+                  icon: Icon(Icons.list_alt_rounded),
+                  label: '判卷进度',
+                ),
+                NavigationDestination(
+                  //TODO
+                  icon: Icon(Icons.photo_album_outlined),
+                  selectedIcon: Icon(Icons.photo_album),
+                  label: '原卷',
+                  enabled: false,
+                )
+              ],
+              selectedIndex: _selectedIndex,
+              onDestinationSelected: (int index) {
+                setState(() {
+                  _selectedIndex = index;
+                  _controller.jumpToPage(_selectedIndex);
+                });
+              },
+            )
+          : NavigationBar(
+              destinations: const [
+                NavigationDestination(
+                  icon: Icon(Icons.photo_album_outlined),
+                  selectedIcon: Icon(Icons.photo_album),
+                  label: '原卷',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.list_alt_rounded),
+                  label: '小分',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.line_axis),
+                  label: '分布',
+                ),
+              ],
+              selectedIndex: _selectedIndex,
+              onDestinationSelected: (int index) {
+                setState(() {
+                  _selectedIndex = index;
+                  _controller.jumpToPage(_selectedIndex);
+                });
+              },
+            ),
     );
   }
 }

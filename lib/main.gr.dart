@@ -54,6 +54,7 @@ abstract class $AppRouter extends _i6.RootStackRouter {
           user: args.user,
           examId: args.examId,
           paperId: args.paperId,
+          preview: args.preview,
         ),
       );
     },
@@ -145,6 +146,7 @@ class PaperRoute extends _i6.PageRouteInfo<PaperRouteArgs> {
     required _i8.User user,
     required String examId,
     required String paperId,
+    required bool preview,
     List<_i6.PageRouteInfo>? children,
   }) : super(
           PaperRoute.name,
@@ -153,6 +155,7 @@ class PaperRoute extends _i6.PageRouteInfo<PaperRouteArgs> {
             user: user,
             examId: examId,
             paperId: paperId,
+            preview: preview,
           ),
           initialChildren: children,
         );
@@ -169,6 +172,7 @@ class PaperRouteArgs {
     required this.user,
     required this.examId,
     required this.paperId,
+    required this.preview,
   });
 
   final _i7.Key? key;
@@ -179,9 +183,11 @@ class PaperRouteArgs {
 
   final String paperId;
 
+  final bool preview;
+
   @override
   String toString() {
-    return 'PaperRouteArgs{key: $key, user: $user, examId: $examId, paperId: $paperId}';
+    return 'PaperRouteArgs{key: $key, user: $user, examId: $examId, paperId: $paperId, preview: $preview}';
   }
 }
 

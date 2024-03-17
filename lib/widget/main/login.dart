@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:prescore_flutter/main.dart';
 import 'package:prescore_flutter/model/login_model.dart';
@@ -7,7 +8,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:prescore_flutter/util/struct.dart';
 import 'package:prescore_flutter/service.dart' show refreshService;
 import 'package:prescore_flutter/util/user_util.dart';
-
 
 class ClearButton extends StatelessWidget {
   const ClearButton({super.key, required this.controller});
@@ -36,10 +36,9 @@ class _LoginWidgetState extends State<LoginWidget> {
   bool _isObscured = true;
 
   void login({useLocalSession = false, keepLocalSession = false}) async {
-    if(useLocalSession) {
+    if (useLocalSession) {
       Provider.of<LoginModel>(context, listen: false).setAutoLogging(true);
     }
-    //Provider.of<LoginModel>(context, listen: false).setLoggedOff(false);
     Provider.of<LoginModel>(context, listen: false).setLoading(true);
     final username = usernameController.text;
     final password = passwordController.text;
@@ -49,7 +48,20 @@ class _LoginWidgetState extends State<LoginWidget> {
 
     User user = User();
     Provider.of<LoginModel>(context, listen: false).setUser(user);
-    Result result = await user.login(username, password, useLocalSession: useLocalSession, keepLocalSession: keepLocalSession);
+    Result result;
+    try {
+      result = await user.login(username, password,
+          useLocalSession: useLocalSession, keepLocalSession: keepLocalSession);
+    } catch (e) {
+      SnackBar snackBar =
+      SnackBar(content: Text('呜呜呜，登录失败了……\n失败原因：${(e as DioException).error}'));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        Provider.of<LoginModel>(context, listen: false).setLoading(false);
+        Provider.of<LoginModel>(context, listen: false).setAutoLogging(false);
+      }
+      return;
+    }
     if (mounted) {
       if (result.state) {
         Provider.of<LoginModel>(context, listen: false).user.telemetryLogin();
@@ -59,8 +71,7 @@ class _LoginWidgetState extends State<LoginWidget> {
         logger.d("session ${user.session}");
         refreshService();
         user.reLoginFailedCallback = () {
-          Provider.of<LoginModel>(context, listen: false)
-              .setLoggedIn(false);
+          Provider.of<LoginModel>(context, listen: false).setLoggedIn(false);
           //Provider.of<LoginModel>(context, listen: false)
           //    .setLoggedOff(true);
           Provider.of<LoginModel>(context, listen: false).setLoading(false);
@@ -72,9 +83,8 @@ class _LoginWidgetState extends State<LoginWidget> {
             .telemetryLogin();
           */
       } else {
-        SnackBar snackBar = SnackBar(
-          content: Text('呜呜呜，登录失败了……\n失败原因：${result.message}')
-        );
+        SnackBar snackBar =
+            SnackBar(content: Text('呜呜呜，登录失败了……\n失败原因：${result.message}'));
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
         Provider.of<LoginModel>(context, listen: false).setLoading(false);
         Provider.of<LoginModel>(context, listen: false).setAutoLogging(false);
@@ -117,7 +127,6 @@ class _LoginWidgetState extends State<LoginWidget> {
       Future.microtask(() {
         login(useLocalSession: true, keepLocalSession: true);
       });
-      
     }
     final textTheme = Theme.of(context)
         .textTheme
@@ -148,14 +157,13 @@ class _LoginWidgetState extends State<LoginWidget> {
                           child: TextField(
                             controller: usernameController,
                             decoration: InputDecoration(
-                              prefixIcon: const Icon(Icons.account_box),
-                              suffixIcon:
-                                  ClearButton(controller: usernameController),
-                              labelText: '用户名',
-                              hintText: '请输入用户名',
-                              filled: true,
-                              enabled: !model.isLoading
-                            ),
+                                prefixIcon: const Icon(Icons.account_box),
+                                suffixIcon:
+                                    ClearButton(controller: usernameController),
+                                labelText: '用户名',
+                                hintText: '请输入用户名',
+                                filled: true,
+                                enabled: !model.isLoading),
                             onChanged: (text) {
                               saveAccount();
                             },
@@ -190,20 +198,26 @@ class _LoginWidgetState extends State<LoginWidget> {
                           child: FilterChip(
                             label: const Text('保持登录'),
                             selected: sharedPrefs.getBool("keepLogin") ?? true,
-                            onSelected: model.isLoading ? null : (bool selected) => setState(() {
-                              if(!selected) {
-                                if(sharedPrefs.getBool("enableWearService") == true
-                                || sharedPrefs.getBool("checkExams") == true) {
-                                  SnackBar snackBar = const SnackBar(
-                                    content: Text('注意：启用后台服务必须保持登录')
-                                  );
-                                  ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                                  //sharedPrefs.setBool("keepLogin", true);
-                                  //return;
-                                }
-                              }
-                              sharedPrefs.setBool("keepLogin", selected);
-                            }),
+                            onSelected: model.isLoading
+                                ? null
+                                : (bool selected) => setState(() {
+                                      if (!selected) {
+                                        if (sharedPrefs.getBool(
+                                                    "enableWearService") ==
+                                                true ||
+                                            sharedPrefs.getBool("checkExams") ==
+                                                true) {
+                                          SnackBar snackBar = const SnackBar(
+                                              content: Text('注意：启用后台服务必须保持登录'));
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(snackBar);
+                                          //sharedPrefs.setBool("keepLogin", true);
+                                          //return;
+                                        }
+                                      }
+                                      sharedPrefs.setBool(
+                                          "keepLogin", selected);
+                                    }),
                           ),
                         )
                       ]),
@@ -211,43 +225,60 @@ class _LoginWidgetState extends State<LoginWidget> {
                 Positioned(
                     right: 0,
                     bottom: 0,
-                    child: FloatingActionButton(
-                        onPressed: model.isLoading ? null : () => login(useLocalSession: false, keepLocalSession: sharedPrefs.getBool("keepLogin") ?? true),
-                        child: model.isLoading ? const SizedBox(height: 16, width: 16, child: CircularProgressIndicator(strokeWidth: 3))
-                         : const Icon(Icons.login)))
+                    child: FloatingActionButton.extended(
+                      onPressed: model.isLoading
+                          ? null
+                          : () => login(
+                              useLocalSession: false,
+                              keepLocalSession:
+                                  sharedPrefs.getBool("keepLogin") ?? true),
+                      icon: model.isLoading
+                          ? Container(
+                              height: 10,
+                              width: 10,
+                              margin: const EdgeInsets.all(4),
+                              child: const CircularProgressIndicator(
+                                  strokeWidth: 2))
+                          : const Icon(Icons.login, size: 18),
+                      label: const Text("登录"),
+                    ))
               ]));
-          return 
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topRight,
-                end: Alignment.bottomLeft,
-                stops: const [0.1, 0.8],
-                colors: [
-                  Theme.of(context).colorScheme.primaryContainer,
-                  Theme.of(context).colorScheme.onPrimary,
-                ],
+          return Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topRight,
+                  end: Alignment.bottomLeft,
+                  stops: const [0.1, 0.8],
+                  colors: [
+                    Theme.of(context).colorScheme.primaryContainer,
+                    Theme.of(context).colorScheme.onPrimary,
+                  ],
+                ),
               ),
-            ),
-            child:
-              Column(children: [
+              child: Column(children: [
                 Expanded(
                     flex: 1,
                     child: Align(
                         alignment: Alignment.bottomLeft,
                         child: Container(
-                            margin: const EdgeInsets.all(32), child: Text("  登入", style: textTheme.displayMedium)))),
+                            margin: const EdgeInsets.all(32),
+                            child:
+                                Text("  登入", style: textTheme.displayMedium)))),
                 Expanded(
                     flex: 2,
-                    child: Align(alignment: Alignment.topLeft, child: loginCard)),
-                const Text("© GoForceX | 2021 - 2024", style: TextStyle(color: Colors.grey, fontSize: 10)),
-                const Text("© 北京市八一学校 NPC 信息社 | 2023.2 - 2023.11", style: TextStyle(color: Colors.grey, fontSize: 10)),
+                    child:
+                        Align(alignment: Alignment.topLeft, child: loginCard)),
+                const Text("© GoForceX | 2021 - 2024",
+                    style: TextStyle(color: Colors.grey, fontSize: 10)),
+                const Text("© 北京市八一学校 NPC 信息社 | 2023 - 2024",
+                    style: TextStyle(color: Colors.grey, fontSize: 10)),
                 const SizedBox(height: 10),
-            ])
-          );
-          
+              ]));
         } else {
-          return Center(child: Container(margin: const EdgeInsets.all(10) ,child: const CircularProgressIndicator()));
+          return Center(
+              child: Container(
+                  margin: const EdgeInsets.all(10),
+                  child: const CircularProgressIndicator()));
         }
       },
     );

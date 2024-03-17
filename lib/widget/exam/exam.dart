@@ -54,28 +54,25 @@ class _ExamPageState extends State<ExamPage> {
           );
         },
       ),
-      bottomNavigationBar: BottomNavigationBarTheme(
-        data: BottomNavigationBarThemeData(
-          elevation: _selectedIndex == 0 ? 0 : 8,
-        ),
-        child: NavigationBar(
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(Icons.library_books_rounded),
-              label: '单科查看',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.dashboard),
-              label: '全科预览',
-            ),
-          ],
-          selectedIndex: _selectedIndex,
-          onDestinationSelected: (int index) {
-            setState(() {
-              _selectedIndex = index;
-            });
-          },
-        ),
+      bottomNavigationBar: NavigationBar(
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.library_books_outlined),
+            selectedIcon: Icon(Icons.library_books_rounded),
+            label: '单科查看',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.dashboard_outlined),
+            selectedIcon: Icon(Icons.dashboard),
+            label: '全科预览',
+          ),
+        ],
+        selectedIndex: _selectedIndex,
+        onDestinationSelected: (int index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
       ),
     );
   }

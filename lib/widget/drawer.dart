@@ -66,7 +66,7 @@ class _MainDrawerState extends State<MainDrawer> {
     const Destination(
         '设置', Icon(Icons.settings_applications_outlined), Icon(Icons.settings_applications), SettingsRoute(), true),
     const Destination(
-        '错题集', Icon(Icons.book_outlined), Icon(Icons.book_rounded), ErrorBookRoute(), false),
+        '错题集', Icon(Icons.book_outlined), Icon(Icons.book_rounded), ErrorBookRoute(), true),
   ];
 
   void logout(context) async {

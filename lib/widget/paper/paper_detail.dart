@@ -16,13 +16,13 @@ class PaperDetail extends StatefulWidget {
   State<PaperDetail> createState() => _PaperDetailState();
 }
 
-class _PaperDetailState extends State<PaperDetail> with AutomaticKeepAliveClientMixin{
+class _PaperDetailState extends State<PaperDetail> with AutomaticKeepAliveClientMixin, TickerProviderStateMixin {
   @override
   bool get wantKeepAlive => true;
   
   late ScrollController scrollController;
   late ListObserverController observerController;
-  bool showToTop = false;
+  late AnimationController fabAnimationController;
   @override
   void dispose() {
     scrollController.dispose();
@@ -33,13 +33,16 @@ class _PaperDetailState extends State<PaperDetail> with AutomaticKeepAliveClient
   void initState() {
     scrollController = ScrollController();
     observerController = ListObserverController(controller: scrollController);
+    fabAnimationController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 300));
     scrollController.addListener(() {
-      if(scrollController.offset > MediaQuery.of(context).size.height * 0.4 && !showToTop) {
-        showToTop = true;
-        setState(() {});
-      } else if(scrollController.offset <= MediaQuery.of(context).size.height * 0.4 && showToTop){
-        showToTop = false;
-        setState(() {});
+      if (scrollController.offset <= MediaQuery.of(context).size.height * 0.4 &&
+          fabAnimationController.status == AnimationStatus.completed) {
+        fabAnimationController.reverse();
+      } else if (scrollController.offset >
+          MediaQuery.of(context).size.height * 0.4 &&
+          fabAnimationController.status == AnimationStatus.dismissed) {
+        fabAnimationController.forward();
       }
     });
     super.initState();
@@ -146,19 +149,26 @@ class _PaperDetailState extends State<PaperDetail> with AutomaticKeepAliveClient
     return Stack(children: [
       main,
       Positioned(
-          bottom: 20,
-          right: 20,
-          child: AnimatedOpacity(
-            opacity: showToTop ? 1 : 0,
-            duration: const Duration(milliseconds: 200),
-            child: FloatingActionButton(onPressed: () {
+        bottom: 20,
+        right: 20,
+        child: SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, 2),
+            end: const Offset(0, 0),
+          ).animate(CurvedAnimation(
+            parent: fabAnimationController,
+            curve: Curves.easeInOut,
+          )),
+          child: FloatingActionButton(
+            onPressed: () {
               scrollController.animateTo(0.0,
                   duration: const Duration(milliseconds: 500),
                   curve: Curves.ease);
             },
-            child: const Icon(Icons.arrow_upward))
-          )
-        )
+            child: const Icon(Icons.arrow_upward),
+          ),
+        ),
+      )
     ]);
   }
 }

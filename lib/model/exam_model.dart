@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:prescore_flutter/util/user_util.dart';
+import 'package:collection/collection.dart';
 
 import '../util/struct.dart';
+
+enum UploadStatus { uploading, complete, incomplete }
 
 class ExamModel extends ChangeNotifier {
   User user = User();
@@ -13,6 +16,8 @@ class ExamModel extends ChangeNotifier {
   String subTips = "";
 
   bool isPaperLoaded = false;
+  bool isPreviewPaperLoaded = false;
+  UploadStatus uploadStatus = UploadStatus.incomplete;
   List<Paper> papers = [];
   List<Paper> absentPapers = [];
 
@@ -29,6 +34,10 @@ class ExamModel extends ChangeNotifier {
   void setDiagLoaded(bool value) {
     isDiagLoaded = value;
     notifyListeners();
+  }
+
+  void setUploadStatus(UploadStatus value) {
+    uploadStatus = value;
   }
 
   void setDiagnoses(List<PaperDiagnosis> value) {
@@ -48,6 +57,28 @@ class ExamModel extends ChangeNotifier {
 
   void setPaperLoaded(bool value) {
     isPaperLoaded = value;
+    notifyListeners();
+  }
+
+  void setPreviewPaperLoaded(bool value) {
+    isPreviewPaperLoaded = value;
+    notifyListeners();
+  }
+
+  void addPapers(List<Paper> value) {
+    for (Paper paperElement in value) {
+      Paper? currentSamePaper = papers
+          .firstWhereOrNull((item) => item.paperId == paperElement.paperId);
+      if (currentSamePaper != null) {
+        if (currentSamePaper.source != Source.common) {
+          int index = papers.indexOf(currentSamePaper);
+          papers.remove(currentSamePaper);
+          papers.insert(index, paperElement);
+        }
+      } else {
+        papers.add(paperElement);
+      }
+    }
     notifyListeners();
   }
 

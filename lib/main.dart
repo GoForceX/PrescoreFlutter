@@ -8,6 +8,7 @@ import 'package:easy_refresh/easy_refresh.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:logger/logger.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
@@ -35,21 +36,17 @@ import 'model/login_model.dart';
 
 @pragma('vm:entry-point')
 serviceEntry() async {
-  if (kReleaseMode){
-    await SentryFlutter.init(
-      (options) {
-        options.dsn = 
-            'https://baab724bcf3cc8b40759a031edd478eb@o4506218740776960.ingest.sentry.io/4506218743857152';
-        // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
-        // We recommend adjusting this value in production.
-        options.tracesSampleRate = 1.0;
-      },
-      appRunner: () => serviceMain()
-    );
+  if (kReleaseMode) {
+    await SentryFlutter.init((options) {
+      options.dsn =
+          'https://baab724bcf3cc8b40759a031edd478eb@o4506218740776960.ingest.sentry.io/4506218743857152';
+      // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
+      // We recommend adjusting this value in production.
+      options.tracesSampleRate = 1.0;
+    }, appRunner: () => serviceMain());
   } else {
-      serviceMain();
+    serviceMain();
   }
-  
 }
 
 bool firebaseAnalyseEnable = true;
@@ -57,14 +54,16 @@ bool sentryAnalyseEnable = true;
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await BaseSingleton.singleton.init();
-  var clientFactory = Client.new; // Constructs the default client.
-  if (Platform.isAndroid) {
-    Future<CronetEngine>? engine;
-    clientFactory = () {
-      engine ??=
-          CronetEngine.build(cacheMode: CacheMode.memory, userAgent: userAgent);
-      return CronetClient.fromCronetEngineFuture(engine!);
-    };
+  var clientFactory = Client.new; // Constructs the default
+  if (!kIsWeb) {
+    if (Platform.isAndroid) {
+      Future<CronetEngine>? engine;
+      clientFactory = () {
+        engine ??= CronetEngine.build(
+            cacheMode: CacheMode.memory, userAgent: userAgent);
+        return CronetClient.fromCronetEngineFuture(engine!);
+      };
+    }
   }
   if (firebaseAnalyseEnable) {
     await Firebase.initializeApp(
@@ -80,15 +79,13 @@ Future<void> main() async {
         // We recommend adjusting this value in production.
         options.tracesSampleRate = 1.0;
       },
-      appRunner: () => runWithClient(() => runApp(ChangeNotifierProvider(
-        create: (_) => LoginModel(),
-        child: MyApp())), clientFactory),
+      appRunner: () => runWithClient(
+          () => runApp(ChangeNotifierProvider(
+              create: (_) => LoginModel(), child: MyApp())),
+          clientFactory),
     );
   } else {
-    runApp(ChangeNotifierProvider(
-        create: (_) => LoginModel(),
-        child: MyApp()));
-    
+    runApp(ChangeNotifierProvider(create: (_) => LoginModel(), child: MyApp()));
   }
 }
 
@@ -145,11 +142,12 @@ class MyApp extends StatelessWidget {
       "brandColor": "天蓝色",
       "useDynamicColor": true,
       "showMarkingRecords": false,
+      "showMoreSubject": false,
+      "tryPreviewScore": false,
       "developMode": false,
-
     };
     defaultSetting.forEach((key, value) {
-      if(value.runtimeType == int) {
+      if (value.runtimeType == int) {
         if (BaseSingleton.singleton.sharedPreferences.getInt(key) == null) {
           BaseSingleton.singleton.sharedPreferences.setInt(key, value);
         }
@@ -166,8 +164,14 @@ class MyApp extends StatelessWidget {
     return DynamicColorBuilder(builder: (lightDynamic, darkDynamic) {
       ColorScheme? lightColorScheme;
       ColorScheme? darkColorScheme;
-      Color brandColor = brandColorMap[BaseSingleton.singleton.sharedPreferences.getString("brandColor")] ?? Colors.blue;
-      if (lightDynamic != null && darkDynamic != null && BaseSingleton.singleton.sharedPreferences.getBool("useDynamicColor") == true) {
+      Color brandColor = brandColorMap[BaseSingleton.singleton.sharedPreferences
+              .getString("brandColor")] ??
+          Colors.blue;
+      if (lightDynamic != null &&
+          darkDynamic != null &&
+          BaseSingleton.singleton.sharedPreferences
+                  .getBool("useDynamicColor") ==
+              true) {
         lightColorScheme = lightDynamic.harmonized();
         darkColorScheme = darkDynamic.harmonized();
       } else {
@@ -181,25 +185,33 @@ class MyApp extends StatelessWidget {
         );
       }
       return MaterialApp.router(
-        routeInformationParser: _appRouter.defaultRouteParser(),
-        routerDelegate: _appRouter.delegate(
-          navigatorObservers: firebaseAnalyseEnable
-              ? (() => [
-                    FirebaseAnalyticsObserver(
-                        analytics: FirebaseAnalytics.instance),
-                  ])
-              : (() => []),
-        ),
-        title: '出分啦',
-        theme: ThemeData(
-          colorScheme: lightColorScheme,
-          useMaterial3: true,
-        ),
-        darkTheme: ThemeData(
-          colorScheme: darkColorScheme,
-          useMaterial3: true,
-        ),
-        themeMode: ThemeMode.system);
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+          ],
+          supportedLocales: const [
+            Locale('zh', 'CH'),
+          ],
+          locale: const Locale('zh'),
+          routeInformationParser: _appRouter.defaultRouteParser(),
+          routerDelegate: _appRouter.delegate(
+            navigatorObservers: firebaseAnalyseEnable
+                ? (() => [
+                      FirebaseAnalyticsObserver(
+                          analytics: FirebaseAnalytics.instance),
+                    ])
+                : (() => []),
+          ),
+          title: '出分啦',
+          theme: ThemeData(
+            colorScheme: lightColorScheme,
+            useMaterial3: true,
+          ),
+          darkTheme: ThemeData(
+            colorScheme: darkColorScheme,
+            useMaterial3: true,
+          ),
+          themeMode: ThemeMode.system);
     });
   }
 }
@@ -224,7 +236,8 @@ class HomePageState extends State<HomePage> {
   }
 
   Future<void> showUpgradeAlert(BuildContext context) async {
-    if(BaseSingleton.singleton.sharedPreferences.getBool('checkUpdate') == false) {
+    if (BaseSingleton.singleton.sharedPreferences.getBool('checkUpdate') ==
+        false) {
       return;
     }
     String appcastURL = 'https://matrix.bjbybbs.com/appcast.xml';
@@ -339,7 +352,8 @@ class HomePageState extends State<HomePage> {
                 actions: <Widget>[
                   TextButton(
                     onPressed: () {
-                      SnackBar snackBar = const SnackBar(content: Text('拒绝之后小部分功能可能无法使用哦，在侧边栏设置中可以手动授权！'));
+                      SnackBar snackBar = const SnackBar(
+                          content: Text('拒绝之后小部分功能可能无法使用哦，在侧边栏设置中可以手动授权！'));
                       ScaffoldMessenger.of(context).showSnackBar(snackBar);
                       Navigator.pop(dialogContext, '不要');
                     },
@@ -364,7 +378,7 @@ class HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-          /*appBar: AppBar(
+      /*appBar: AppBar(
             title: const Text('出分啦'),
             actions: [
               IconButton(
@@ -372,95 +386,98 @@ class HomePageState extends State<HomePage> {
                   icon: const Icon(Icons.insert_comment))
             ],
           ),*/
-          body: FutureBuilder(
-              future: Future.delayed(Duration.zero, () {
-                showRequestDialog(context);
-                showUpgradeAlert(context);
-              }),
-              builder: (BuildContext context, AsyncSnapshot snapshot) {
-                return Consumer<LoginModel>(builder: (context, model, child) {
-                  if(!(model.isLoggedIn && !prevLoginState)) {
-                    return const Center(child: LoginWidget());
-                  } else {
-                    List<Widget> slivers = [];
-                    EasyRefreshController controller = EasyRefreshController(
-                      controlFinishRefresh: true,
-                      controlFinishLoad: true,
-                    );
-                    //slivers.add(const SliverHeader());
-                    slivers.add(SliverAppBar(
-                      //title: Text("考试列表"),
-                      forceElevated: true,
-                      flexibleSpace: FlexibleSpaceBar(
-                        title: Text("考试列表", style: Theme.of(context).textTheme.titleLarge),
-                        titlePadding: const EdgeInsetsDirectional.only(start: 56, bottom: 14),
-                        expandedTitleScale: 1.8,
-                      ),
-                      actions: [IconButton(
+      body: FutureBuilder(
+          future: Future.delayed(Duration.zero, () {
+            showRequestDialog(context);
+            showUpgradeAlert(context);
+          }),
+          builder: (BuildContext context, AsyncSnapshot snapshot) {
+            return Consumer<LoginModel>(builder: (context, model, child) {
+              if (!(model.isLoggedIn && !prevLoginState)) {
+                return const Center(child: LoginWidget());
+              } else {
+                List<Widget> slivers = [];
+                EasyRefreshController controller = EasyRefreshController(
+                  controlFinishRefresh: true,
+                  controlFinishLoad: true,
+                );
+                //slivers.add(const SliverHeader());
+                slivers.add(SliverAppBar(
+                  //title: Text("考试列表"),
+                  forceElevated: true,
+                  flexibleSpace: FlexibleSpaceBar(
+                    title: Text("考试列表",
+                        style: Theme.of(context).textTheme.titleLarge),
+                    titlePadding:
+                        const EdgeInsetsDirectional.only(start: 56, bottom: 14),
+                    expandedTitleScale: 1.8,
+                  ),
+                  actions: [
+                    IconButton(
                         onPressed: onNavigatingForum,
-                        icon: const Icon(Icons.insert_comment))],
-                      expandedHeight: 200.0,
-                      floating: false,
-                      pinned: true,
-                      snap: false,
-                      
-                    ));
-                    slivers.add(const HeaderLocator.sliver());
-                    GlobalKey<ExamsState> key = GlobalKey();
-                    Exams exams = Exams(key: key, controller: controller);
-                    slivers.add(exams);
-                    slivers.add(const FooterLocator.sliver());
+                        icon: const Icon(Icons.insert_comment))
+                  ],
+                  expandedHeight: 200.0,
+                  floating: false,
+                  pinned: true,
+                  snap: false,
+                ));
+                slivers.add(const HeaderLocator.sliver());
+                GlobalKey<ExamsState> key = GlobalKey();
+                Exams exams = Exams(key: key, controller: controller);
+                slivers.add(exams);
+                slivers.add(const FooterLocator.sliver());
 
-                    return EasyRefresh.builder(
-                        controller: controller,
-                        header: const ClassicHeader(
-                          position: IndicatorPosition.locator,
-                          dragText: '下滑刷新 (´ρ`)',
-                          armedText: '松开刷新 (´ρ`)',
-                          readyText: '获取数据中... (›´ω`‹)',
-                          processingText: '获取数据中... (›´ω`‹)',
-                          processedText: '成功！(`ヮ´)',
-                          noMoreText: '太多啦 TwT',
-                          failedText: '失败了 TwT',
-                          messageText: '上次更新于 %T',
-                        ),
-                        footer: const ClassicFooter(
-                          infiniteOffset: 0,
-                          position: IndicatorPosition.locator,
-                          dragText: '下滑刷新 (´ρ`)',
-                          armedText: '松开刷新 (´ρ`)',
-                          readyText: '获取数据中... (›´ω`‹)',
-                          processingText: '获取数据中... (›´ω`‹)',
-                          processedText: '成功！(`ヮ´)',
-                          noMoreText: '我一点都没有了... TwT',
-                          failedText: '失败了 TwT',
-                          messageText: '上次更新于 %T',
-                        ),
-                        onRefresh: (model.isLoggedIn && !prevLoginState)
-                            ? () async {
-                                await key.currentState?.refresh();
-                              }
-                            : null,
-                        onLoad: (model.isLoggedIn && !prevLoginState)
-                            ? () async {
-                                await key.currentState?.load();
-                              }
-                            : null,
-                        childBuilder: (BuildContext ct, ScrollPhysics sp) =>
-                          CustomScrollView(
-                            physics: sp,
-                            slivers: slivers,
-                          ));
-                          /*  CustomScrollView(
+                return EasyRefresh.builder(
+                    controller: controller,
+                    header: const ClassicHeader(
+                      position: IndicatorPosition.locator,
+                      dragText: '下滑刷新 (´ρ`)',
+                      armedText: '松开刷新 (´ρ`)',
+                      readyText: '获取数据中... (›´ω`‹)',
+                      processingText: '获取数据中... (›´ω`‹)',
+                      processedText: '成功！(`ヮ´)',
+                      noMoreText: '太多啦 TwT',
+                      failedText: '失败了 TwT',
+                      messageText: '上次更新于 %T',
+                    ),
+                    footer: const ClassicFooter(
+                      infiniteOffset: 0,
+                      position: IndicatorPosition.locator,
+                      dragText: '下滑刷新 (´ρ`)',
+                      armedText: '松开刷新 (´ρ`)',
+                      readyText: '获取数据中... (›´ω`‹)',
+                      processingText: '获取数据中... (›´ω`‹)',
+                      processedText: '成功！(`ヮ´)',
+                      noMoreText: '我一点都没有了... TwT',
+                      failedText: '失败了 TwT',
+                      messageText: '上次更新于 %T',
+                    ),
+                    onRefresh: (model.isLoggedIn && !prevLoginState)
+                        ? () async {
+                            await key.currentState?.refresh();
+                          }
+                        : null,
+                    onLoad: (model.isLoggedIn && !prevLoginState)
+                        ? () async {
+                            await key.currentState?.load();
+                          }
+                        : null,
+                    childBuilder: (BuildContext ct, ScrollPhysics sp) =>
+                        CustomScrollView(
+                          physics: sp,
+                          slivers: slivers,
+                        ));
+                /*  CustomScrollView(
                               physics: sp,
                               shrinkWrap: true,
                               slivers: slivers,
                             ));*/
-                  }
-                });
-              }),
-          drawer: const MainDrawer(),
-        );
+              }
+            });
+          }),
+      drawer: const MainDrawer(),
+    );
   }
 }
 
@@ -510,9 +527,10 @@ class BaseSingleton {
     }
 
     dio.options.headers = commonHeaders;
-
-    if (Platform.isIOS || Platform.isMacOS || Platform.isAndroid) {
-      dio.httpClientAdapter = CronetAdapter(null);
+    if (!kIsWeb) {
+      if (Platform.isIOS || Platform.isMacOS || Platform.isAndroid) {
+        dio.httpClientAdapter = CronetAdapter(null);
+      }
     }
 
     sharedPreferences = await SharedPreferences.getInstance();

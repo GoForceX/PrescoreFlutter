@@ -18,7 +18,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 0.40.0+1175
 
 environment:
-  sdk: ">=2.17.3 <3.0.0"
+  sdk: ">=2.19.0 <3.0.0"
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -28,6 +28,8 @@ environment:
 # versions available, run `flutter pub outdated`.
 dependencies:
   flutter:
+    sdk: flutter
+  flutter_localizations:
     sdk: flutter
 
 
@@ -80,7 +82,7 @@ dependencies:
   archive: ^3.4.10
   dynamic_color: ^1.6.9
   flutter_html: ^3.0.0-beta.2
-  flutter_html_all: ^3.0.0-alpha.6
+  flutter_html_table: ^3.0.0-beta.2
 
 dev_dependencies:
   flutter_test:

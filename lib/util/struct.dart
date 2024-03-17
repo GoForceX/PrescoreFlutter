@@ -55,18 +55,17 @@ class StudentInfo {
   String classId = "";
   String schoolName = "";
 
-  StudentInfo({
-    required this.id, 
-    required this.loginName, 
-    required this.name, 
-    required this.role, 
-    required this.avatar, 
-    required this.studentNo, 
-    required this.gradeName, 
-    required this.className, 
-    required this.classId, 
-    required this.schoolName
-  });
+  StudentInfo(
+      {required this.id,
+      required this.loginName,
+      required this.name,
+      required this.role,
+      required this.avatar,
+      required this.studentNo,
+      required this.gradeName,
+      required this.className,
+      required this.classId,
+      required this.schoolName});
 
   @override
   String toString() {
@@ -74,20 +73,24 @@ class StudentInfo {
   }
 }
 
+enum Gender {
+  male,
+  female,
+}
+
 class Classmate {
   String name = "";
   String id = "";
   String code = "";
-  String gender = "";
+  Gender gender;
   String mobile = "";
 
-  Classmate({
-    required this.name, 
-    required this.id, 
-    required this.code, 
-    required this.gender, 
-    required this.mobile
-  });
+  Classmate(
+      {required this.name,
+      required this.id,
+      required this.code,
+      required this.gender,
+      required this.mobile});
 
   @override
   String toString() {
@@ -125,6 +128,13 @@ class Exam {
   }
 }
 
+enum Source {
+  common,
+  preview,
+}
+
+enum PaperStatus { unknown }
+
 class Paper {
   String examId;
   String paperId;
@@ -134,22 +144,26 @@ class Paper {
   double fullScore;
   double? assignScore;
   double? diagnosticScore;
+  PaperStatus paperStatus = PaperStatus.unknown;
+  Source source;
 
-  Paper({
-    required this.examId,
-    required this.paperId,
-    required this.name,
-    required this.subjectId,
-    required this.userScore,
-    required this.fullScore,
-    this.assignScore,
-    this.diagnosticScore,
-  });
+  Paper(
+      {required this.examId,
+      required this.paperId,
+      required this.name,
+      required this.subjectId,
+      required this.userScore,
+      required this.fullScore,
+      required this.source,
+      this.assignScore,
+      this.diagnosticScore,
+      this.paperStatus = PaperStatus.unknown});
 
   @override
   String toString() {
-    return 'Paper{examId: $examId, paperId: $paperId, name: $name, subjectId: $subjectId, userScore: $userScore, fullScore: $fullScore, assignScore: $assignScore, diagnosticScore: $diagnosticScore}';
+    return 'Paper{examId: $examId, paperId: $paperId, name: $name, subjectId: $subjectId, userScore: $userScore, fullScore: $fullScore, assignScore: $assignScore, diagnosticScore: $diagnosticScore, source: $source}';
   }
+
   Map<String, dynamic> toMap() {
     return {
       "examId": examId,
@@ -159,6 +173,22 @@ class Paper {
       "userScore": userScore,
       "fullScore": fullScore,
     };
+  }
+}
+
+class QuestionProgress {
+  String dispTitle;
+  int allCount;
+  int realCompleteCount;
+  QuestionProgress({
+    required this.dispTitle,
+    required this.allCount,
+    required this.realCompleteCount,
+  });
+
+  @override
+  String toString() {
+    return 'QuestionProgress{dispTitle: $dispTitle, allCount: $allCount, realCompleteCount: $realCompleteCount}';
   }
 }
 
@@ -222,6 +252,7 @@ class TeacherMarking {
     };
   }
 }
+
 class QuestionSubTopic {
   double score;
   double? standradScore;
@@ -242,7 +273,8 @@ class QuestionSubTopic {
   }
 
   Map<String, dynamic> toMap() {
-    List<Map<String, dynamic>> teacherMarkingRecordsJsonList = teacherMarkingRecords.map((element) => element.toMap()).toList();
+    List<Map<String, dynamic>> teacherMarkingRecordsJsonList =
+        teacherMarkingRecords.map((element) => element.toMap()).toList();
     return {
       "score": score,
       "standradScore": standradScore,
@@ -282,16 +314,18 @@ class Question {
   String toString() {
     return 'Question{questionId: $questionId, userScore: $userScore, fullScore: $fullScore, isSelected: $isSelected, selectedAnswer: $selectedAnswer, isSubjective: $isSubjective, subTopic: $subTopic, classScoreRate: $classScoreRate, stepRecords: $stepRecords}';
   }
+
   Map<String, dynamic> toMap() {
-    List<Map<String, dynamic>> subTopicJsonList = subTopic.map((element) => element.toMap()).toList();
+    List<Map<String, dynamic>> subTopicJsonList =
+        subTopic.map((element) => element.toMap()).toList();
 
     return {
       "questionId": questionId,
       "userScore": userScore,
       "fullScore": fullScore,
-      "isSubjective" : isSubjective ? "true" : "false",
-      "selectedAnswer" : selectedAnswer,
-      "subTopic" : subTopicJsonList,
+      "isSubjective": isSubjective ? "true" : "false",
+      "selectedAnswer": selectedAnswer,
+      "subTopic": subTopicJsonList,
     };
   }
 }
@@ -351,13 +385,29 @@ class Subject {
 }
 
 class ErrorQuestion {
-  dynamic data;
-  ErrorQuestion({
-    required this.data
-  });
+  int? topicNumber;
+  String? contentHtml;
+  String? analysisHtml;
+  String? difficultyName;
+  List<dynamic>? knowledgeNames;
+  String? topicSourcePaperName;
+  dynamic userAnswer;
+  double? standardScore;
+  double? userScore;
+
+  ErrorQuestion(
+      {required this.topicNumber,
+      required this.analysisHtml,
+      required this.contentHtml,
+      required this.difficultyName,
+      required this.knowledgeNames,
+      required this.topicSourcePaperName,
+      required this.userAnswer,
+      required this.standardScore,
+      required this.userScore});
   @override
   String toString() {
-    return 'ErrorQuestion{data: $data}';
+    return 'ErrorQuestion{TopicNumber: $topicNumber, analysisHtml: $analysisHtml, contentHtml: $contentHtml, difficultyName: $difficultyName, knowledgeNames: $knowledgeNames, topicSourcePaperName: $topicSourcePaperName, userAnswer: $userAnswer, standardScore: $standardScore, userScore: $userScore}';
   }
 }
 
@@ -366,17 +416,16 @@ class ErrorBookData {
   int currentPageIndex;
   int totalPage;
   int totalQuestion;
-  List<ErrorQuestion> errorQuestion;
-  ErrorBookData({
-    required this.subjectCode,
-    required this.currentPageIndex,
-    required this.totalPage,
-    required this.totalQuestion,
-    required this.errorQuestion
-  });
+  List<ErrorQuestion> errorQuestions;
+  ErrorBookData(
+      {required this.subjectCode,
+      required this.currentPageIndex,
+      required this.totalPage,
+      required this.totalQuestion,
+      required this.errorQuestions});
   @override
   String toString() {
-    return 'ErrorBookData{subjectCode: $subjectCode, currentPageIndex: $currentPageIndex, totalPage: $totalPage, totalQuestion: $totalQuestion, errorQuestion: $errorQuestion}';
+    return 'ErrorBookData{subjectCode: $subjectCode, currentPageIndex: $currentPageIndex, totalPage: $totalPage, totalQuestion: $totalQuestion, errorQuestion: $errorQuestions}';
   }
 }
 
@@ -399,8 +448,10 @@ class PaperData {
   String toString() {
     return 'PaperData{examId: $examId, paperId: $paperId, sheetImages: $sheetImages, questions: $questions, markers: $markers}';
   }
+
   Map<String, dynamic> toMap() {
-    List<Map<String, dynamic>> jsonList = questions.map((element) => element.toMap()).toList();
+    List<Map<String, dynamic>> jsonList =
+        questions.map((element) => element.toMap()).toList();
     return {
       "examId": examId,
       "paperId": paperId,
@@ -462,6 +513,7 @@ class ClassInfo {
   String toString() {
     return 'ClassInfo{classId: $classId, className: $className, count: $count, max: $max, min: $min, avg: $avg, med: $med}';
   }
+
   Map<String, dynamic> toMap() {
     return {
       "classId": classId,
@@ -510,9 +562,7 @@ class ExamPercentile {
   bool official;
 
   ExamPercentile(
-      {required this.percentile,
-        required this.count,
-        required this.official});
+      {required this.percentile, required this.count, required this.official});
 
   @override
   String toString() {

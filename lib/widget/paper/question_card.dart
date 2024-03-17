@@ -1,32 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:prescore_flutter/main.dart';
-
 import '../../util/struct.dart';
-
-class TagCard extends StatelessWidget {
-  final String text;
-  const TagCard({Key? key, required this.text}) : super(key: key);
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 20,
-      width: null,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.outlineVariant,
-        borderRadius: const BorderRadius.all(
-          Radius.circular(4),
-        ),
-      ),
-      child: Center(
-        child: Text(
-          ("  $text  "),
-          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-        ),
-      ),
-    );
-  }
-}
+import '../component.dart';
 
 class QuestionCard extends StatefulWidget {
   final Question question;
@@ -43,11 +19,14 @@ class QuestionCardState extends State<QuestionCard>
   Set<String> teachersName = {};
   bool complexMarking = false;
   late AnimationController _animationController;
+  late CurvedAnimation animationCurve;
 
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(vsync: this, duration: const Duration(milliseconds: 100));
+    _animationController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 150));
+    animationCurve = CurvedAnimation(parent: _animationController, curve: Curves.easeOut);
     for (var subQuestion in widget.question.subTopic) {
       if (subQuestion.teacherMarkingRecords.length > 1) {
         complexMarking = true;
@@ -111,17 +90,19 @@ class QuestionCardState extends State<QuestionCard>
             height: 24,
             child: DecoratedBox(
               decoration: BoxDecoration(
-                  color: 
-                    subStandradScore == -1
-                    ? Colors.grey
-                    : subStudentScore == subStandradScore 
-                    ? Colors.green
-                    : subStudentScore != 0
-                    ? Colors.yellow
-                    : Colors.red),
+                  color: subStandradScore == -1
+                      ? Colors.grey
+                      : subStudentScore == subStandradScore
+                          ? Colors.green
+                          : subStudentScore != 0
+                              ? Colors.yellow
+                              : Colors.red),
             ),
           ),
-          if(BaseSingleton.singleton.sharedPreferences.getBool("showMarkingRecords") == true) Row(children: subTeachersWidget),
+          if (BaseSingleton.singleton.sharedPreferences
+                  .getBool("showMarkingRecords") ==
+              true)
+            Row(children: subTeachersWidget),
           Text(
             "  $subStudentScore",
             style: const TextStyle(fontSize: 24),
@@ -129,7 +110,7 @@ class QuestionCardState extends State<QuestionCard>
           const SizedBox(
             width: 16,
           ),
-          if(subStandradScore != -1)
+          if (subStandradScore != -1)
             Row(children: [
               const Text(
                 "/",
@@ -175,8 +156,12 @@ class QuestionCardState extends State<QuestionCard>
               // tag
               children: [
                 TagCard(text: widget.question.isSubjective ? "主观" : "选择"),
-                if (widget.question.subTopic.length > 1) const Row(children: [SizedBox(width: 8), TagCard(text: "多空")]),
-                if (complexMarking) const Row(children: [SizedBox(width: 8), TagCard(text: "多判")]),
+                if (widget.question.subTopic.length > 1)
+                  const Row(
+                      children: [SizedBox(width: 8), TagCard(text: "多空")]),
+                if (complexMarking)
+                  const Row(
+                      children: [SizedBox(width: 8), TagCard(text: "多判")]),
               ],
             ),
             Container(
@@ -228,10 +213,12 @@ class QuestionCardState extends State<QuestionCard>
                   ),
                 )),
             const SizedBox(height: 4),
-            if(BaseSingleton.singleton.sharedPreferences.getBool("showMarkingRecords") == true)
-            Row(
-              children: allTeachersWidget,
-            ),
+            if (BaseSingleton.singleton.sharedPreferences
+                    .getBool("showMarkingRecords") ==
+                true)
+              Row(
+                children: allTeachersWidget,
+              ),
             const SizedBox(
               height: 16,
             ),
@@ -240,10 +227,12 @@ class QuestionCardState extends State<QuestionCard>
               percent: widget.question.userScore / widget.question.fullScore,
               backgroundColor: Colors.grey,
               linearGradient: LinearGradient(
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-                colors: [Theme.of(context).colorScheme.primary, Theme.of(context).colorScheme.primary.withOpacity(0.6)]
-              ),
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [
+                    Theme.of(context).colorScheme.primary,
+                    Theme.of(context).colorScheme.primary.withOpacity(0.6)
+                  ]),
               barRadius: const Radius.circular(4),
             ),
             Builder(builder: (BuildContext context) {
@@ -313,7 +302,7 @@ class QuestionCardState extends State<QuestionCard>
                             ),
                             Text(
                               ((widget.question.classScoreRate ?? 0) *
-                                  widget.question.fullScore)
+                                      widget.question.fullScore)
                                   .toStringAsFixed(2),
                               style: const TextStyle(fontSize: 48),
                             ),
@@ -374,7 +363,7 @@ class QuestionCardState extends State<QuestionCard>
             const SizedBox(height: 8),*/
             SizeTransition(
               axisAlignment: 0.0,
-              sizeFactor: _animationController,
+              sizeFactor: animationCurve,
               axis: Axis.vertical,
               child: Column(
                 children: subTopicWidget,
@@ -393,18 +382,18 @@ class QuestionCardState extends State<QuestionCard>
         ),
         child: widget.question.subTopic.length > 1 || complexMarking
             ? InkWell(
-            borderRadius: BorderRadius.circular(12.0),
-            onTap: () {
-              setState(() {
-                detailExpanded = !detailExpanded;
-                if(detailExpanded) {
-                  _animationController.forward(from: 0);
-                } else {
-                  _animationController.reverse(from: 1);
-                }
-              });
-            },
-            child: infoCard)
+                borderRadius: BorderRadius.circular(12.0),
+                onTap: () {
+                  setState(() {
+                    detailExpanded = !detailExpanded;
+                    if (detailExpanded) {
+                      _animationController.forward(from: 0);
+                    } else {
+                      _animationController.reverse(from: 1);
+                    }
+                  });
+                },
+                child: infoCard)
             : infoCard);
   }
 }

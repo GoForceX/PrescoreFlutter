@@ -7,8 +7,6 @@ class LoginModel extends ChangeNotifier {
   bool isLoggedIn = false;
   bool isLoading = false;
   bool isAutoLogging = false;
-  String username = "";
-  String password = "";
   User user = User();
   BasicInfo basicInfo = BasicInfo("", "", "", "", "");
 
@@ -24,16 +22,6 @@ class LoginModel extends ChangeNotifier {
 
   void setLoading(bool value) {
     isLoading = value;
-    notifyListeners();
-  }
-
-  void setUsername(String value) {
-    username = value;
-    notifyListeners();
-  }
-
-  void setPassword(String value) {
-    password = value;
     notifyListeners();
   }
 

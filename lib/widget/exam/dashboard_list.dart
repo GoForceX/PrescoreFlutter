@@ -14,18 +14,11 @@ class DashboardList extends StatefulWidget {
 class _DashboardListState extends State<DashboardList> {
   @override
   Widget build(BuildContext context) {
-    //int count = 0;
-
-    List<Paper> papers = widget.papers.toList();
+    List<Paper> papers = List<Paper>.from(widget.papers);
+    papers.removeWhere((paper) => paper.source != Source.common);
 
     Widget listCard = DataTable(
       columns: const [
-        /*DataColumn(
-          label: Text(
-            "序号",
-            style: TextStyle(fontSize: 16),
-          ),
-        ),*/
         DataColumn(
           label: Text(
             "科目",

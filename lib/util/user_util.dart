@@ -23,8 +23,8 @@ Future<void> initLocalSessionDataBase() async {
   database = await openDatabase(
     path.join(await getDatabasesPath(), 'UserSession.db'),
     onCreate: (db, version) async {
-      var tableExists = await db
-          .rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='$userSession'");
+      var tableExists = await db.rawQuery(
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='$userSession'");
       if (tableExists.isEmpty) {
         logger.d("tableNotExists, CREATE TABLE $userSession");
         db.execute(
@@ -60,8 +60,9 @@ class User {
   Future<void> readLocalSession() async {
     SharedPreferences sharedPrefs = BaseSingleton.singleton.sharedPreferences;
     await initLocalSessionDataBase();
-    List<Map<String, Object?>> list = await database.rawQuery('SELECT * FROM $userSession');
-    if(list.length == 1) {
+    List<Map<String, Object?>> list =
+        await database.rawQuery('SELECT * FROM $userSession');
+    if (list.length == 1) {
       sharedPrefs.setBool("localSessionExist", true);
       Session localSession = Session(
         list[0]['st'] as String,
@@ -70,13 +71,13 @@ class User {
         list[0]['userId'] as String,
         serverToken: list[0]['serverToken'] as String?,
       );
-      if(list[0]['basicInfo_id'] != null) {
+      if (list[0]['basicInfo_id'] != null) {
         basicInfo = BasicInfo(
-          list[0]['basicInfo_id'] as String, 
-          list[0]['basicInfo_loginName'] as String,
-          list[0]['basicInfo_name'] as String,
-          list[0]['basicInfo_role'] as String,
-          list[0]['basicInfo_avatar'] as String);
+            list[0]['basicInfo_id'] as String,
+            list[0]['basicInfo_loginName'] as String,
+            list[0]['basicInfo_name'] as String,
+            list[0]['basicInfo_role'] as String,
+            list[0]['basicInfo_avatar'] as String);
         isBasicInfoLoaded = true;
       }
       session = localSession;
@@ -122,11 +123,15 @@ class User {
     Dio client = BaseSingleton.singleton.dio;
     Response response = await client.get(zhixueLoginStatusUrl);
     Map<String, dynamic> json = jsonDecode(response.data);
-    if(json["result"] != "success") {
+    if (json["result"] != "success") {
       logger.d("updateLoginStatus $response");
-      Result result = await login(loginCredential.userName ?? "", loginCredential.password ?? "", useLocalSession: false, keepLocalSession: keepLocalSession, force: true);
+      Result result = await login(
+          loginCredential.userName ?? "", loginCredential.password ?? "",
+          useLocalSession: false,
+          keepLocalSession: keepLocalSession,
+          force: true);
       //if(!result.state && (result.message.contains("用户不存在") || result.message.contains("凭证有误"))) {
-      if(!result.state) {
+      if (!result.state) {
         logoff();
         reLoginFailedCallback();
       }
@@ -148,12 +153,10 @@ class User {
     CookieJar cookieJar = BaseSingleton.singleton.cookieJar;
     cookieJar.delete(Uri.parse("https://www.zhixue.com/"));
     cookieJar.delete(Uri.parse("https://open.changyan.com/"));
-    initLocalSessionDataBase().then(
-      (value) async {
-        await database.rawDelete('DELETE FROM $userSession');
-        await database.close();
-      }
-    );
+    initLocalSessionDataBase().then((value) async {
+      await database.rawDelete('DELETE FROM $userSession');
+      await database.close();
+    });
     sharedPrefs.setBool("localSessionExist", false);
   }
 
@@ -274,14 +277,6 @@ class User {
       BuildContext? context,
       bool useLocalSession = false,
       bool keepLocalSession = false}) async {
-    /*String argStr = {
-      //"username": username,
-      //"password": password,
-      "force": force,
-      "useLocalSession": useLocalSession,
-      "keepLocalSession": keepLocalSession,
-    }.toString();
-    LocalLogger.write("登录尝试 $argStr", isError: false);*/
     // Check if is logging in now.
     // If there is a login request pending, ignore current request.
     if (isLoading & !ignoreLoading) {
@@ -305,7 +300,7 @@ class User {
     Dio client = BaseSingleton.singleton.dio;
     // Start login and set this flag to true to avoid multiple login requests.
     isLoading = true;
-    if(useLocalSession) {
+    if (useLocalSession) {
       try {
         this.keepLocalSession = keepLocalSession;
         await readLocalSession();
@@ -318,11 +313,11 @@ class User {
         //LocalLogger.write("本地Session登录成功", isError: false);
         try {
           fetchStudentInfo();
-        } catch(_) {}
+        } catch (_) {}
         return Result(state: true, message: "本地Session登录成功");
-      } catch(_) {}
+      } catch (_) {}
     }
-    if(username == "") {
+    if (username == "") {
       return Result(state: false, message: "用户名为空");
     }
     // Check if there is a previous session from cookies.
@@ -351,7 +346,7 @@ class User {
         }
         loginCredential.userName = username;
         loginCredential.password = password;
-        if(keepLocalSession) {
+        if (keepLocalSession) {
           await saveLocalSession();
         }
         isLoading = false;
@@ -400,7 +395,7 @@ class User {
     loginCredential.userName = username;
     loginCredential.password = password;
     this.keepLocalSession = keepLocalSession;
-    if(keepLocalSession) {
+    if (keepLocalSession) {
       await saveLocalSession();
     }
     // Login to private server.
@@ -417,7 +412,7 @@ class User {
     //LocalLogger.write("登录成功", isError: false);
     try {
       fetchStudentInfo();
-    } catch(_) {}
+    } catch (_) {}
     return Result(state: true, message: "登录成功");
   }
 
@@ -444,7 +439,7 @@ class User {
     logger.d('serverLogin response: ${response.data}');
     Map<String, dynamic> parsed = jsonDecode(response.data);
     session?.serverToken = parsed['access_token'];
-    if(keepLocalSession) {
+    if (keepLocalSession) {
       await saveLocalSession();
     }
     return Result(state: true, message: "成功哒！", result: parsed['access_token']);
@@ -493,7 +488,7 @@ class User {
       logger.d("callback");
       callback(basicInfo);
     }
-    if(keepLocalSession) {
+    if (keepLocalSession) {
       await saveLocalSession();
     }
     logger.d("basicInfo: success,  $basicInfo");
@@ -512,7 +507,6 @@ class User {
       logger.d("fetchStudentInfo: loaded, ${this.studentInfo}");
       return this.studentInfo;
     }
-
 
     Response response = await client.get(zhixueStudentAccountUrl);
     logger.d("fetchStudentInfo: ${response.data}");
@@ -540,7 +534,6 @@ class User {
       logger.d("callback");
       callback(studentInfo);
     }
-    fetchClassmate();
     logger.d("fetchStudentInfo: success,  $studentInfo");
     return studentInfo;
   }
@@ -548,16 +541,17 @@ class User {
   Future<List<Classmate>> fetchClassmate() async {
     await fetchStudentInfo();
     Dio client = BaseSingleton.singleton.dio;
-    Response response = await client.get("$zhixueClassmatesUrl?r=${studentInfo?.id}student&clazzId=${studentInfo?.classId}");
+    Response response = await client.get(
+        "$zhixueClassmatesUrl?r=${studentInfo?.id}student&clazzId=${studentInfo?.classId}");
     logger.d("fetchClassmate: ${response.data}");
     List<dynamic> json = jsonDecode(response.data);
     List<Classmate> classmates = [];
-    for(var classmate in json) {
+    for (var classmate in json) {
       classmates.add(Classmate(
         name: classmate["name"],
         id: classmate["id"],
         code: classmate["code"],
-        gender: classmate["gender"] == 1 ? "女" : "男",
+        gender: classmate["gender"] == 1 ? Gender.female : Gender.male,
         mobile: classmate["mobile"],
       ));
     }
@@ -583,39 +577,81 @@ class User {
       return Result(state: false, message: json["errorInfo"]);
     }
     List<Subject> result = [];
-    for(var subject in json["result"]["subjects"]) {
+    for (var subject in json["result"]["subjects"]) {
       result.add(Subject(code: subject["code"], name: subject["name"]));
     }
     return Result(state: true, message: "", result: result);
   }
 
-    /// Fetch exam list from [zhixueErrorbookListUrl]
-  Future<Result<ErrorBookData>> fetchErrorbookList({required String subjectCode, required int pageIndex, int? fromDate, int? toDate}) async {
+  /// Fetch exam list from [zhixueErrorbookListUrl]
+  Future<Result<ErrorBookData>> fetchErrorbookList(
+      {required String subjectCode,
+      required int pageIndex,
+      DateTime? beginTime,
+      DateTime? endTime}) async {
     Dio client = BaseSingleton.singleton.dio;
 
     // Reject if not logged in.
     if (session == null) {
       return Result(state: false, message: "未登录");
     }
+    String uri = "$zhixueErrorbookListUrl?subjectCode=$subjectCode";
+    if (beginTime != null) {
+      uri += "&beginTime=${beginTime.millisecondsSinceEpoch}";
+    }
+    if (endTime != null) {
+      uri += "&endTime=${endTime.millisecondsSinceEpoch}";
+    }
+    uri += "&pageIndex=$pageIndex&pageSize=5&";
 
-    logger.d("fetchErrorbookList, xToken: ${session?.xToken}");
-    Response response = await client.get("$zhixueErrorbookListUrl?subjectCode=$subjectCode&pageIndex=$pageIndex&pageSize=10");
+    Response response = await client.get(uri);
     Map<String, dynamic> json = jsonDecode(response.data);
-    logger.d("errorbookList: $json");
     if (json["errorCode"] != 0) {
       logger.d("errorbookList: failed");
       return Result(state: false, message: json["errorInfo"]);
     }
     List<ErrorQuestion> errorQuestionList = [];
-    for(var wrongTopic in json["result"]["wrongTopics"]["list"]) {
-      errorQuestionList.add(ErrorQuestion(data: wrongTopic));
+    for (var wrongTopic in json["result"]["wrongTopics"]["list"]) {
+      Map<String, dynamic> errorBookTopicDTO = wrongTopic["errorBookTopicDTO"];
+      dynamic userAnswer =
+          errorBookTopicDTO["wrongTopicRecordArchive"]["userAnswer"];
+      try {
+        if (userAnswer.runtimeType != String || userAnswer[0] == "[") {
+          userAnswer =
+              errorBookTopicDTO["wrongTopicRecordArchive"]["imageAnswers"];
+        }
+      } catch (_) {}
+      errorQuestionList.add(ErrorQuestion(
+          topicNumber: errorBookTopicDTO["wrongTopicRecordArchive"]
+              ["topicNumber"],
+          analysisHtml: errorBookTopicDTO["analysisHtml"],
+          contentHtml: errorBookTopicDTO["contentHtml"],
+          difficultyName: errorBookTopicDTO["wrongTopicRecordArchive"]
+              ["difficultyName"],
+          knowledgeNames: (errorBookTopicDTO["wrongTopicRecordArchive"]
+                  ["knowledgeNames"] as List<dynamic>)
+              .map((item) => item as String)
+              .toList(),
+          topicSourcePaperName: errorBookTopicDTO["wrongTopicRecordArchive"]
+              ["topicSourcePaperName"],
+          userAnswer: userAnswer,
+          standardScore: errorBookTopicDTO["wrongTopicRecordArchive"]
+              ["standardScore"],
+          userScore: errorBookTopicDTO["wrongTopicRecordArchive"]
+              ["userScore"]));
     }
-    ErrorBookData result = ErrorBookData(subjectCode: subjectCode, currentPageIndex: pageIndex, totalPage: json["result"]["pageInfo"]["lastPage"], totalQuestion: json["result"]["pageInfo"]["totalCount"], errorQuestion: errorQuestionList);
+    ErrorBookData result = ErrorBookData(
+        subjectCode: subjectCode,
+        currentPageIndex: pageIndex,
+        totalPage: json["result"]["pageInfo"]["lastPage"],
+        totalQuestion: json["result"]["pageInfo"]["totalCount"],
+        errorQuestions: errorQuestionList);
     return Result(state: true, message: "", result: result);
   }
 
   /// Fetch exam list from [zhixueExamListUrl]
-  Future<Result<List<Exam>>> fetchExams(int pageIndex) async {
+  Future<Result<List<Exam>>> fetchExams(int pageIndex,
+      {bool homework = false}) async {
     updateLoginStatus();
     Dio client = BaseSingleton.singleton.dio;
 
@@ -626,8 +662,11 @@ class User {
 
     // Fetch exams.
     logger.d("fetchExams, xToken: ${session?.xToken}");
-    Response response =
-        await client.get("$zhixueExamListUrl?pageIndex=$pageIndex");
+    String url = "$zhixueExamListUrl?pageIndex=$pageIndex";
+    if (homework) {
+      url += "&reportType=homework";
+    }
+    Response response = await client.get(url);
     Map<String, dynamic> json = jsonDecode(response.data);
     logger.d("exams: $json");
     if (json["errorCode"] != 0) {
@@ -650,6 +689,103 @@ class User {
     });
     logger.d("exams: success, $exams");
     return Result(state: true, message: "", result: exams);
+  }
+
+  /// Fetch exam report from [zhixueNewExamAnswerSheetUrl].
+  Future<Result<List<List<Paper>>>> fetchPreviewPaper(String examId,
+      {bool requestScore = true}) async {
+    Dio client = BaseSingleton.singleton.dio;
+
+    if (session == null) {
+      return Result(state: false, message: "未登录");
+    }
+    logger.d("fetchPreviewPaper, xToken: ${session?.xToken}");
+    Response response =
+        await client.get("$zhixueNewExamAnswerSheetUrl?examId=$examId");
+    Map<String, dynamic> json = jsonDecode(response.data);
+    logger.d("fetchPreviewPaper: $json");
+
+    if (json["result"] != "success") {
+      logger.d("fetchPreviewPaper: failed");
+      return Result(state: false, message: json["message"] ?? "");
+    }
+
+    List<Paper> papers = [];
+    for (var subject in jsonDecode(json["message"])["newAdminExamSubjectDTO"]) {
+      double userScore = 0;
+      double standardScore = 0;
+      try {
+        if (requestScore) {
+          logger.d(
+              "fetchPreviewPaper $zhixueTranscriptUrl?subjectCode=${subject["subjectCode"]}&examId=${subject["examId"]}&paperId=${subject["markingPaperId"]}&token=${session?.xToken}");
+          Response response = await client.get(
+              "$zhixueTranscriptUrl?subjectCode=${subject["subjectCode"]}&examId=${subject["examId"]}&paperId=${subject["markingPaperId"]}&token=${session?.xToken}");
+          dom.Document document = parse(response.data);
+          List<dom.Element> elements = document.getElementsByTagName('script');
+          String transcriptData = "";
+          for (var element in elements) {
+            transcriptData = "$transcriptData${element.innerHtml}\n";
+          }
+          RegExp regExp = RegExp(r'var hisQueParseDetail = (.*);');
+          if (regExp.hasMatch(transcriptData)) {
+            transcriptData = regExp.firstMatch(transcriptData)!.group(1)!;
+            logger.d("transcriptData: $transcriptData");
+            List<dynamic> transcriptDataDynamic = jsonDecode(transcriptData);
+            for (var section in transcriptDataDynamic) {
+              List<dynamic> topicAnalysisDTOs = section["topicAnalysisDTOs"];
+              for (var data in topicAnalysisDTOs) {
+                userScore += data["score"] as double;
+                standardScore += data["standardScore"] as double;
+              }
+            }
+          }
+        }
+      } catch (_) {}
+      if (standardScore == 0) {
+        //TODO
+        //continue;
+      }
+      papers.add(Paper(
+          examId: subject["examId"],
+          paperId: subject["markingPaperId"],
+          name: subject["subjectName"],
+          subjectId: subject["subjectCode"],
+          userScore: userScore,
+          fullScore: standardScore,
+          source: Source.preview,
+          paperStatus: PaperStatus.unknown
+          //subject["markingStatus"]
+          ));
+    }
+    logger.d("fetchPreviewPaper: $papers");
+    return Result(state: true, message: "", result: [papers, []]);
+  }
+
+  /// Fetch exam report from [zhixueMarkingProgressUrl].
+  Future<Result<List<QuestionProgress>>> fetchMarkingProgress(
+      String paperId) async {
+    Dio client = BaseSingleton.singleton.dio;
+
+    if (session == null) {
+      return Result(state: false, message: "未登录");
+    }
+    Response response =
+        await client.get("$zhixueMarkingProgressUrl?markingPaperId=$paperId");
+    logger.d("fetchMarkingProgress, data: ${response.data}");
+    List<dynamic> dynamicJson = jsonDecode(response.data);
+    List<Map<String, dynamic>> json = dynamicJson.map((item) {
+      return item as Map<String, dynamic>;
+    }).toList();
+
+    List<QuestionProgress> result = [];
+    for (var element in json) {
+      result.add(QuestionProgress(
+          dispTitle: element["dispTitle"] as String,
+          allCount: element["allCount"],
+          realCompleteCount: element["realCompleteCount"]));
+    }
+    logger.d("fetchMarkingProgress, $result");
+    return Result(state: true, message: "", result: result);
   }
 
   /// Fetch exam report from [zhixueReportUrl].
@@ -690,7 +826,8 @@ class User {
                 subjectId: element["subjectCode"],
                 userScore: element["preAssignScore"],
                 fullScore: element["standardScore"],
-                assignScore: element["userScore"]));
+                assignScore: element["userScore"],
+                source: Source.common));
           } else {
             absentPapers.add(Paper(
                 examId: examId,
@@ -698,7 +835,8 @@ class User {
                 name: element["subjectName"],
                 subjectId: element["subjectCode"],
                 userScore: element["preAssignScore"],
-                fullScore: element["standardScore"]));
+                fullScore: element["standardScore"],
+                source: Source.common));
           }
         } else {
           absentPapers.add(Paper(
@@ -707,7 +845,8 @@ class User {
               name: element["subjectName"],
               subjectId: element["subjectCode"],
               userScore: element["userScore"],
-              fullScore: element["standardScore"]));
+              fullScore: element["standardScore"],
+              source: Source.common));
         }
       } else {
         absentPapers.add(Paper(
@@ -716,7 +855,8 @@ class User {
             name: element["subjectName"],
             subjectId: element["subjectCode"],
             userScore: 0,
-            fullScore: element["standardScore"]));
+            fullScore: element["standardScore"],
+            source: Source.common));
       }
     }
 
@@ -732,7 +872,8 @@ class User {
                 subjectId: element["subjectCode"],
                 userScore: element["preAssignScore"],
                 fullScore: element["standardScore"],
-                assignScore: element["userScore"]));
+                assignScore: element["userScore"],
+                source: Source.common));
           } else {
             papers.add(Paper(
                 examId: examId,
@@ -740,7 +881,8 @@ class User {
                 name: element["subjectName"],
                 subjectId: element["subjectCode"],
                 userScore: element["preAssignScore"],
-                fullScore: element["standardScore"]));
+                fullScore: element["standardScore"],
+                source: Source.common));
           }
         } else {
           papers.add(Paper(
@@ -749,7 +891,8 @@ class User {
               name: element["subjectName"],
               subjectId: element["subjectCode"],
               userScore: element["userScore"],
-              fullScore: element["standardScore"]));
+              fullScore: element["standardScore"],
+              source: Source.common));
         }
       } else {
         Response response2 = await client.get(
@@ -767,7 +910,8 @@ class User {
               name: element["subjectName"],
               subjectId: element["subjectCode"],
               userScore: json["result"]["score"],
-              fullScore: json["result"]["standardScore"]));
+              fullScore: json["result"]["standardScore"],
+              source: Source.common));
         }
       }
     }
@@ -876,8 +1020,7 @@ class User {
 
     List<dynamic> sheetImagesDynamic =
         jsonDecode(json["result"]["sheetImages"]);
-    List<dynamic> cutBlockDetail =
-        jsonDecode(json["result"]["cutBlockDetail"]);
+    List<dynamic> cutBlockDetail = jsonDecode(json["result"]["cutBlockDetail"]);
     List<String> sheetImages = [];
     for (var element in sheetImagesDynamic) {
       sheetImages.add(element);
@@ -889,25 +1032,28 @@ class User {
     List<dynamic> sheetQuestionsDynamic =
         jsonDecode(sheetQuestions)["userAnswerRecordDTO"]
             ["answerRecordDetails"];
-    for(var subCutBlockDetail in cutBlockDetail){
-      for(var cutBlocks in subCutBlockDetail["cutBlocks"]) {
-        if(cutBlocksPosition[cutBlocks["topicStartNum"]] == null) {
+    for (var subCutBlockDetail in cutBlockDetail) {
+      for (var cutBlocks in subCutBlockDetail["cutBlocks"]) {
+        if (cutBlocksPosition[cutBlocks["topicStartNum"]] == null) {
           cutBlocksPosition[cutBlocks["topicStartNum"]] = [];
         }
-        cutBlocksPosition[cutBlocks["topicStartNum"]]?.add(jsonDecode(cutBlocks["position"]));
+        cutBlocksPosition[cutBlocks["topicStartNum"]]
+            ?.add(jsonDecode(cutBlocks["position"]));
       }
     }
     for (var element in sheetQuestionsDynamic) {
       String? selectedAnswer;
       bool isSubjective = true;
       List<dynamic> subTopicMap = [];
-      try{
-        if(element["subTopics"] != null) {
+      try {
+        if (element["subTopics"] != null) {
           Map<String, double> subStandradScore = {};
-          for(var subCutBlockDetail in cutBlockDetail){
-            if(subCutBlockDetail["topicNumber"].toString() == element["dispTitle"]) {
-              for(var cutBlocks in subCutBlockDetail["cutBlocks"]){
-                subStandradScore[cutBlocks["topicNumStr"]] = cutBlocks["subTopicScore"] as double;
+          for (var subCutBlockDetail in cutBlockDetail) {
+            if (subCutBlockDetail["topicNumber"].toString() ==
+                element["dispTitle"]) {
+              for (var cutBlocks in subCutBlockDetail["cutBlocks"]) {
+                subStandradScore[cutBlocks["topicNumStr"]] =
+                    cutBlocks["subTopicScore"] as double;
               }
             }
           }
@@ -919,11 +1065,12 @@ class User {
                     ? subQuestionId
                     : element["dispTitle"].toString();
             subTopicElement["standradScore"] =
-                subStandradScore[subQuestionId] ?? element["standardScore"] as double;
+                subStandradScore[subQuestionId] ??
+                    element["standardScore"] as double;
           }
           subTopicMap = element["subTopics"];
         }
-      } catch(e) {
+      } catch (e) {
         logger.e("fetchPaperData: $e");
       }
       if (element["answerType"] == "s01Text") {
@@ -935,40 +1082,39 @@ class User {
       for (var subTopicElement in subTopicMap) {
         List<TeacherMarking> teacherMarkingList = [];
         if (subTopicElement.containsKey("teacherMarkingRecords")) {
-          for(var teacherMarkingRecordsElement in subTopicElement["teacherMarkingRecords"]) {
+          for (var teacherMarkingRecordsElement
+              in subTopicElement["teacherMarkingRecords"]) {
             teacherMarkingList.add(TeacherMarking(
-              role: teacherMarkingRecordsElement["role"],
-              score: teacherMarkingRecordsElement["score"],
-              teacherId: teacherMarkingRecordsElement["teacherId"],
-              teacherName: teacherMarkingRecordsElement["teacherName"]
-            ));
+                role: teacherMarkingRecordsElement["role"],
+                score: teacherMarkingRecordsElement["score"],
+                teacherId: teacherMarkingRecordsElement["teacherId"],
+                teacherName: teacherMarkingRecordsElement["teacherName"]));
           }
         }
         if (subTopicElement["stepRecords"] != null && subTopicMap.length == 1) {
           for (var subTopicElement in subTopicMap) {
             for (var stepRecordElement in subTopicElement["stepRecords"]) {
               subTopic.add(QuestionSubTopic(
-              score: stepRecordElement["score"],
-              standradScore: null,
-              scoreSource: subTopicElement["scoreSource"],
-              subQuestionId: stepRecordElement["stepTitle"],
-              teacherMarkingRecords: teacherMarkingList
-            ));
+                  score: stepRecordElement["score"],
+                  standradScore: null,
+                  scoreSource: subTopicElement["scoreSource"],
+                  subQuestionId: stepRecordElement["stepTitle"],
+                  teacherMarkingRecords: teacherMarkingList));
             }
           }
         } else {
           subTopic.add(QuestionSubTopic(
-            score: subTopicElement["score"],
-            standradScore: subTopicElement["standradScore"],
-            scoreSource: subTopicElement["scoreSource"],
-            subQuestionId: subTopicElement["subQuestionId"],
-            teacherMarkingRecords: teacherMarkingList
-          ));
+              score: subTopicElement["score"],
+              standradScore: subTopicElement["standradScore"],
+              scoreSource: subTopicElement["scoreSource"],
+              subQuestionId: subTopicElement["subQuestionId"],
+              teacherMarkingRecords: teacherMarkingList));
           subStandradScoreSum += subTopicElement["standradScore"] as double;
         }
       }
-      if(subStandradScoreSum != (element["standardScore"] as double)) { //TODO
-        for(QuestionSubTopic subTopicElement in subTopic) {
+      if (subStandradScoreSum != (element["standardScore"] as double)) {
+        //TODO
+        for (QuestionSubTopic subTopicElement in subTopic) {
           subTopicElement.standradScore = null;
         }
       }
@@ -1018,7 +1164,8 @@ class User {
 
       logger.d("sheetMarkersSheets, start: $sheetMarkersSheets");
       try {
-        Result parseResult = parseMarkers(sheetMarkersSheets, questions, cutBlocksPosition);
+        Result parseResult =
+            parseMarkers(sheetMarkersSheets, questions, cutBlocksPosition);
         if (parseResult.state) {
           markers = parseResult.result;
           logger.d("parseMarkers, success: $markers");
@@ -1056,8 +1203,8 @@ class User {
     return Result(state: true, message: "", result: paperData);
   }
 
-  Result<List<Marker>> parseMarkers(
-      List sheetMarkersSheets, List<Question> questions, Map<int, List<dynamic>> cutBlocksPosition) {
+  Result<List<Marker>> parseMarkers(List sheetMarkersSheets,
+      List<Question> questions, Map<int, List<dynamic>> cutBlocksPosition) {
     logger.d("parseMarkers: $sheetMarkersSheets");
     List<Marker> markers = [];
     List<int> parsedQuestionIds = [];
@@ -1229,24 +1376,26 @@ class User {
           double left = section["contents"]["position"]["left"].toDouble();
           double width = section["contents"]["position"]["width"].toDouble();
           double height = section["contents"]["position"]["height"].toDouble();
-          for(var branchElement in section["contents"]["branch"]) {
+          for (var branchElement in section["contents"]["branch"]) {
             var cutBlockList = cutBlocksPosition[branchElement["num"].toInt()];
-            if(cutBlockList != null) {
+            if (cutBlockList != null) {
               var count = 1;
-              for(var cutBlockElement in cutBlockList) {
-                  markers.add(Marker(
-                    type: MarkerType.cutBlock,
-                    sheetId: sheetId,
-                    top: branchElement["position"]["top"].toDouble(),
-                    left: branchElement["position"]["left"].toDouble(),
-                    topOffset: cutBlockElement["top"].toDouble(),
-                    leftOffset: cutBlockElement["left"].toDouble(),
-                    width: cutBlockElement["width"].toDouble(),
-                    height: cutBlockElement["height"].toDouble(),
-                    color: count % 2 == 0 ? Colors.yellow.shade800 : Colors.blue.shade400,
-                    message: " $count",
-                  ));
-                  count += 1;
+              for (var cutBlockElement in cutBlockList) {
+                markers.add(Marker(
+                  type: MarkerType.cutBlock,
+                  sheetId: sheetId,
+                  top: branchElement["position"]["top"].toDouble(),
+                  left: branchElement["position"]["left"].toDouble(),
+                  topOffset: cutBlockElement["top"].toDouble(),
+                  leftOffset: cutBlockElement["left"].toDouble(),
+                  width: cutBlockElement["width"].toDouble(),
+                  height: cutBlockElement["height"].toDouble(),
+                  color: count % 2 == 0
+                      ? Colors.yellow.shade800
+                      : Colors.blue.shade400,
+                  message: " $count",
+                ));
+                count += 1;
               }
             }
             break;
@@ -1384,9 +1533,15 @@ class User {
   }
 
   Future<Result<String>> uploadPaperData(Paper paper) async {
+    await fetchBasicInfo();
+    if (paper.source == Source.preview) {
+      logger.d("uploadPaperData 不允许上传预览分数 $paper");
+      return Result(state: true, message: "不允许上传预览分数");
+    }
     SharedPreferences shared = await SharedPreferences.getInstance();
     bool? allowed = shared.getBool("allowTelemetry");
     if (allowed == null || !allowed) {
+      logger.d("uploadPaperData 不允许数据上传 $paper");
       return Result(state: true, message: "不允许数据上传");
     }
 
@@ -1503,6 +1658,7 @@ class User {
       return Result(state: false, message: result["code"]);
     }
   }
+
   Future<Result<List<ClassInfo>>> fetchExamClassInfo(String examId) async {
     Dio client = BaseSingleton.singleton.dio;
 

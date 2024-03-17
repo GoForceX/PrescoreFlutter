@@ -10,197 +10,100 @@ import 'dashboard_chart.dart';
 import 'dashboard_info.dart';
 import 'dashboard_predict.dart';
 import 'dashboard_ranking.dart';
+import 'detail_util.dart';
 
-class DashboardCard extends StatefulWidget {
+class DashboardCard extends StatelessWidget {
   final String examId;
   const DashboardCard({Key? key, required this.examId}) : super(key: key);
 
   @override
-  State<DashboardCard> createState() => _DashboardCardState();
-}
-
-class _DashboardCardState extends State<DashboardCard> {
-  @override
   Widget build(BuildContext context) {
-    List<Widget> children = [];
+    setUploadListener(context);
+    fetchData(context, examId);
 
-    Provider.of<ExamModel>(context, listen: false).addListener(() {
-      logger.d(
-          "DashboardInfo: ${Provider.of<ExamModel>(context, listen: false).isPaperLoaded} ${Provider.of<ExamModel>(context, listen: false).isDiagFetched}");
-      if (Provider.of<ExamModel>(context, listen: false).isPaperLoaded &&
-          Provider.of<ExamModel>(context, listen: false).isDiagFetched) {
-        for (var paper
-            in Provider.of<ExamModel>(context, listen: false).papers) {
-          try {
-            logger.d("DashboardInfo: $paper");
-            bool noDiag = false;
-            if (Provider.of<ExamModel>(context, listen: false)
-                    .diagnoses
-                    .firstWhere(
-                        (element) => element.subjectId == paper.subjectId,
-                        orElse: () => PaperDiagnosis(
-                            subjectId: '',
-                            subjectName: '',
-                            diagnosticScore: -1))
-                    .diagnosticScore ==
-                -1) {
-              noDiag = true;
-            }
-            Paper processedPaper = Paper(
-                examId: paper.examId,
-                paperId: paper.paperId,
-                name: paper.name,
-                subjectId: paper.subjectId,
-                userScore: paper.userScore,
-                fullScore: paper.fullScore,
-                diagnosticScore: noDiag
-                    ? null
-                    : 100 -
-                        Provider.of<ExamModel>(context, listen: false)
-                            .diagnoses
-                            .firstWhere((element) =>
-                                element.subjectId == paper.subjectId)
-                            .diagnosticScore);
-            Provider.of<ExamModel>(context, listen: false)
-                .user
-                .uploadPaperData(processedPaper);
-          } catch (e) {
-            logger.e(e);
+    List<Widget> children = [];
+    //总分
+    Consumer totalCards = Consumer<ExamModel>(builder:
+        (BuildContext consumerContext, ExamModel examModel, Widget? child) {
+      List<Widget> infoChildren = [];
+      if (examModel.isPaperLoaded || examModel.isPreviewPaperLoaded) {
+        double userScore = 0;
+        List<Paper> papers = examModel.papers;
+        // List<Paper> absentPapers = examModel.absentPapers;
+
+        for (var element in papers) {
+          if (element.source != Source.common) {
+            continue;
           }
+          userScore += element.userScore;
         }
+
+        double assignScore = 0;
+        int noAssignCount = 0;
+        for (var element in papers) {
+          if (element.source != Source.common) {
+            continue;
+          }
+          if (element.assignScore == null) {
+            noAssignCount += 1;
+          }
+          assignScore += element.assignScore ?? element.userScore;
+        }
+
+        double fullScore = 0;
+        for (var element in papers) {
+          if (element.source != Source.common) {
+            continue;
+          }
+          fullScore += element.fullScore;
+        }
+        if (noAssignCount != papers.length) {
+          Widget chart = DashboardInfo(
+            userScore: userScore,
+            fullScore: fullScore,
+            assignScore: assignScore,
+          );
+          infoChildren.add(chart);
+        } else {
+          Widget chart = DashboardInfo(
+            userScore: userScore,
+            fullScore: fullScore,
+          );
+          infoChildren.add(chart);
+        }
+        Widget lst = DashboardList(papers: papers);
+        infoChildren.add(lst);
+
+        return ListView(
+          padding: const EdgeInsets.all(0),
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          children: infoChildren,
+        );
+      } else {
+        return Center(
+            child: Container(
+                margin: const EdgeInsets.all(10),
+                child: const CircularProgressIndicator()));
       }
     });
-
-    if (Provider.of<ExamModel>(context, listen: false).isPaperLoaded) {
-      List<Paper> papers =
-          Provider.of<ExamModel>(context, listen: false).papers;
-
-      List<Widget> infoChildren = [];
-
-      double userScore = 0;
-      for (var element in papers) {
-        userScore += element.userScore;
-      }
-
-      double assignScore = 0;
-      int noAssignCount = 0;
-      for (var element in papers) {
-        if (element.assignScore == null) {
-          noAssignCount += 1;
-        }
-        assignScore += element.assignScore ?? element.userScore;
-      }
-
-      double fullScore = 0;
-      for (var element in papers) {
-        fullScore += element.fullScore;
-      }
-      if (noAssignCount != papers.length) {
-        Widget chart = DashboardInfo(
-          userScore: userScore,
-          fullScore: fullScore,
-          assignScore: assignScore,
-        );
-        infoChildren.add(chart);
-      } else {
-        Widget chart = DashboardInfo(
-          userScore: userScore,
-          fullScore: fullScore,
-        );
-        infoChildren.add(chart);
-      }
-
-      Widget lst = DashboardList(papers: papers);
-      infoChildren.add(lst);
-      children.addAll(infoChildren);
-    } else {
-      FutureBuilder futureBuilder = FutureBuilder(
-        future: Provider.of<ExamModel>(context, listen: false)
-            .user
-            .fetchPaper(widget.examId),
-        builder: (BuildContext context, AsyncSnapshot snapshot) {
-          List<Widget> infoChildren = [];
-
-          if (snapshot.hasData) {
-            if (snapshot.data.state) {
-              Future.delayed(Duration.zero, () {
-                Provider.of<ExamModel>(context, listen: false)
-                    .setPapers(snapshot.data.result[0]);
-                Provider.of<ExamModel>(context, listen: false)
-                    .setAbsentPapers(snapshot.data.result[1]);
-                Provider.of<ExamModel>(context, listen: false)
-                    .setPaperLoaded(true);
-              });
-              double userScore = 0;
-
-              List<Paper> papers = snapshot.data.result[0];
-              // List<Paper> absentPapers = snapshot.data.result[1];
-
-              for (var element in papers) {
-                userScore += element.userScore;
-              }
-
-              double assignScore = 0;
-              int noAssignCount = 0;
-              for (var element in papers) {
-                if (element.assignScore == null) {
-                  noAssignCount += 1;
-                }
-                assignScore += element.assignScore ?? element.userScore;
-              }
-
-              double fullScore = 0;
-              for (var element in papers) {
-                fullScore += element.fullScore;
-              }
-              if (noAssignCount != papers.length) {
-                Widget chart = DashboardInfo(
-                  userScore: userScore,
-                  fullScore: fullScore,
-                  assignScore: assignScore,
-                );
-                infoChildren.add(chart);
-              } else {
-                Widget chart = DashboardInfo(
-                  userScore: userScore,
-                  fullScore: fullScore,
-                );
-                infoChildren.add(chart);
-              }
-
-              Widget lst = DashboardList(papers: papers);
-              infoChildren.add(lst);
-
-              return ListView(
-                padding: const EdgeInsets.all(8),
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                children: infoChildren,
-              );
-            } else {
-              return Container();
-            }
-          } else {
-            return Center(child: Container(margin: const EdgeInsets.all(10) ,child: const CircularProgressIndicator()));
-          }
-        },
-      );
-
-      children.add(futureBuilder);
-    }
+    children.add(totalCards);
 
     children.add(Consumer(builder:
         (BuildContext consumerContext, ExamModel examModel, Widget? child) {
       if (examModel.isPaperLoaded) {
         double userScore = 0;
         for (var element in examModel.papers) {
+          if (element.source != Source.common) {
+            continue;
+          }
           userScore += element.userScore;
         }
 
         return FutureBuilder(
           future: Provider.of<ExamModel>(context, listen: false)
               .user
-              .fetchExamPredict(widget.examId, userScore),
+              .fetchExamPredict(examId, userScore),
           builder: (BuildContext context, AsyncSnapshot snapshot) {
             logger.d("DashboardPredict: ${snapshot.data}");
             if (snapshot.hasData) {
@@ -220,7 +123,10 @@ class _DashboardCardState extends State<DashboardCard> {
                 return Container();
               }
             } else {
-              return Center(child: Container(margin: const EdgeInsets.all(10) ,child: const CircularProgressIndicator()));
+              return Center(
+                  child: Container(
+                      margin: const EdgeInsets.all(10),
+                      child: const CircularProgressIndicator()));
             }
           },
         );
@@ -234,13 +140,13 @@ class _DashboardCardState extends State<DashboardCard> {
       return FutureBuilder(
         future: Provider.of<ExamModel>(context, listen: false)
             .user
-            .fetchExamScoreInfo(widget.examId),
+            .fetchExamScoreInfo(examId),
         builder: (BuildContext context, AsyncSnapshot snapshot) {
           logger.d("DashboardScoreInfo: ${snapshot.data}");
           if (snapshot.hasData) {
             if (snapshot.data.state) {
               Widget scoreInfo = DashboardScoreInfo(
-                examId: widget.examId,
+                examId: examId,
                 maximum: snapshot.data.result.max,
                 minimum: snapshot.data.result.min,
                 avg: snapshot.data.result.avg,
@@ -251,38 +157,18 @@ class _DashboardCardState extends State<DashboardCard> {
               return Container();
             }
           } else {
-            return Center(child: Container(margin: const EdgeInsets.all(10) ,child: const CircularProgressIndicator()));
+            return Center(
+                child: Container(
+                    margin: const EdgeInsets.all(10),
+                    child: const CircularProgressIndicator()));
           }
         },
       );
     }));
 
-    Future.delayed(Duration.zero, () async {
-      Result<ExamDiagnosis> result = await Provider.of<ExamModel>(context, listen: false)
-          .user
-          .fetchPaperDiagnosis(widget.examId);
-
-      if (result.state && context.mounted) {
-        Provider.of<ExamModel>(context, listen: false)
-            .setDiagnoses(result.result!.diagnoses);
-        Provider.of<ExamModel>(context, listen: false)
-            .setTips(result.result!.tips);
-        Provider.of<ExamModel>(context, listen: false)
-            .setSubTips(result.result!.subTips);
-        Provider.of<ExamModel>(context, listen: false)
-            .setDiagFetched(true);
-        Provider.of<ExamModel>(context, listen: false)
-            .setDiagLoaded(true);
-      } else if (context.mounted) {
-        Provider.of<ExamModel>(context, listen: false)
-            .setDiagFetched(true);
-      }
-    });
-
     children.add(Consumer(builder:
         (BuildContext consumerContext, ExamModel examModel, Widget? child) {
       if (examModel.isPaperLoaded && examModel.isDiagLoaded) {
-
         List<PaperDiagnosis> diagnoses = [];
         bool absentFlag = false;
         for (var element in examModel.diagnoses) {
@@ -322,9 +208,7 @@ class _DashboardCardState extends State<DashboardCard> {
         return Column(
           children: [
             DashboardChart(
-                diagnoses: diagnoses,
-                tips: tips,
-                subTips: examModel.subTips),
+                diagnoses: diagnoses, tips: tips, subTips: examModel.subTips),
             DashboardRanking(diagnoses: diagnoses),
           ],
         );

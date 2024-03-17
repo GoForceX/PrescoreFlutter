@@ -8,7 +8,7 @@ import '../../util/struct.dart';
 import 'exam_card.dart';
 
 List<Widget> generateCardsFromExams(BuildContext context, List<Exam> exams) {
-  List<Widget> cards = [const SizedBox(height: 5)];
+  List<Widget> cards = [];
   for (Exam exam in exams) {
     cards.add(ExamCard(
       user: Provider.of<LoginModel>(context, listen: false).user,
@@ -30,10 +30,13 @@ class Exams extends StatefulWidget {
   State<StatefulWidget> createState() => ExamsState();
 }
 
+enum PageType { exam, homework }
+
 class ExamsState extends State<Exams> {
   int pageIndex = 1;
   bool lastFetched = false;
   bool isLoading = false;
+  PageType pageType = PageType.exam;
   List<Exam>? result;
 
   bool isLoaded() {
@@ -47,7 +50,9 @@ class ExamsState extends State<Exams> {
   Future<bool> refresh() async {
     isLoading = true;
     LoginModel model = Provider.of<LoginModel>(context, listen: false);
-    result = (await model.user.fetchExams(1)).result;
+    result = (await model.user
+            .fetchExams(1, homework: pageType == PageType.homework))
+        .result;
     pageIndex = 1;
     lastFetched = false;
     setState(() {});
@@ -62,7 +67,10 @@ class ExamsState extends State<Exams> {
     isLoading = true;
     LoginModel model = Provider.of<LoginModel>(context, listen: false);
     pageIndex += 1;
-    List<Exam>? newResult = ((await model.user.fetchExams(pageIndex)).result);
+    List<Exam>? newResult;
+    newResult = ((await model.user
+            .fetchExams(pageIndex, homework: pageType == PageType.homework))
+        .result);
     if (newResult == null) {
       widget.controller.finishLoad(IndicatorResult.fail);
       return true;
@@ -86,22 +94,59 @@ class ExamsState extends State<Exams> {
   @override
   Widget build(BuildContext context) {
     logger.d("Rebuild!");
-
+    Widget segmentedButton = Container(
+        padding: const EdgeInsets.all(8),
+        child: SegmentedButton<PageType>(
+          style: ButtonStyle(
+            side: MaterialStateProperty.all(BorderSide(
+              color: Theme.of(context).colorScheme.outlineVariant,
+            )),
+            shape: MaterialStateProperty.all(RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.0))),
+            elevation: MaterialStateProperty.all(2),
+          ),
+          segments: const <ButtonSegment<PageType>>[
+            ButtonSegment<PageType>(
+                value: PageType.exam,
+                label: Text('考试报告'),
+                icon: Icon(Icons.history_edu)),
+            ButtonSegment<PageType>(
+                value: PageType.homework,
+                label: Text('练习报告'),
+                icon: Icon(Icons.home_work_outlined)),
+          ],
+          selected: <PageType>{pageType},
+          onSelectionChanged: (newSelection) {
+            setState(() {
+              pageType = newSelection.first;
+              result = null;
+              isLoading = true;
+              //refresh();
+            });
+          },
+        ));
     if (result != null) {
-      return SliverList(
-          delegate: SliverChildListDelegate(
-              generateCardsFromExams(context, result!)));
+      List<Widget> pageList = [const SizedBox(height: 8), segmentedButton];
+      pageList.addAll(generateCardsFromExams(context, result!));
+      return SliverList(delegate: SliverChildListDelegate(pageList));
     }
 
     LoginModel model = Provider.of<LoginModel>(context, listen: false);
-    model.user.fetchExams(1).then((value) {
+    model.user
+        .fetchExams(1, homework: pageType == PageType.homework)
+        .then((value) {
       result = value.result;
       setState(() {});
     });
-    return SliverFillRemaining(
-      hasScrollBody: false,
-      child: Center(child: Container(margin: const EdgeInsets.all(10) ,child: const CircularProgressIndicator())),
-    );
+    return SliverList(
+        delegate: SliverChildListDelegate([
+      const SizedBox(height: 8),
+      segmentedButton,
+      Center(
+          child: Container(
+              margin: const EdgeInsets.all(10),
+              child: const CircularProgressIndicator()))
+    ]));
   }
 }
 
@@ -133,12 +178,11 @@ class ExamsBuilder extends StatelessWidget {
             return const SliverFillRemaining(
               hasScrollBody: false,
               child: Center(
-                child: SizedBox(
-                  height: 40,
-                  width: 40,
-                  child: CircularProgressIndicator(),
-                )
-              ),
+                  child: SizedBox(
+                height: 40,
+                width: 40,
+                child: CircularProgressIndicator(),
+              )),
             );
           }
         });

@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:prescore_flutter/util/user_util.dart';
+import 'package:prescore_flutter/widget/component.dart';
 import 'package:provider/provider.dart';
 
 import '../../main.dart';
@@ -17,142 +18,187 @@ class DetailCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Container infoCard = Container(
-        padding: const EdgeInsets.all(12.0),
-        alignment: AlignmentDirectional.topStart,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: FittedBox(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Text(
-                            "${paper.name}：",
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                          const SizedBox(
-                            height: 12,
-                          )
-                        ],
-                      ),
-                      Text(
-                        "${paper.userScore}",
-                        style: const TextStyle(fontSize: 48),
-                      ),
-                      const SizedBox(
-                        width: 16,
-                      ),
-                      const Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Text(
-                            "/",
-                            style: TextStyle(fontSize: 16),
-                          ),
-                          SizedBox(
-                            height: 12,
-                          )
-                        ],
-                      ),
-                      const SizedBox(
-                        width: 16,
-                      ),
-                      Text(
-                        "${paper.fullScore}",
-                        style: const TextStyle(fontSize: 48),
-                      ),
-                    ],
-                  ),
-                )),
-            const SizedBox(
-              height: 16,
-            ),
-            LinearPercentIndicator(
-              lineHeight: 8.0,
-              percent: paper.userScore / paper.fullScore,
-              backgroundColor: Colors.grey,
-              linearGradient: LinearGradient(
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-                //colors: [Colors.lightBlueAccent, Colors.lightBlue, Colors.blue],
-                colors: [Theme.of(context).colorScheme.primary, Theme.of(context).colorScheme.primary.withOpacity(0.6)]
+    Container infoCard;
+    if (paper.fullScore == 0) {
+      infoCard = Container(
+          padding: const EdgeInsets.all(12.0),
+          alignment: AlignmentDirectional.topStart,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TagCard(text: paper.source == Source.common ? "最终" : "预览"),
+              Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: FittedBox(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            const SizedBox(
+                              height: 12,
+                            ),
+                            Text(
+                              "${paper.name}  ",
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                            const SizedBox(
+                              height: 12,
+                            )
+                          ],
+                        ),
+                        const Text(
+                          "无分数信息",
+                          style: TextStyle(fontSize: 42),
+                        ),
+                      ],
+                    ),
+                  )),
+            ],
+          ));
+    } else {
+      infoCard = Container(
+          padding: const EdgeInsets.all(12.0),
+          alignment: AlignmentDirectional.topStart,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TagCard(text: paper.source == Source.common ? "最终" : "预览"),
+              Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: FittedBox(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Text(
+                              "${paper.name}  ",
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                            const SizedBox(
+                              height: 12,
+                            )
+                          ],
+                        ),
+                        Text(
+                          "${paper.userScore}",
+                          style: const TextStyle(fontSize: 48),
+                        ),
+                        const SizedBox(
+                          width: 16,
+                        ),
+                        const Column(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Text(
+                              "/",
+                              style: TextStyle(fontSize: 16),
+                            ),
+                            SizedBox(
+                              height: 12,
+                            )
+                          ],
+                        ),
+                        const SizedBox(
+                          width: 16,
+                        ),
+                        Text(
+                          "${paper.fullScore}",
+                          style: const TextStyle(fontSize: 48),
+                        ),
+                      ],
+                    ),
+                  )),
+              const SizedBox(
+                height: 16,
               ),
-              barRadius: const Radius.circular(4),
-            ),
-            const SizedBox(
-              height: 16,
-            ),
-            FutureBuilder(
-              future: Provider.of<ExamModel>(context, listen: false)
-                  .user
-                  .fetchPaperPercentile(
-                      paper.examId, paper.paperId, paper.userScore),
-              builder: (BuildContext context,
-                  AsyncSnapshot<Result<PaperPercentile>> snapshot) {
-                logger.d("DetailPredict: ${snapshot.data}");
-                if (snapshot.hasData) {
-                  if (snapshot.data!.state) {
-                    Widget predict = DetailPredict(
+              LinearPercentIndicator(
+                lineHeight: 8.0,
+                percent: paper.userScore / paper.fullScore,
+                backgroundColor: Colors.grey,
+                linearGradient: LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    //colors: [Colors.lightBlueAccent, Colors.lightBlue, Colors.blue],
+                    colors: [
+                      Theme.of(context).colorScheme.primary,
+                      Theme.of(context).colorScheme.primary.withOpacity(0.6)
+                    ]),
+                barRadius: const Radius.circular(4),
+              ),
+              const SizedBox(
+                height: 16,
+              ),
+              FutureBuilder(
+                future: Provider.of<ExamModel>(context, listen: false)
+                    .user
+                    .fetchPaperPercentile(
+                        paper.examId, paper.paperId, paper.userScore),
+                builder: (BuildContext context,
+                    AsyncSnapshot<Result<PaperPercentile>> snapshot) {
+                  logger.d("DetailPredict: ${snapshot.data}");
+                  if (snapshot.hasData) {
+                    if (snapshot.data!.state) {
+                      Widget predict = DetailPredict(
+                          subjectId: paper.subjectId,
+                          subjectName: paper.name,
+                          version: snapshot.data!.result!.version,
+                          percentage: snapshot.data!.result!.percentile,
+                          official: snapshot.data!.result!.official,
+                          count: snapshot.data!.result!.count,
+                          assignScore: paper.assignScore);
+                      return predict;
+                    } else {
+                      return Container();
+                    }
+                  } else {
+                    return DetailPredict(
                         subjectId: paper.subjectId,
                         subjectName: paper.name,
-                        version: snapshot.data!.result!.version,
-                        percentage: snapshot.data!.result!.percentile,
-                        official: snapshot.data!.result!.official,
-                        count: snapshot.data!.result!.count,
+                        version: -1,
+                        percentage: -1,
+                        official: false,
+                        count: -1,
                         assignScore: paper.assignScore);
-                    return predict;
-                  } else {
-                    return Container();
                   }
-                } else {
-                  return DetailPredict(
-                      subjectId: paper.subjectId,
-                      subjectName: paper.name,
-                      version: -1,
-                      percentage: -1,
-                      official: false,
-                      count: -1,
-                      assignScore: paper.assignScore);
-                }
-              },
-            ),
-            FutureBuilder(
-              future: Provider.of<ExamModel>(context, listen: false)
-                  .user
-                  .fetchPaperScoreInfo(paper.paperId),
-              builder: (BuildContext context, AsyncSnapshot snapshot) {
-                logger.d("DetailScoreInfo: ${snapshot.data}");
-                if (snapshot.hasData) {
-                  if (snapshot.data.state) {
-                    Widget scoreInfo = DetailScoreInfo(
+                },
+              ),
+              FutureBuilder(
+                future: Provider.of<ExamModel>(context, listen: false)
+                    .user
+                    .fetchPaperScoreInfo(paper.paperId),
+                builder: (BuildContext context, AsyncSnapshot snapshot) {
+                  logger.d("DetailScoreInfo: ${snapshot.data}");
+                  if (snapshot.hasData) {
+                    if (snapshot.data.state) {
+                      Widget scoreInfo = DetailScoreInfo(
+                          paperId: paper.paperId,
+                          maximum: snapshot.data.result.max,
+                          minimum: snapshot.data.result.min,
+                          avg: snapshot.data.result.avg,
+                          med: snapshot.data.result.med);
+                      return scoreInfo;
+                    } else {
+                      return Container();
+                    }
+                  } else {
+                    return DetailScoreInfo(
                         paperId: paper.paperId,
-                        maximum: snapshot.data.result.max,
-                        minimum: snapshot.data.result.min,
-                        avg: snapshot.data.result.avg,
-                        med: snapshot.data.result.med);
-                    return scoreInfo;
-                  } else {
-                    return Container();
+                        maximum: -1,
+                        minimum: -1,
+                        avg: -1,
+                        med: -1);
                   }
-                } else {
-                  return DetailScoreInfo(
-                      paperId: paper.paperId,
-                      maximum: -1,
-                      minimum: -1,
-                      avg: -1,
-                      med: -1);
-                }
-              },
-            ),
-          ],
-        ));
+                },
+              )
+            ],
+          ));
+    }
 
     return Card(
       elevation: 2,
@@ -164,11 +210,12 @@ class DetailCard extends StatelessWidget {
         borderRadius: const BorderRadius.all(Radius.circular(12)),
       ),
       child: InkWell(
-        borderRadius:BorderRadius.circular(12.0),
+        borderRadius: BorderRadius.circular(12.0),
         onTap: () {
           context.router.navigate(PaperRoute(
               examId: examId,
               paperId: paper.paperId,
+              preview: paper.source == Source.preview,
               user: Provider.of<ExamModel>(context, listen: false).user));
         },
         child: infoCard,
@@ -260,11 +307,11 @@ class DetailPredict extends StatelessWidget {
                       //const Column(
                       //  mainAxisAlignment: MainAxisAlignment.end,
                       //  children: [
-                          const Text(
-                            "%",
-                            style: TextStyle(fontSize: 24),
-                          ),
-                     //   ],
+                      const Text(
+                        "%",
+                        style: TextStyle(fontSize: 24),
+                      ),
+                      //   ],
                       //),
                     ],
                   ),
@@ -406,20 +453,17 @@ class _DetailScoreInfoState extends State<DetailScoreInfo> {
     return Column(
       children: [
         FittedBox(
-          child:
-            FutureBuilder(
+          child: FutureBuilder(
               future: Provider.of<ExamModel>(context, listen: false)
                   .user
                   .fetchPaperClassInfo(widget.paperId),
-              builder:
-                  (BuildContext futureContext, AsyncSnapshot snapshot) {
+              builder: (BuildContext futureContext, AsyncSnapshot snapshot) {
                 if (snapshot.hasData) {
                   if (snapshot.data.state == false) {
-                    return const Text("全年级",
-                        style: TextStyle(fontSize: 16));
+                    return const Text("全年级", style: TextStyle(fontSize: 16));
                   }
                   num tempClassInfoNum = 0;
-                  for(var i in snapshot.data.result) {
+                  for (var i in snapshot.data.result) {
                     tempClassInfoNum = tempClassInfoNum + (i.count ?? 0);
                   }
                   classInfoNum = tempClassInfoNum;
@@ -430,8 +474,7 @@ class _DetailScoreInfoState extends State<DetailScoreInfo> {
                     chosenClass = snapshot.data.result[0];
                   }
 
-                  List<DropdownMenuItem<String>> items = snapshot
-                      .data.result
+                  List<DropdownMenuItem<String>> items = snapshot.data.result
                       .map<DropdownMenuItem<String>>((ClassInfo value) {
                     return DropdownMenuItem<String>(
                       value: value.classId,
@@ -483,14 +526,16 @@ class _DetailScoreInfoState extends State<DetailScoreInfo> {
                             const SizedBox(width: 8),
                             const Icon(Icons.people),
                             Text(" $classInfoNum 条",
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold))
+                                style: const TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold))
                           ]);
                         } else {
                           return Row(children: [
                             const SizedBox(width: 8),
                             const Icon(Icons.people),
                             Text(" ${chosenClass?.count ?? 0} 条",
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold))
+                                style: const TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold))
                           ]);
                         }
                       }),
