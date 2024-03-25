@@ -89,7 +89,7 @@ class _MainDrawerState extends State<MainDrawer> {
               Provider.of<LoginModel>(context, listen: false).setLoading(false);
               Provider.of<LoginModel>(context, listen: false).user.logoff();
               Provider.of<LoginModel>(context, listen: false).setUser(User());
-              dialogContext.router.navigate(const HomeRoute());
+              dialogContext.router.replaceAll([const HomeRoute()]);
               //MethodChannel channel = const MethodChannel('MainActivity');
               //channel.invokeMethod('stopService');
               refreshService();
@@ -114,7 +114,7 @@ class _MainDrawerState extends State<MainDrawer> {
                 return;
               }
               Navigator.pop(context);
-              context.router.navigate(destinations[selectedIndex].router);
+              context.router.replace(destinations[selectedIndex].router);
             });
           },
           selectedIndex: currentIndex,

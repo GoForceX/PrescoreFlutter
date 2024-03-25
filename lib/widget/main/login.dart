@@ -1,6 +1,8 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:prescore_flutter/main.dart';
+import 'package:prescore_flutter/main.gr.dart';
 import 'package:prescore_flutter/model/login_model.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -53,8 +55,8 @@ class _LoginWidgetState extends State<LoginWidget> {
       result = await user.login(username, password,
           useLocalSession: useLocalSession, keepLocalSession: keepLocalSession);
     } catch (e) {
-      SnackBar snackBar =
-      SnackBar(content: Text('呜呜呜，登录失败了……\n失败原因：${(e as DioException).error}'));
+      SnackBar snackBar = SnackBar(
+          content: Text('呜呜呜，登录失败了……\n失败原因：${(e as DioException).error}'));
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
         Provider.of<LoginModel>(context, listen: false).setLoading(false);
@@ -72,16 +74,10 @@ class _LoginWidgetState extends State<LoginWidget> {
         refreshService();
         user.reLoginFailedCallback = () {
           Provider.of<LoginModel>(context, listen: false).setLoggedIn(false);
-          //Provider.of<LoginModel>(context, listen: false)
-          //    .setLoggedOff(true);
           Provider.of<LoginModel>(context, listen: false).setLoading(false);
           Provider.of<LoginModel>(context, listen: false).setUser(User());
+          Navigator.of(context, rootNavigator: true).pushReplacementNamed(HomeRoute.name);
         };
-        /*
-        Provider.of<LoginModel>(context, listen: false)
-            .user
-            .telemetryLogin();
-          */
       } else {
         SnackBar snackBar =
             SnackBar(content: Text('呜呜呜，登录失败了……\n失败原因：${result.message}'));
@@ -90,14 +86,6 @@ class _LoginWidgetState extends State<LoginWidget> {
         Provider.of<LoginModel>(context, listen: false).setAutoLogging(false);
       }
     }
-    /*
-    Future.delayed(
-        const Duration(seconds: 2),
-        () => Provider.of<LoginModel>(context,
-                listen: false)
-            .setLoggedIn(true));
-      */
-    // setLoggedIn(true);
   }
 
   void saveAccount() {

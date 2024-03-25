@@ -3,12 +3,14 @@ import 'dart:io';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:cronet_http_embedded/cronet_http.dart';
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:http/io_client.dart';
 import 'package:logger/logger.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
@@ -62,6 +64,10 @@ Future<void> main() async {
         engine ??= CronetEngine.build(
             cacheMode: CacheMode.memory, userAgent: userAgent);
         return CronetClient.fromCronetEngineFuture(engine!);
+      };
+    } else if (Platform.isIOS) {
+      clientFactory = () {
+        return IOClient(HttpClient());
       };
     }
   }
@@ -206,10 +212,12 @@ class MyApp extends StatelessWidget {
           theme: ThemeData(
             colorScheme: lightColorScheme,
             useMaterial3: true,
+            platform: TargetPlatform.android,
           ),
           darkTheme: ThemeData(
             colorScheme: darkColorScheme,
             useMaterial3: true,
+            platform: TargetPlatform.android,
           ),
           themeMode: ThemeMode.system);
     });
@@ -377,107 +385,100 @@ class HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      /*appBar: AppBar(
-            title: const Text('出分啦'),
-            actions: [
-              IconButton(
-                  onPressed: onNavigatingForum,
-                  icon: const Icon(Icons.insert_comment))
-            ],
-          ),*/
-      body: FutureBuilder(
-          future: Future.delayed(Duration.zero, () {
-            showRequestDialog(context);
-            showUpgradeAlert(context);
-          }),
-          builder: (BuildContext context, AsyncSnapshot snapshot) {
-            return Consumer<LoginModel>(builder: (context, model, child) {
-              if (!(model.isLoggedIn && !prevLoginState)) {
-                return const Center(child: LoginWidget());
-              } else {
-                List<Widget> slivers = [];
-                EasyRefreshController controller = EasyRefreshController(
-                  controlFinishRefresh: true,
-                  controlFinishLoad: true,
-                );
-                //slivers.add(const SliverHeader());
-                slivers.add(SliverAppBar(
-                  //title: Text("考试列表"),
-                  forceElevated: true,
-                  flexibleSpace: FlexibleSpaceBar(
-                    title: Text("考试列表",
-                        style: Theme.of(context).textTheme.titleLarge),
-                    titlePadding:
-                        const EdgeInsetsDirectional.only(start: 56, bottom: 14),
-                    expandedTitleScale: 1.8,
-                  ),
-                  actions: [
-                    IconButton(
-                        onPressed: onNavigatingForum,
-                        icon: const Icon(Icons.insert_comment))
-                  ],
-                  expandedHeight: 200.0,
-                  floating: false,
-                  pinned: true,
-                  snap: false,
-                ));
-                slivers.add(const HeaderLocator.sliver());
-                GlobalKey<ExamsState> key = GlobalKey();
-                Exams exams = Exams(key: key, controller: controller);
-                slivers.add(exams);
-                slivers.add(const FooterLocator.sliver());
+    Future.microtask(() {
+      showRequestDialog(context);
+      showUpgradeAlert(context);
+    });
+    return Consumer<LoginModel>(builder: (context, model, child) {
+      return Scaffold(
+          /*appBar: AppBar(
+                title: const Text('出分啦'),
+                actions: [
+                  IconButton(
+                      onPressed: onNavigatingForum,
+                      icon: const Icon(Icons.insert_comment))
+                ],
+              ),*/
+          body: Builder(builder: (BuildContext context) {
+            if (!(model.isLoggedIn && !prevLoginState)) {
+              return const Center(child: LoginWidget());
+            } else {
+              List<Widget> slivers = [];
+              EasyRefreshController controller = EasyRefreshController(
+                controlFinishRefresh: true,
+                controlFinishLoad: true,
+              );
+              //slivers.add(const SliverHeader());
+              slivers.add(SliverAppBar(
+                //title: Text("考试列表"),
+                forceElevated: true,
+                flexibleSpace: FlexibleSpaceBar(
+                  title: Text("考试列表",
+                      style: Theme.of(context).textTheme.titleLarge),
+                  titlePadding:
+                      const EdgeInsetsDirectional.only(start: 56, bottom: 14),
+                  expandedTitleScale: 1.8,
+                ),
+                actions: [
+                  IconButton(
+                      onPressed: onNavigatingForum,
+                      icon: const Icon(Icons.insert_comment))
+                ],
+                expandedHeight: 200.0,
+                floating: false,
+                pinned: true,
+                snap: false,
+              ));
+              slivers.add(const HeaderLocator.sliver());
+              GlobalKey<ExamsState> key = GlobalKey();
+              Exams exams = Exams(key: key, controller: controller);
+              slivers.add(exams);
+              slivers.add(const FooterLocator.sliver());
 
-                return EasyRefresh.builder(
-                    controller: controller,
-                    header: const ClassicHeader(
-                      position: IndicatorPosition.locator,
-                      dragText: '下滑刷新 (´ρ`)',
-                      armedText: '松开刷新 (´ρ`)',
-                      readyText: '获取数据中... (›´ω`‹)',
-                      processingText: '获取数据中... (›´ω`‹)',
-                      processedText: '成功！(`ヮ´)',
-                      noMoreText: '太多啦 TwT',
-                      failedText: '失败了 TwT',
-                      messageText: '上次更新于 %T',
-                    ),
-                    footer: const ClassicFooter(
-                      infiniteOffset: 0,
-                      position: IndicatorPosition.locator,
-                      dragText: '下滑刷新 (´ρ`)',
-                      armedText: '松开刷新 (´ρ`)',
-                      readyText: '获取数据中... (›´ω`‹)',
-                      processingText: '获取数据中... (›´ω`‹)',
-                      processedText: '成功！(`ヮ´)',
-                      noMoreText: '我一点都没有了... TwT',
-                      failedText: '失败了 TwT',
-                      messageText: '上次更新于 %T',
-                    ),
-                    onRefresh: (model.isLoggedIn && !prevLoginState)
-                        ? () async {
-                            await key.currentState?.refresh();
-                          }
-                        : null,
-                    onLoad: (model.isLoggedIn && !prevLoginState)
-                        ? () async {
-                            await key.currentState?.load();
-                          }
-                        : null,
-                    childBuilder: (BuildContext ct, ScrollPhysics sp) =>
-                        CustomScrollView(
-                          physics: sp,
-                          slivers: slivers,
-                        ));
-                /*  CustomScrollView(
-                              physics: sp,
-                              shrinkWrap: true,
-                              slivers: slivers,
-                            ));*/
-              }
-            });
+              return EasyRefresh.builder(
+                  controller: controller,
+                  header: const ClassicHeader(
+                    position: IndicatorPosition.locator,
+                    dragText: '下滑刷新 (´ρ`)',
+                    armedText: '松开刷新 (´ρ`)',
+                    readyText: '获取数据中... (›´ω`‹)',
+                    processingText: '获取数据中... (›´ω`‹)',
+                    processedText: '成功！(`ヮ´)',
+                    noMoreText: '太多啦 TwT',
+                    failedText: '失败了 TwT',
+                    messageText: '上次更新于 %T',
+                  ),
+                  footer: const ClassicFooter(
+                    infiniteOffset: 0,
+                    position: IndicatorPosition.locator,
+                    dragText: '下滑刷新 (´ρ`)',
+                    armedText: '松开刷新 (´ρ`)',
+                    readyText: '获取数据中... (›´ω`‹)',
+                    processingText: '获取数据中... (›´ω`‹)',
+                    processedText: '成功！(`ヮ´)',
+                    noMoreText: '我一点都没有了... TwT',
+                    failedText: '失败了 TwT',
+                    messageText: '上次更新于 %T',
+                  ),
+                  onRefresh: (model.isLoggedIn && !prevLoginState)
+                      ? () async {
+                          await key.currentState?.refresh();
+                        }
+                      : null,
+                  onLoad: (model.isLoggedIn && !prevLoginState)
+                      ? () async {
+                          await key.currentState?.load();
+                        }
+                      : null,
+                  childBuilder: (BuildContext ct, ScrollPhysics sp) =>
+                      CustomScrollView(
+                        physics: sp,
+                        slivers: slivers,
+                      ));
+            }
           }),
-      drawer: const MainDrawer(),
-    );
+          drawer: model.isLoggedIn ? const MainDrawer() : null);
+    });
   }
 }
 
@@ -500,10 +501,12 @@ class BaseSingleton {
       InterceptorsWrapper(
         onResponse: (Response response, ResponseInterceptorHandler handler) {
           logger.d(response.headers.map.entries.toList());
-          String? c = response.headers.value('set-cookie');
-          if (c != null) {
-            if (c.contains('SameSite=Nonetlsysapp')) {
-              response.headers.remove('set-cookie', c);
+          List<String>? cookies = response.headers[HttpHeaders.setCookieHeader];
+          if (cookies != null) {
+            for (String cookie in cookies) {
+              if (cookie.contains('SameSite=Nonetlsysapp')) {
+                response.headers.removeAll(HttpHeaders.setCookieHeader);
+              }
             }
           }
           return handler.next(response);
@@ -513,7 +516,7 @@ class BaseSingleton {
 
     if (kIsWeb) {
       cookieJar = CookieJar();
-      dio.interceptors.add(CookieManager(cookieJar));
+      //dio.interceptors.add(CookieManager(cookieJar));
     } else {
       getApplicationSupportDirectory().then((value) {
         String dataPath = value.path;
@@ -528,8 +531,10 @@ class BaseSingleton {
 
     dio.options.headers = commonHeaders;
     if (!kIsWeb) {
-      if (Platform.isIOS || Platform.isMacOS || Platform.isAndroid) {
+      if (Platform.isAndroid) {
         dio.httpClientAdapter = CronetAdapter(null);
+      } else if (Platform.isIOS) {
+        dio.httpClientAdapter = IOHttpClientAdapter();
       }
     }
 
