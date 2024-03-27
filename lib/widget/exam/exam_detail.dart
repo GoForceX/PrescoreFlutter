@@ -64,7 +64,7 @@ class _ExamDetailState extends State<ExamDetail> {
             ListView(
               padding: const EdgeInsets.all(8),
               shrinkWrap: false,
-              children: children,
+              children: [...children, const SizedBox(height: 40)],
             ),
             Align(
               alignment: Alignment.bottomCenter,
