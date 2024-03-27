@@ -1,4 +1,3 @@
-import 'package:auto_route/auto_route.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:prescore_flutter/main.dart';
@@ -72,11 +71,13 @@ class _LoginWidgetState extends State<LoginWidget> {
         Provider.of<LoginModel>(context, listen: false).setLoading(false);
         logger.d("session ${user.session}");
         refreshService();
+        LoginModel model = Provider.of<LoginModel>(context, listen: false);
         user.reLoginFailedCallback = () {
-          Provider.of<LoginModel>(context, listen: false).setLoggedIn(false);
-          Provider.of<LoginModel>(context, listen: false).setLoading(false);
-          Provider.of<LoginModel>(context, listen: false).setUser(User());
-          Navigator.of(context, rootNavigator: true).pushReplacementNamed(HomeRoute.name);
+          model.setLoggedIn(false);
+          model.setLoading(false);
+          model.setUser(User());
+          Navigator.of(context, rootNavigator: true)
+              .pushReplacementNamed(HomeRoute.name); //TODO
         };
       } else {
         SnackBar snackBar =

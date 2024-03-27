@@ -83,6 +83,7 @@ dependencies:
   dynamic_color: ^1.6.9
   flutter_html: ^3.0.0-beta.2
   flutter_html_table: ^3.0.0-beta.2
+  crypto: ^3.0.3
 
 dev_dependencies:
   flutter_test:

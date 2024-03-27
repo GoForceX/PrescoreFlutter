@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:crypto/crypto.dart';
 import 'package:html/parser.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:dio/dio.dart';
@@ -14,7 +15,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as path;
 import '../constants.dart';
-//import '../util/flutter_log_local/flutter_log_local.dart';
 
 late Database database;
 const String userSession = "userSession";
@@ -119,12 +119,12 @@ class User {
     sharedPrefs.setBool("localSessionExist", true);
   }
 
-  Future<void> updateLoginStatus() async {
+  Future<void> updateLoginStatus({bool force = false}) async {
     Dio client = BaseSingleton.singleton.dio;
     Response response = await client.get(zhixueLoginStatusUrl);
     Map<String, dynamic> json = jsonDecode(response.data);
-    if (json["result"] != "success") {
-      logger.d("updateLoginStatus $response");
+    logger.d("updateLoginStatus $response");
+    if (json["result"] != "success" || force) {
       Result result = await login(
           loginCredential.userName ?? "", loginCredential.password ?? "",
           useLocalSession: false,
@@ -669,6 +669,11 @@ class User {
     Response response = await client.get(url);
     Map<String, dynamic> json = jsonDecode(response.data);
     logger.d("exams: $json");
+    if (json["errorCode"] != 0 && json["errorInfo"].contains("Token")) {
+      await updateLoginStatus(force: true);
+      Response response = await client.get(url);
+      json = jsonDecode(response.data);
+    }
     if (json["errorCode"] != 0) {
       logger.d("exams: failed");
       //LocalLogger.write("fetchExams failed: ${json["errorCode"]} ${json["errorInfo"]}", isError: true);
@@ -742,7 +747,6 @@ class User {
         }
       } catch (_) {}
       if (standardScore == 0) {
-        //TODO
         //continue;
       }
       papers.add(Paper(
@@ -1027,7 +1031,7 @@ class User {
     }
     List<Question> questions = [];
     List<Marker> markers = [];
-    Map<int, List<dynamic>> cutBlocksPosition = {};
+    Map<int, List<Map>> cutBlocksPosition = {};
     String sheetQuestions = json["result"]["sheetDatas"];
     List<dynamic> sheetQuestionsDynamic =
         jsonDecode(sheetQuestions)["userAnswerRecordDTO"]
@@ -1037,8 +1041,17 @@ class User {
         if (cutBlocksPosition[cutBlocks["topicStartNum"]] == null) {
           cutBlocksPosition[cutBlocks["topicStartNum"]] = [];
         }
-        cutBlocksPosition[cutBlocks["topicStartNum"]]
-            ?.add(jsonDecode(cutBlocks["position"]));
+        try {
+          cutBlocksPosition[cutBlocks["topicStartNum"]]?.add({
+            "position": jsonDecode(cutBlocks["position"]),
+            "positionPercent": jsonDecode(cutBlocks["positionPercent"]),
+            "dispTopic": cutBlocks["dispTopic"],
+            "topicNumStr": cutBlocks["topicNumStr"],
+            "topicStartNum": cutBlocks["topicStartNum"],
+            "crossSection":
+                jsonDecode(cutBlocks["coordinate"] ?? "[]").length > 1,
+          });
+        } catch (_) {}
       }
     }
     for (var element in sheetQuestionsDynamic) {
@@ -1203,11 +1216,60 @@ class User {
     return Result(state: true, message: "", result: paperData);
   }
 
+  int findMaxOverlap(List<double> lengths, double startPercentage,
+      double endPercentage, String message) {
+    double totalLength = 0;
+    for (int i = 0; i < lengths.length; i++) {
+      totalLength += lengths[i];
+    }
+    double start = totalLength * startPercentage;
+    double end = totalLength * endPercentage;
+    double maxOverlap = -1;
+    int maxIndex = 0;
+    double currentStart = 0;
+    double currentEnd = 0;
+    for (int i = 0; i < lengths.length; i++) {
+      currentEnd += lengths[i];
+      List points = <double>[start, end, currentStart, currentEnd];
+      points.sort();
+      double overlap = points[2] - points[1];
+      if (end < currentStart || start > currentEnd) {
+        overlap = 0;
+      }
+      if (overlap > maxOverlap) {
+        maxOverlap = overlap;
+        maxIndex = i;
+      }
+      currentStart = currentEnd;
+    }
+    return maxIndex;
+  }
+
   Result<List<Marker>> parseMarkers(List sheetMarkersSheets,
-      List<Question> questions, Map<int, List<dynamic>> cutBlocksPosition) {
+      List<Question> questions, Map<int, List<Map>> cutBlocksPosition) {
     logger.d("parseMarkers: $sheetMarkersSheets");
     List<Marker> markers = [];
     List<int> parsedQuestionIds = [];
+    Map<int, List<double>> questionSectionHeight = {};
+    Map<int, double> questionSectionCount = {};
+
+    try {
+      for (var sheetId = 0; sheetId < sheetMarkersSheets.length; sheetId++) {
+        //统计每大题 Section 高度
+        Map sheet = sheetMarkersSheets[sheetId];
+        for (var section in sheet["sections"]) {
+          if (section["type"] == "AnswerQuestion") {
+            for (var branchElement in section["contents"]["branch"]) {
+              if (questionSectionHeight[branchElement["num"].toInt()] == null) {
+                questionSectionHeight[branchElement["num"].toInt()] = [];
+              }
+              questionSectionHeight[branchElement["num"].toInt()]
+                  ?.add(branchElement["position"]["height"].toDouble());
+            }
+          }
+        }
+      }
+    } catch (_) {}
     for (var sheetId = 0; sheetId < sheetMarkersSheets.length; sheetId++) {
       Map sheet = sheetMarkersSheets[sheetId];
       for (var section in sheet["sections"]) {
@@ -1376,30 +1438,66 @@ class User {
           double left = section["contents"]["position"]["left"].toDouble();
           double width = section["contents"]["position"]["width"].toDouble();
           double height = section["contents"]["position"]["height"].toDouble();
-          for (var branchElement in section["contents"]["branch"]) {
-            var cutBlockList = cutBlocksPosition[branchElement["num"].toInt()];
-            if (cutBlockList != null) {
-              var count = 1;
-              for (var cutBlockElement in cutBlockList) {
-                markers.add(Marker(
-                  type: MarkerType.cutBlock,
-                  sheetId: sheetId,
-                  top: branchElement["position"]["top"].toDouble(),
-                  left: branchElement["position"]["left"].toDouble(),
-                  topOffset: cutBlockElement["top"].toDouble(),
-                  leftOffset: cutBlockElement["left"].toDouble(),
-                  width: cutBlockElement["width"].toDouble(),
-                  height: cutBlockElement["height"].toDouble(),
-                  color: count % 2 == 0
-                      ? Colors.yellow.shade800
-                      : Colors.blue.shade400,
-                  message: " $count",
-                ));
-                count += 1;
+          try {
+            for (var branchElement in section["contents"]["branch"]) {
+              var cutBlockList =
+                  cutBlocksPosition[branchElement["num"].toInt()];
+              questionSectionCount[branchElement["num"].toInt()] =
+                  (questionSectionCount[branchElement["num"].toInt()] ?? 0) + 1;
+              if (cutBlockList != null) {
+                var count = 1;
+                for (var cutBlock in cutBlockList) {
+                  double preHeight = 0;
+                  int sectionIndex = 0;
+                  if (cutBlock["crossSection"] == true) {
+                    sectionIndex = findMaxOverlap(
+                        questionSectionHeight[branchElement["num"].toInt()] ??
+                            <double>[1000],
+                        cutBlock["positionPercent"]["top"].toDouble(),
+                        (cutBlock["positionPercent"]["top"] +
+                                cutBlock["positionPercent"]["height"])
+                            .toDouble(),
+                        branchElement["num"].toString());
+                    if (sectionIndex + 1 !=
+                        (questionSectionCount[branchElement["num"].toInt()] ??
+                            0)) {
+                      //CutBlock 不属于该 Section
+                      continue;
+                    }
+                    for (int i = 0; i < sectionIndex; i++) {
+                      preHeight +=
+                          questionSectionHeight[branchElement["num"].toInt()]
+                                  ?[i] ??
+                              0;
+                    }
+                  }
+                  if ((branchElement["numList"] ?? []).length > 1) {
+                    //TODO
+                    continue;
+                  }
+                  markers.add(Marker(
+                    type: MarkerType.cutBlock,
+                    sheetId: sheetId,
+                    top: branchElement["position"]["top"].toDouble() -
+                            preHeight ??
+                        0,
+                    left: branchElement["position"]["left"].toDouble(),
+                    topOffset: cutBlock["position"]["top"].toDouble(),
+                    leftOffset: cutBlock["position"]["left"].toDouble(),
+                    width: cutBlock["position"]["width"].toDouble(),
+                    height: cutBlock["position"]["height"].toDouble(),
+                    color: count % 2 == 0
+                        ? Colors.yellow.shade800
+                        : Colors.blue.shade400,
+                    message:
+                        " ${cutBlock["dispTopic"] ?? cutBlock["topicNumStr"] ?? ""}",
+                  ));
+                  count += 1;
+                }
               }
+              //break;
             }
-            break;
-          }
+          } catch (_) {}
           if (userScore != fullScore) {
             markers.add(Marker(
               type: MarkerType.sectionEnd,
@@ -1558,6 +1656,8 @@ class User {
       "diagnostic_score": paper.diagnosticScore,
     }}");
 
+    //String rawData =
+    //    "user_id=${basicInfo?.id}&exam_id=${paper.examId}&paper_id=${paper.paperId}&subject_id=${paper.subjectId}&subject_name=${paper.name}&standard_score=${paper.fullScore}&user_score=${paper.userScore}&diagnostic_score=${paper.diagnosticScore}";
     Response response = await client.post(
       'https://matrix.bjbybbs.com/api/exam/submit',
       data: {
@@ -1573,6 +1673,7 @@ class User {
       options: Options(
         headers: {
           'Authorization': 'Bearer ${session?.serverToken}',
+          //'Signature': Hmac(sha256, utf8.encode(uploadKey)).convert(utf8.encode(rawData))
         },
         contentType: Headers.jsonContentType,
       ),

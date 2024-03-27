@@ -161,7 +161,7 @@ Future<Result> checkExams({int retry = 0, bool firstRun = false, Result? errMsg}
         trackExamCount += 1;
         if(remoteSubjectList.state) {
           if(remoteSubjectList.result != examLocal[0]["subjectList"] && !newExam && firstRun == false) { //科目变动
-            channel.invokeMethod("sendNotification",{"text": "考试 ${examRemote.examName} 发布了新的科目"}); //TODO
+            channel.invokeMethod("sendNotification",{"text": "考试 ${examRemote.examName} 发布了新的科目"});
           }
           if(remoteSubjectList.result != examLocal[0]["subjectList"] || examRemote.isFinal) { //科目变动或远程变更为已关闭
             var finalTime = examLocal[0]["finalTime"];

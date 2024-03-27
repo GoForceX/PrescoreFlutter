@@ -135,8 +135,13 @@ class ExamsState extends State<Exams> {
     model.user
         .fetchExams(1, homework: pageType == PageType.homework)
         .then((value) {
-      result = value.result;
-      setState(() {});
+      setState(() {
+        result = value.result ?? [];
+        if (!value.state) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(value.message)));
+        }
+      });
     });
     return SliverList(
         delegate: SliverChildListDelegate([

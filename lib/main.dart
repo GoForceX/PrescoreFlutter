@@ -38,7 +38,7 @@ import 'model/login_model.dart';
 
 @pragma('vm:entry-point')
 serviceEntry() async {
-  if (kReleaseMode) {
+  if (sentryAnalyseEnable) {
     await SentryFlutter.init((options) {
       options.dsn =
           'https://baab724bcf3cc8b40759a031edd478eb@o4506218740776960.ingest.sentry.io/4506218743857152';
@@ -51,8 +51,8 @@ serviceEntry() async {
   }
 }
 
-bool firebaseAnalyseEnable = true;
-bool sentryAnalyseEnable = true;
+bool firebaseAnalyseEnable = kReleaseMode;
+bool sentryAnalyseEnable = kReleaseMode;
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await BaseSingleton.singleton.init();
@@ -76,7 +76,7 @@ Future<void> main() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
   }
-  if (sentryAnalyseEnable && kReleaseMode) {
+  if (sentryAnalyseEnable) {
     await SentryFlutter.init(
       (options) {
         options.dsn =

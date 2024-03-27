@@ -25,91 +25,128 @@ class PaperPhoto extends StatefulWidget {
   State<PaperPhoto> createState() => _PaperPhotoState();
 }
 
-class _PaperPhotoState extends State<PaperPhoto> with AutomaticKeepAliveClientMixin { //TODO
+class _PaperPhotoState extends State<PaperPhoto>
+    with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
-  Widget mainWidget = Container();
-  @override
-  Widget build(BuildContext context) {
-    super.build(context);
-    return mainWidget;
-  }
+
+  ListView? markedphotos;
+  ListView? unMarkedphotos;
 
   @override
   void initState() {
     super.initState();
-    Widget main = Container();
+    if (!Provider.of<PaperModel>(context, listen: false).isDataLoaded) {
+      Provider.of<PaperModel>(context, listen: false)
+          .user
+          .fetchPaperData(widget.examId, widget.paperId)
+          .then((value) {
+        if (value.state) {
+          Provider.of<PaperModel>(context, listen: false)
+              .setPaperData(value.result);
+          Provider.of<PaperModel>(context, listen: false).setDataLoaded(true);
+        }
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
     logger.d("exam id: ${widget.examId}");
-    if (Provider.of<PaperModel>(context, listen: false).isDataLoaded) {
-      List<Widget> photos = [];
-
-      photos.add(const ExperimentalDrawTips());
-      photos.add(const SizedBox(
-        height: 16,
-      ));
-
-      List<Marker>? markers =
-          Provider.of<PaperModel>(context, listen: false).paperData?.markers;
-      markers ??= [];
-      for (var i = 0;
-          i <
-              Provider.of<PaperModel>(context, listen: false)
-                  .paperData!
-                  .sheetImages
-                  .length;
-          i++) {
-        photos.add(PaperPhotoWidget(
-          sheetId: i,
-          url: Provider.of<PaperModel>(context, listen: false)
-              .paperData!
-              .sheetImages[i],
-          tag: const Uuid().v4(),
-          markers: markers,
-        ));
+    return Consumer<PaperModel>(builder:
+        (BuildContext consumerContext, PaperModel examModel, Widget? child) {
+      if (examModel.paperData == null) {
+        return Center(
+            child: Container(
+                margin: const EdgeInsets.all(10),
+                child: const CircularProgressIndicator()));
+      }
+      if (BaseSingleton.singleton.sharedPreferences
+                  .getBool("useExperimentalDraw") ==
+              true &&
+          markedphotos == null) {
+        List<Marker> markers = examModel.paperData?.markers ?? [];
+        List<Widget> photos = [];
+        for (var i = 0; i < examModel.paperData!.sheetImages.length; i++) {
+          photos.add(PaperPhotoWidget(
+              sheetId: i,
+              url: examModel.paperData!.sheetImages[i],
+              tag: const Uuid().v4(),
+              markers: markers,
+              mark: true));
+        }
+        markedphotos = ListView(
+          children: photos,
+        );
+      }
+      if (BaseSingleton.singleton.sharedPreferences
+                  .getBool("useExperimentalDraw") ==
+              false &&
+          unMarkedphotos == null) {
+        List<Marker> markers = examModel.paperData?.markers ?? [];
+        List<Widget> photos = [];
+        for (var i = 0; i < examModel.paperData!.sheetImages.length; i++) {
+          photos.add(PaperPhotoWidget(
+              sheetId: i,
+              url: examModel.paperData!.sheetImages[i],
+              tag: const Uuid().v4(),
+              markers: markers,
+              mark: false));
+        }
+        unMarkedphotos = ListView(
+          children: photos,
+        );
       }
 
-      mainWidget = ListView(
-        children: photos,
-      );
-    } else {
-      main = FutureBuilder(
-        future: Provider.of<PaperModel>(context, listen: false)
-            .user
-            .fetchPaperData(widget.examId, widget.paperId),
-        builder: (BuildContext context, AsyncSnapshot snapshot) {
-          if (snapshot.hasData) {
-            if (snapshot.data.state) {
-              List<Widget> photos = [];
-
-              photos.add(const ExperimentalDrawTips());
-              photos.add(const SizedBox(
-                height: 16,
-              ));
-
-              for (var i = 0;
-                  i < snapshot.data.result.sheetImages.length;
-                  i++) {
-                photos.add(PaperPhotoWidget(
-                  sheetId: i,
-                  url: snapshot.data.result.sheetImages[i],
-                  tag: const Uuid().v4(),
-                  markers: snapshot.data.result.markers,
-                ));
-              }
-
-              return ListView(
-                children: photos,
-              );
-            } else {
-              return Container();
-            }
-          } else {
-            return Center(child: Container(margin: const EdgeInsets.all(10) ,child: const CircularProgressIndicator()));
-          }
-        },
-      );
-    }
-    mainWidget = Center(child: Column(children: [Expanded(child: main)]));
+      return Stack(children: [
+        Center(
+            child: Column(children: [
+          Expanded(
+              child: Visibility(
+            visible: BaseSingleton.singleton.sharedPreferences
+                    .getBool("useExperimentalDraw") ==
+                true,
+            maintainState: true,
+            child: markedphotos ?? Container(),
+          )),
+        ])),
+        Center(
+            child: Column(children: [
+          Expanded(
+              child: Visibility(
+            visible: BaseSingleton.singleton.sharedPreferences
+                    .getBool("useExperimentalDraw") ==
+                false,
+            maintainState: true,
+            child: unMarkedphotos ?? Container(),
+          ))
+        ])),
+        Positioned(
+          bottom: 20,
+          right: 20,
+          child: FloatingActionButton.extended(
+            onPressed: () {
+              bool useExperimentalDraw = BaseSingleton
+                  .singleton.sharedPreferences
+                  .getBool("useExperimentalDraw")!;
+              setState(() {
+                BaseSingleton.singleton.sharedPreferences
+                    .setBool("useExperimentalDraw", !useExperimentalDraw);
+              });
+            },
+            icon: BaseSingleton.singleton.sharedPreferences
+                    .getBool("useExperimentalDraw")!
+                ? const Icon(Icons.brush)
+                : const Icon(Icons.brush_outlined),
+            label: Text(BaseSingleton.singleton.sharedPreferences
+                    .getBool("useExperimentalDraw")!
+                ? "已启用"
+                : "已禁用"),
+          ),
+        ),
+      ]);
+    });
   }
 }
 
@@ -118,23 +155,20 @@ class PaperPhotoWidget extends StatelessWidget {
   final String url;
   final String tag;
   final List<Marker> markers;
+  final bool mark;
   const PaperPhotoWidget(
       {Key? key,
       required this.sheetId,
       required this.url,
       required this.tag,
-      required this.markers})
+      required this.markers,
+      required this.mark})
       : super(key: key);
 
   Future<Uint8List?> markerPainter(
       List<Marker> markers, Uint8List originalImage) async {
-    if (BaseSingleton.singleton.sharedPreferences
-            .getBool("useExperimentalDraw") !=
-        null) {
-      if (!BaseSingleton.singleton.sharedPreferences
-          .getBool("useExperimentalDraw")!) {
-        return originalImage;
-      }
+    if (!mark) {
+      return originalImage;
     }
 
     /*
@@ -204,11 +238,11 @@ class PaperPhotoWidget extends StatelessWidget {
                 textAlign: TextAlign.right,
                 fontWeight: FontWeight.w400,
                 fontStyle: FontStyle.normal,
-                fontSize: 48.0));
+                fontSize: 40.0));
             pb.pushStyle(ui.TextStyle(color: marker.color));
             pb.addText(marker.message);
             ui.ParagraphConstraints pc =
-            const ui.ParagraphConstraints(width: 300);
+                const ui.ParagraphConstraints(width: 300);
             ui.Paragraph paragraph = pb.build()..layout(pc);
             canvas.drawParagraph(
                 paragraph,
@@ -309,8 +343,8 @@ class PaperPhotoWidget extends StatelessWidget {
     Dio dio = BaseSingleton.singleton.dio;
     logger.d(url);
     return FutureBuilder(
-        future: dio.get(url,
-            options: Options(responseType: ResponseType.bytes)),
+        future:
+            dio.get(url, options: Options(responseType: ResponseType.bytes)),
         builder: (BuildContext context, AsyncSnapshot snapshot) {
           if (snapshot.hasData) {
             memoryImage = Uint8List.fromList(snapshot.data.data);
@@ -347,13 +381,17 @@ class PaperPhotoWidget extends StatelessWidget {
                         ));
                   } else {
                     return Center(
-                      child: Container(margin: const EdgeInsets.all(10) ,child: const CircularProgressIndicator()),
+                      child: Container(
+                          margin: const EdgeInsets.all(10),
+                          child: const CircularProgressIndicator()),
                     );
                   }
                 });
           } else {
             return Center(
-              child: Container(margin: const EdgeInsets.all(10) ,child: const CircularProgressIndicator()),
+              child: Container(
+                  margin: const EdgeInsets.all(10),
+                  child: const CircularProgressIndicator()),
             );
           }
         });
@@ -436,34 +474,5 @@ class _PaperPhotoEnlargedState extends State<PaperPhotoEnlarged> {
         heroAttributes: PhotoViewHeroAttributes(tag: widget.tag),
       ),
     );
-  }
-}
-
-class ExperimentalDrawTips extends StatelessWidget {
-  const ExperimentalDrawTips({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    if (BaseSingleton.singleton.sharedPreferences
-            .getBool("useExperimentalDraw") !=
-        null) {
-      if (!BaseSingleton.singleton.sharedPreferences
-          .getBool("useExperimentalDraw")!) {
-        return Container(
-          padding: const EdgeInsets.all(16),
-          child: Card(
-              elevation: 2,
-              child: Container(
-                  padding: const EdgeInsets.all(16),
-                  child: const Text(
-                      "现在可以像智学网原版一样在原卷上绘制扣分信息啦（虽然可能有bug），为什么不去试试呢？就在主页侧边栏设置里啦！",
-                      style: TextStyle(fontSize: 16)))),
-        );
-      } else {
-        return Container();
-      }
-    } else {
-      return Container();
-    }
   }
 }
