@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:prescore_flutter/main.dart';
@@ -34,6 +35,7 @@ enum PageType { exam, homework }
 
 class ExamsState extends State<Exams> {
   int pageIndex = 1;
+  int retry = 4;
   bool lastFetched = false;
   bool isLoading = false;
   PageType pageType = PageType.exam;
@@ -50,9 +52,16 @@ class ExamsState extends State<Exams> {
   Future<bool> refresh() async {
     isLoading = true;
     LoginModel model = Provider.of<LoginModel>(context, listen: false);
-    result = (await model.user
-            .fetchExams(1, homework: pageType == PageType.homework))
-        .result;
+    try {
+      result = (await model.user
+              .fetchExams(1, homework: pageType == PageType.homework))
+          .result;
+    } catch (e) {
+      widget.controller.finishRefresh(IndicatorResult.fail);
+      widget.controller.resetHeader();
+      widget.controller.resetFooter();
+      return true;
+    }
     pageIndex = 1;
     lastFetched = false;
     setState(() {});
@@ -68,9 +77,14 @@ class ExamsState extends State<Exams> {
     LoginModel model = Provider.of<LoginModel>(context, listen: false);
     pageIndex += 1;
     List<Exam>? newResult;
-    newResult = ((await model.user
-            .fetchExams(pageIndex, homework: pageType == PageType.homework))
-        .result);
+    try {
+      newResult = ((await model.user
+              .fetchExams(pageIndex, homework: pageType == PageType.homework))
+          .result);
+    } catch (e) {
+      widget.controller.finishLoad(IndicatorResult.fail);
+      return true;
+    }
     if (newResult == null) {
       widget.controller.finishLoad(IndicatorResult.fail);
       return true;
@@ -136,10 +150,24 @@ class ExamsState extends State<Exams> {
         .fetchExams(1, homework: pageType == PageType.homework)
         .then((value) {
       setState(() {
-        result = value.result ?? [];
-        if (!value.state) {
+        result = value.result;
+        retry--;
+        if (retry <= 0) {
+          result ??= [];
+          if (!value.state) {
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text(value.message)));
+          }
+        }
+      });
+    }).catchError((e) {
+      (e as DioException);
+      setState(() {
+        retry--;
+        if (retry <= 0) {
+          result ??= [];
           ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(value.message)));
+              .showSnackBar(SnackBar(content: Text(e.error.toString())));
         }
       });
     });
