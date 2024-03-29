@@ -16,11 +16,10 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as path;
 import '../constants.dart';
 
-late Database database;
 const String userSession = "userSession";
 
-Future<void> initLocalSessionDataBase() async {
-  database = await openDatabase(
+Future<Database> initLocalSessionDataBase() async {
+  return await openDatabase(
     path.join(await getDatabasesPath(), 'UserSession.db'),
     onCreate: (db, version) async {
       var tableExists = await db.rawQuery(
@@ -59,7 +58,7 @@ class User {
 
   Future<void> readLocalSession() async {
     SharedPreferences sharedPrefs = BaseSingleton.singleton.sharedPreferences;
-    await initLocalSessionDataBase();
+    Database database = await initLocalSessionDataBase();
     List<Map<String, Object?>> list =
         await database.rawQuery('SELECT * FROM $userSession');
     if (list.length == 1) {
@@ -95,7 +94,7 @@ class User {
 
   Future<void> saveLocalSession() async {
     SharedPreferences sharedPrefs = BaseSingleton.singleton.sharedPreferences;
-    await initLocalSessionDataBase();
+    Database database = await initLocalSessionDataBase();
     await database.rawDelete('DELETE FROM $userSession');
     await database.insert(
       userSession,
@@ -154,8 +153,8 @@ class User {
     cookieJar.delete(Uri.parse("https://www.zhixue.com/"));
     cookieJar.delete(Uri.parse("https://open.changyan.com/"));
     initLocalSessionDataBase().then((value) async {
-      await database.rawDelete('DELETE FROM $userSession');
-      await database.close();
+      await value.rawDelete('DELETE FROM $userSession');
+      await value.close();
     });
     sharedPrefs.setBool("localSessionExist", false);
   }
