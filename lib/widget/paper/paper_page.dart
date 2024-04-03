@@ -109,7 +109,6 @@ class _PaperPageState extends State<PaperPage> {
                   icon: Icon(Icons.photo_album_outlined),
                   selectedIcon: Icon(Icons.photo_album),
                   label: '原卷',
-                  enabled: false,
                 )
               ],
               selectedIndex: _selectedIndex,

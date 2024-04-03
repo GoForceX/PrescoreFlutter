@@ -7,9 +7,15 @@ class PaperModel extends ChangeNotifier {
   User user = User();
   bool isDataLoaded = false;
   PaperData? paperData;
+  String? errMsg;
 
   void setUser(User value) {
     user = value;
+    notifyListeners();
+  }
+
+  void setErrMsg(String value) {
+    errMsg = value;
     notifyListeners();
   }
 

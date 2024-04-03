@@ -45,6 +45,8 @@ class _PaperPhotoState extends State<PaperPhoto>
           Provider.of<PaperModel>(context, listen: false)
               .setPaperData(value.result);
           Provider.of<PaperModel>(context, listen: false).setDataLoaded(true);
+        } else {
+          Provider.of<PaperModel>(context, listen: false).setErrMsg(value.message);
         }
       });
     }
@@ -56,6 +58,10 @@ class _PaperPhotoState extends State<PaperPhoto>
     logger.d("exam id: ${widget.examId}");
     return Consumer<PaperModel>(builder:
         (BuildContext consumerContext, PaperModel examModel, Widget? child) {
+      if (examModel.errMsg != null) {
+        return Center(
+            child: Text(examModel.errMsg ?? ""));
+      }
       if (examModel.paperData == null) {
         return Center(
             child: Container(

@@ -461,7 +461,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       .getBool('tryPreviewScore'),
                   leading: const Icon(Icons.preview),
                   title: const Text('提前查分(Beta)'),
-                  description: const Text('提前查询正在阅卷中的分数，可能失效'),
+                  description: const Text('提前查询正在阅卷中的分数，不代表最终分数，可能失效'),
                 ),
               /*SettingsTile.switchTile(
                 onToggle: (value) {

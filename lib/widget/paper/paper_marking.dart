@@ -46,16 +46,18 @@ class _PaperMarkingState extends State<PaperMarking>
         fabAnimationController.forward();
       }
     });
+    future = Provider.of<PaperModel>(context, listen: false)
+        .user
+        .fetchMarkingProgress(widget.paperId);
     super.initState();
   }
 
+  late Future future;
   @override
   Widget build(BuildContext context) {
     super.build(context);
     Widget main = FutureBuilder(
-        future: Provider.of<PaperModel>(context, listen: false)
-            .user
-            .fetchMarkingProgress(widget.paperId),
+        future: future,
         builder: (BuildContext context, AsyncSnapshot snapshot) {
           if (snapshot.hasData) {
             if (snapshot.data.state) {
@@ -132,7 +134,16 @@ class _PaperMarkingState extends State<PaperMarking>
           }
         });
     return Stack(children: [
-      main,
+      RefreshIndicator(
+          onRefresh: () {
+            setState(() {
+              future = Provider.of<PaperModel>(context, listen: false)
+                  .user
+                  .fetchMarkingProgress(widget.paperId);
+            });
+            return future;
+          },
+          child: main),
       Positioned(
         bottom: 20,
         right: 20,

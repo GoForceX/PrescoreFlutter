@@ -20,6 +20,15 @@ class ExamModel extends ChangeNotifier {
   UploadStatus uploadStatus = UploadStatus.incomplete;
   List<Paper> papers = [];
   List<Paper> absentPapers = [];
+  int getLength(Source paperSource) {
+    int sum = 0;
+    for (Paper element in papers) {
+      if (element.source == paperSource) {
+        sum++;
+      }
+    }
+    return sum;
+  }
 
   void setUser(User value) {
     user = value;

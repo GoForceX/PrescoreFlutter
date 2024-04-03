@@ -57,7 +57,7 @@ class DashboardCard extends StatelessWidget {
           }
           fullScore += element.fullScore;
         }
-        if (noAssignCount != papers.length) {
+        if (noAssignCount != examModel.getLength(Source.common)) {
           Widget chart = DashboardInfo(
             userScore: userScore,
             fullScore: fullScore,
