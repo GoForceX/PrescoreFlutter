@@ -1,0 +1,32 @@
+# From https://medium.com/team-rockstars-it/the-easiest-way-to-build-a-flutter-ios-app-using-github-actions-plus-a-key-takeaway-for-developers-48cf2ad7c72a
+name: "Build IPA Package"
+on: workflow_dispatch
+    
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Install flutter
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      # Install your project's dependencies
+      - run: flutter pub get
+
+      # Build and sign the ipa using a single flutter command
+      - name: Building IPA
+        run: flutter build ipa --release
+          
+      # Collect the file and upload as artifact         
+      - name: collect ipa artifacts
+        uses: actions/upload-artifact@v3
+        with:
+         name: release-ipa
+         # Path to the release files
+         path: build/ios/ipa/*.ipa
+         
