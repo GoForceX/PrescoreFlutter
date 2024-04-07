@@ -748,17 +748,19 @@ class User {
       if (standardScore == 0) {
         //continue;
       }
-      papers.add(Paper(
-          examId: subject["examId"],
-          paperId: subject["markingPaperId"],
-          name: subject["subjectName"],
-          subjectId: subject["subjectCode"],
-          userScore: userScore,
-          fullScore: standardScore,
-          source: Source.preview,
-          paperStatus: PaperStatus.unknown
-          //subject["markingStatus"]
-          ));
+      try {
+        papers.add(Paper(
+            examId: subject["examId"],
+            paperId: subject["markingPaperId"],
+            name: subject["subjectName"],
+            subjectId: subject["subjectCode"],
+            userScore: userScore,
+            fullScore: standardScore,
+            source: Source.preview,
+            paperStatus: PaperStatus.unknown
+            //subject["markingStatus"]
+            ));
+      } catch (_) {}
     }
     logger.d("fetchPreviewPaper: $papers");
     return Result(state: true, message: "", result: [papers, []]);

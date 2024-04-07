@@ -134,6 +134,7 @@ class ExamsState extends State<Exams> {
             setState(() {
               pageType = newSelection.first;
               result = null;
+              lastFetched = false;
               isLoading = true;
               //refresh();
             });
