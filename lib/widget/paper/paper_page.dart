@@ -85,7 +85,7 @@ class _PaperPageState extends State<PaperPage> {
                 ),
                 Center(
                   child: PaperPhoto(
-                      examId: widget.examId, paperId: widget.paperId),
+                      examId: widget.examId, paperId: widget.paperId, showNonFinalAlert: true),
                 ),
               ],
               onPageChanged: (value) {

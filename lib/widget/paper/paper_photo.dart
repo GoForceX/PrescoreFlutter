@@ -18,7 +18,12 @@ import '../../util/struct.dart';
 class PaperPhoto extends StatefulWidget {
   final String examId;
   final String paperId;
-  const PaperPhoto({Key? key, required this.paperId, required this.examId})
+  final bool showNonFinalAlert;
+  const PaperPhoto(
+      {Key? key,
+      required this.paperId,
+      required this.examId,
+      this.showNonFinalAlert = false})
       : super(key: key);
 
   @override
@@ -46,7 +51,8 @@ class _PaperPhotoState extends State<PaperPhoto>
               .setPaperData(value.result);
           Provider.of<PaperModel>(context, listen: false).setDataLoaded(true);
         } else {
-          Provider.of<PaperModel>(context, listen: false).setErrMsg(value.message);
+          Provider.of<PaperModel>(context, listen: false)
+              .setErrMsg(value.message);
         }
       });
     }
@@ -59,8 +65,7 @@ class _PaperPhotoState extends State<PaperPhoto>
     return Consumer<PaperModel>(builder:
         (BuildContext consumerContext, PaperModel examModel, Widget? child) {
       if (examModel.errMsg != null) {
-        return Center(
-            child: Text(examModel.errMsg ?? ""));
+        return Center(child: Text(examModel.errMsg ?? ""));
       }
       if (examModel.paperData == null) {
         return Center(
@@ -108,6 +113,15 @@ class _PaperPhotoState extends State<PaperPhoto>
       return Stack(children: [
         Center(
             child: Column(children: [
+          if (widget.showNonFinalAlert)
+            Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                child: const Row(children: [
+                  SizedBox(width: 20),
+                  Icon(Icons.warning_amber_rounded,
+                      size: 16, color: Colors.red),
+                  Text(" 判卷可能未完成，不代表最终成绩")
+                ])),
           Expanded(
               child: Visibility(
             visible: BaseSingleton.singleton.sharedPreferences
