@@ -9,22 +9,25 @@ import 'package:logger/logger.dart';
 import 'package:prescore_flutter/main.dart';
 import 'package:prescore_flutter/util/struct.dart';
 import 'package:prescore_flutter/util/user_util.dart';
+import 'package:collection/collection.dart';
 //import './util/flutter_log_local/flutter_log_local.dart';
 
-void refreshService() { //供主程序调用以刷新服务状态
+void refreshService() {
+  //供主程序调用以刷新服务状态
   var sharedPreferences = BaseSingleton.singleton.sharedPreferences;
   var channelMainActitvy = const MethodChannel("MainActivity");
-  if(sharedPreferences.getBool("localSessionExist") ?? false) {
-    if(sharedPreferences.getBool("enableWearService")! || sharedPreferences.getBool("checkExams")!) {
-      channelMainActitvy.invokeMethod(
-        "startService",
-        {
-          "checkExams" : sharedPreferences.getBool("checkExams") ?? false,
-          "checkExamsInterval" : sharedPreferences.getInt("checkExamsInterval") ?? 6,
-          "selectedWearDeviceUUID" : sharedPreferences.getString("selectedWearDeviceUUID") ?? "",
-          "enableWearService" : sharedPreferences.getBool("enableWearService") ?? "",
-        }
-      );
+  if (sharedPreferences.getBool("localSessionExist") ?? false) {
+    if (sharedPreferences.getBool("enableWearService")! ||
+        sharedPreferences.getBool("checkExams")!) {
+      channelMainActitvy.invokeMethod("startService", {
+        "checkExams": sharedPreferences.getBool("checkExams") ?? false,
+        "checkExamsInterval":
+            sharedPreferences.getInt("checkExamsInterval") ?? 6,
+        "selectedWearDeviceUUID":
+            sharedPreferences.getString("selectedWearDeviceUUID") ?? "",
+        "enableWearService":
+            sharedPreferences.getBool("enableWearService") ?? "",
+      });
     } else {
       channelMainActitvy.invokeMethod('stopService');
     }
@@ -59,8 +62,8 @@ Future<void> initDataBase() async {
   database = await openDatabase(
     join(await getDatabasesPath(), 'ExamList.db'),
     onCreate: (db, version) async {
-      var tableExists = await db
-          .rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='$tableName'");
+      var tableExists = await db.rawQuery(
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='$tableName'");
       if (tableExists.isEmpty) {
         logger.d("tableNotExists, CREATE TABLE $tableName");
         db.execute(
@@ -79,16 +82,15 @@ Future<void> login({bool force = true}) async {
   Result result = await user.login("", "", force: force, useLocalSession: true);
   if (result.state) {
     user.reLoginFailedCallback = () {
-      channel.invokeMethod(
-        'stopService');
+      channel.invokeMethod('stopService');
     };
     logger.d(user.session?.xToken);
-    if(user.isBasicInfoLoaded) {
+    if (user.isBasicInfoLoaded) {
       await channel.invokeMethod(
-        'setupForeground', '${user.basicInfo?.name} 已登录');
+          'setupForeground', '${user.basicInfo?.name} 已登录');
     } else {
       await channel.invokeMethod(
-        'setupForeground', '${user.loginCredential.userName} 已登录');
+          'setupForeground', '${user.loginCredential.userName} 已登录');
     }
     return;
   } else {
@@ -96,23 +98,26 @@ Future<void> login({bool force = true}) async {
   }
 }
 
-Future<Result<String>> fetchSubjectList({int retry = 0, String examId = ""}) async {
+Future<Result<String>> fetchSubjectList(
+    {int retry = 0, String examId = ""}) async {
   Result result = await user.fetchPaper(examId);
   List subjectList = [];
   if (result.state) {
-    for(Paper subject in result.result[0]) {
+    for (Paper subject in result.result[0]) {
       subjectList.add(subject.name);
     }
     subjectList.sort();
     return Result(state: true, message: "", result: subjectList.toString());
   } else {
-    if(retry <= 0) {
+    if (retry <= 0) {
       return Result(state: false, message: result.message);
     }
     return fetchSubjectList(retry: retry - 1, examId: examId);
   }
 }
-Future<Result> checkExams({int retry = 0, bool firstRun = false, Result? errMsg}) async {
+
+Future<Result> checkExams(
+    {int retry = 0, bool firstRun = false, Result? errMsg}) async {
   if (retry <= -1) {
     logger.e(errMsg);
     return errMsg ?? Result(state: false, message: "");
@@ -120,7 +125,7 @@ Future<Result> checkExams({int retry = 0, bool firstRun = false, Result? errMsg}
   if (!user.isLoggedIn()) {
     try {
       await login(force: false);
-    } catch(_) {}
+    } catch (_) {}
   }
   Result result = Result(state: false, message: "");
   try {
@@ -130,7 +135,7 @@ Future<Result> checkExams({int retry = 0, bool firstRun = false, Result? errMsg}
   }
   if (result.state) {
     var trackExamCount = 0;
-    for(Exam examRemote in result.result) {
+    for (Exam examRemote in result.result) {
       logger.d("checkExams examRemote : $examRemote");
       List<Map<String, dynamic>> examLocal = await database.query(
         tableName,
@@ -139,39 +144,67 @@ Future<Result> checkExams({int retry = 0, bool firstRun = false, Result? errMsg}
       );
       logger.d("checkExams examLocal ($database): $examLocal");
       bool newExam = false;
-      if(examLocal.isEmpty) { //新的考试
-        await database.insert(tableName, {"id": examRemote.uuid, "subjectList": "[]", "isFinal": "false", "finalTime": -1});
+      if (examLocal.isEmpty) {
+        //新的考试
+        await database.insert(tableName, {
+          "id": examRemote.uuid,
+          "subjectList": "[]",
+          "isFinal": "false",
+          "finalTime": -1
+        });
         examLocal = await database.query(
           tableName,
           where: 'id = ?',
           whereArgs: [examRemote.uuid],
         );
-        if(firstRun == false) {
-          channel.invokeMethod("sendNotification",{"text": "考试 ${examRemote.examName} 发布了"});
+        if (firstRun == false) {
+          channel.invokeMethod(
+              "sendNotification", {"text": "考试 ${examRemote.examName} 发布了"});
         }
         newExam = true;
       }
-      logger.d("checkExams DelayTime: ${DateTime.now().microsecondsSinceEpoch - examLocal[0]["finalTime"]}");
-      if(examLocal[0]["isFinal"] == "false" || (DateTime.now().microsecondsSinceEpoch - examLocal[0]["finalTime"]) < delayFinalTime) { //本地未标记为关闭的考试
-        if(trackExamCount > maxExamCount) {
+      logger.d(
+          "checkExams DelayTime: ${DateTime.now().microsecondsSinceEpoch - examLocal[0]["finalTime"]}");
+      if (examLocal[0]["isFinal"] == "false" ||
+          (DateTime.now().microsecondsSinceEpoch - examLocal[0]["finalTime"]) <
+              delayFinalTime) {
+        //本地未标记为关闭的考试
+        if (trackExamCount > maxExamCount) {
           //LocalLogger.write("checkExams $trackExamCount 个", isError: false);
           return Result(state: true, message: "Warning：活动考试数量超过限制");
         }
-        Result remoteSubjectList = await fetchSubjectList(retry: 0, examId: examRemote.uuid);
+        Result remoteSubjectList =
+            await fetchSubjectList(retry: 0, examId: examRemote.uuid);
         trackExamCount += 1;
-        if(remoteSubjectList.state) {
-          if(remoteSubjectList.result != examLocal[0]["subjectList"] && !newExam && firstRun == false) { //科目变动
-            channel.invokeMethod("sendNotification",{"text": "考试 ${examRemote.examName} 发布了新的科目"});
+        if (remoteSubjectList.state) {
+          if (remoteSubjectList.result != examLocal[0]["subjectList"] &&
+              !newExam &&
+              firstRun == false) {
+            //科目变动
+            channel.invokeMethod("sendNotification",
+                {"text": "考试 ${examRemote.examName} 发布了新的科目"});
           }
-          if(remoteSubjectList.result != examLocal[0]["subjectList"] || examRemote.isFinal) { //科目变动或远程变更为已关闭
+          if (remoteSubjectList.result != examLocal[0]["subjectList"] ||
+              examRemote.isFinal) {
+            //科目变动或远程变更为已关闭
             var finalTime = examLocal[0]["finalTime"];
-            if(examRemote.isFinal && firstRun == false && finalTime == -1) {
-                finalTime = DateTime.now().microsecondsSinceEpoch;
+            if (examRemote.isFinal && firstRun == false && finalTime == -1) {
+              finalTime = DateTime.now().microsecondsSinceEpoch;
             }
-            await database.update(tableName, {"id": examRemote.uuid, "subjectList": remoteSubjectList.result, "isFinal": examRemote.isFinal.toString(), "finalTime": finalTime}, where: 'id = ?', whereArgs: [examRemote.uuid]);
+            await database.update(
+                tableName,
+                {
+                  "id": examRemote.uuid,
+                  "subjectList": remoteSubjectList.result,
+                  "isFinal": examRemote.isFinal.toString(),
+                  "finalTime": finalTime
+                },
+                where: 'id = ?',
+                whereArgs: [examRemote.uuid]);
           }
         } else if (firstRun) {
-          return checkExams(retry: retry - 1, firstRun: firstRun, errMsg: remoteSubjectList);
+          return checkExams(
+              retry: retry - 1, firstRun: firstRun, errMsg: remoteSubjectList);
         } else {
           logger.e(remoteSubjectList);
         }
@@ -184,7 +217,7 @@ Future<Result> checkExams({int retry = 0, bool firstRun = false, Result? errMsg}
     try {
       //LocalLogger.write("examCheck failed $result", isError: true);
       //if(result.message.contains("oken")) {
-    } catch(_) {}
+    } catch (_) {}
     return checkExams(retry: retry - 1, firstRun: firstRun, errMsg: result);
   }
 }
@@ -195,10 +228,12 @@ Future<void> serviceMain() async {
   await initDataBase();
   Timer? checkExamsTimer;
   channel.setMethodCallHandler((call) async {
-    if(call.method == "changeServiceStatus") {
-      if(call.arguments["checkExams"]) {
+    if (call.method == "changeServiceStatus") {
+      if (call.arguments["checkExams"]) {
         bool isLock = false;
-        checkExamsTimer = Timer.periodic(Duration(minutes: call.arguments["checkExamsInterval"]), (timer) async {
+        checkExamsTimer = Timer.periodic(
+            Duration(minutes: call.arguments["checkExamsInterval"]),
+            (timer) async {
           if (isLock) return;
           isLock = true;
           try {
@@ -244,15 +279,44 @@ Future<void> serviceMain() async {
             }
           case "fetchPaper":
             {
-              Result result = await user.fetchPaper(call.arguments["examId"]);
-              if (result.state) {
+              Future normalPaper = user.fetchPaper(call.arguments["examId"]);
+              Future<Result> previewPaper = Future<Result>(() async {
+                return Result(state: true, result: [[], []], message: '');
+              });
+              if (BaseSingleton.singleton.sharedPreferences
+                      .getBool("showMoreSubject") ==
+                  true) {
+                bool previewScore = BaseSingleton.singleton.sharedPreferences
+                        .getBool('tryPreviewScore') ==
+                    true;
+                previewPaper = user.fetchPreviewPaper(call.arguments["examId"],
+                    requestScore: previewScore);
+              }
+              List<Paper> papers = [];
+              List result = await Future.wait([normalPaper, previewPaper]);
+              for (Result resultElement in result) {
+                if (resultElement.state) {
+                  for (Paper paperElement in resultElement.result[0]) {
+                    Paper? currentSamePaper = papers.firstWhereOrNull(
+                        (item) => item.paperId == paperElement.paperId);
+                    if (currentSamePaper != null) {
+                      if (currentSamePaper.source != Source.common) {
+                        int index = papers.indexOf(currentSamePaper);
+                        papers.remove(currentSamePaper);
+                        papers.insert(index, paperElement);
+                      }
+                    } else {
+                      papers.add(paperElement);
+                    }
+                  }
+                }
+              }
+              if (result[0].state) {
                 List<Map<String, dynamic>> paperJsonList =
-                    (result.result[0] as List<Paper>)
-                        .map((paper) => paper.toMap())
-                        .toList();
+                    papers.map((paper) => paper.toMap()).toList();
                 return Future.value(jsonEncode(paperJsonList));
               } else {
-                throw Exception(result.message);
+                throw Exception(result[0].message);
               }
             }
           case "fetchPaperPercentile":
@@ -262,7 +326,8 @@ Future<void> serviceMain() async {
                   call.arguments["paperId"],
                   double.parse(call.arguments["score"]));
               if (result.state) {
-                return Future.value(jsonEncode(result.result.toMap(extraMap: {"paperId" : call.arguments["paperId"]})));
+                return Future.value(jsonEncode(result.result
+                    .toMap(extraMap: {"paperId": call.arguments["paperId"]})));
               } else {
                 throw Exception(result.message);
               }
@@ -291,14 +356,29 @@ Future<void> serviceMain() async {
                   for (var subTopicElement in element["subTopic"]) {
                     try {
                       var subTeacherName = "";
-                      for (var name in subTopicElement["teacherMarkingRecords"]) {
+                      for (var name
+                          in subTopicElement["teacherMarkingRecords"]) {
                         subTeacherName += (name["teacherName"] + " ");
                       }
                       subTopicElement["subTeacherName"] = subTeacherName;
                       subTopicElement.remove("teacherMarkingRecords");
-                    } catch(_) {}
+                    } catch (_) {}
                   }
                 }
+                return Future.value(jsonEncode(jsonList));
+              } else {
+                throw Exception(result.message);
+              }
+            }
+          case "fetchMarkingProgress":
+            {
+              Result result =
+                  await user.fetchMarkingProgress(call.arguments["paperId"]);
+              if (result.state) {
+                List<Map<String, dynamic>> jsonList =
+                    (result.result as List<QuestionProgress>)
+                        .map((element) => element.toMap())
+                        .toList();
                 return Future.value(jsonEncode(jsonList));
               } else {
                 throw Exception(result.message);
@@ -307,7 +387,7 @@ Future<void> serviceMain() async {
         }
       } catch (e) {
         retry -= 1;
-        //LocalLogger.write("wearMethod failed $e", isError: true); 
+        //LocalLogger.write("wearMethod failed $e", isError: true);
         //await login(force: true);
         if (retry <= 0) {
           rethrow;

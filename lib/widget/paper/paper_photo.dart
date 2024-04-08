@@ -120,7 +120,7 @@ class _PaperPhotoState extends State<PaperPhoto>
                   SizedBox(width: 20),
                   Icon(Icons.warning_amber_rounded,
                       size: 16, color: Colors.red),
-                  Text(" 判卷可能未完成，不代表最终成绩")
+                  Text(" 判卷未完成，不代表最终成绩，可能误标零分")
                 ])),
           Expanded(
               child: Visibility(

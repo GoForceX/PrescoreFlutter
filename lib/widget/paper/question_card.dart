@@ -6,7 +6,10 @@ import '../component.dart';
 
 class QuestionCard extends StatefulWidget {
   final Question question;
-  const QuestionCard({Key? key, required this.question}) : super(key: key);
+  final bool nonFinalAlert;
+  const QuestionCard(
+      {Key? key, required this.question, this.nonFinalAlert = false})
+      : super(key: key);
   @override
   QuestionCardState createState() => QuestionCardState();
 }
@@ -26,7 +29,8 @@ class QuestionCardState extends State<QuestionCard>
     super.initState();
     _animationController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 150));
-    animationCurve = CurvedAnimation(parent: _animationController, curve: Curves.easeOut);
+    animationCurve =
+        CurvedAnimation(parent: _animationController, curve: Curves.easeOut);
     for (var subQuestion in widget.question.subTopic) {
       if (subQuestion.teacherMarkingRecords.length > 1) {
         complexMarking = true;
@@ -162,6 +166,11 @@ class QuestionCardState extends State<QuestionCard>
                 if (complexMarking)
                   const Row(
                       children: [SizedBox(width: 8), TagCard(text: "多判")]),
+                if ((!widget.question.markingContentsExist &&
+                    widget.question.isSubjective &&
+                    widget.nonFinalAlert))
+                  const Row(
+                      children: [SizedBox(width: 8), TagCard(text: "未云判卷")]),
               ],
             ),
             Container(
@@ -185,7 +194,14 @@ class QuestionCardState extends State<QuestionCard>
                       ),
                       Text(
                         "${widget.question.userScore}",
-                        style: const TextStyle(fontSize: 48),
+                        style: TextStyle(
+                            fontSize: 48,
+                            decoration:
+                                (!widget.question.markingContentsExist &&
+                                        widget.question.isSubjective &&
+                                        widget.nonFinalAlert)
+                                    ? TextDecoration.lineThrough
+                                    : TextDecoration.none),
                       ),
                       const SizedBox(
                         width: 16,

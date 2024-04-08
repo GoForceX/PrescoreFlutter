@@ -50,7 +50,7 @@ class DetailCard extends StatelessWidget {
                           ],
                         ),
                         const Text(
-                          "无分数信息",
+                          "无总分信息",
                           style: TextStyle(fontSize: 42),
                         ),
                       ],

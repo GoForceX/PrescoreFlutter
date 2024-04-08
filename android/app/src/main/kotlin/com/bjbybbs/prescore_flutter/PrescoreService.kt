@@ -150,7 +150,7 @@ class PrescoreService : Service() {
                                         },
                                         fun(errorCode: String, errorMessage: String?, _: Any?) {
                                             wearEngine.sendMessage("Error: $errorCode, $errorMessage")
-                                            Log.e(tag,"Error: $errorCode, $errorMessage")
+                                            Log.e(tag,"${dataSplit[0]} Error: $errorCode, $errorMessage")
                                         }
                                     )
                                 }

@@ -8,7 +8,12 @@ import '../../model/paper_model.dart';
 class PaperDetail extends StatefulWidget {
   final String examId;
   final String paperId;
-  const PaperDetail({Key? key, required this.examId, required this.paperId})
+  final bool nonFinalAlert;
+  const PaperDetail(
+      {Key? key,
+      required this.examId,
+      required this.paperId,
+      this.nonFinalAlert = false})
       : super(key: key);
 
   @override
@@ -54,6 +59,9 @@ class _PaperDetailState extends State<PaperDetail>
           Provider.of<PaperModel>(context, listen: false)
               .setPaperData(value.result);
           Provider.of<PaperModel>(context, listen: false).setDataLoaded(true);
+        } else {
+          Provider.of<PaperModel>(context, listen: false)
+              .setErrMsg(value.message);
         }
       });
     }
@@ -66,6 +74,9 @@ class _PaperDetailState extends State<PaperDetail>
     return Consumer<PaperModel>(
       builder:
           (BuildContext consumerContext, PaperModel examModel, Widget? child) {
+        if (examModel.errMsg != null) {
+          return Center(child: Text(examModel.errMsg ?? ""));
+        }
         if (examModel.paperData == null) {
           return Center(
               child: Container(
@@ -74,13 +85,18 @@ class _PaperDetailState extends State<PaperDetail>
         }
         List<Widget> questionCards = [];
         List<Widget> questionIndicators = [];
-
+        bool nonFinalAlert = widget.nonFinalAlert;
         examModel.paperData?.questions.forEach((element) {
           if (element.isSelected) {
-            questionCards.add(QuestionCard(question: element));
+            questionCards.add(
+                QuestionCard(question: element, nonFinalAlert: nonFinalAlert));
 
             Color indicatorColor = Colors.grey;
-            if ((element).userScore / (element).fullScore == 1) {
+            if (!(element).markingContentsExist &&
+                (element).isSubjective &&
+                nonFinalAlert) {
+              indicatorColor = Colors.grey;
+            } else if ((element).userScore / (element).fullScore == 1) {
               indicatorColor = Colors.lightGreen;
             } else if ((element).userScore / (element).fullScore > 0) {
               indicatorColor = Colors.yellowAccent;
@@ -129,7 +145,16 @@ class _PaperDetailState extends State<PaperDetail>
                 children: questionIndicators,
               ),
               SliverList(
-                delegate: SliverChildListDelegate(questionCards),
+                delegate: SliverChildListDelegate([
+                  if (widget.nonFinalAlert)
+                   const Row(children: [
+                          SizedBox(width: 20),
+                          Icon(Icons.warning_amber_rounded,
+                              size: 16, color: Colors.red),
+                          Text(" 判卷未完成，不代表最终成绩，可能误标零分")
+                        ]),
+                  ...questionCards
+                ]),
               ),
             ],
             controller: scrollController,

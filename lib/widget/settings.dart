@@ -449,8 +449,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               if (BaseSingleton.singleton.sharedPreferences
                           .getBool("developMode") ==
-                      true &&
-                  !kReleaseMode)
+                      true)
                 SettingsTile.switchTile(
                   onToggle: (value) {
                     BaseSingleton.singleton.sharedPreferences
@@ -460,8 +459,8 @@ class _SettingsPageState extends State<SettingsPage> {
                   initialValue: BaseSingleton.singleton.sharedPreferences
                       .getBool('tryPreviewScore'),
                   leading: const Icon(Icons.preview),
-                  title: const Text('提前查分(Beta)'),
-                  description: const Text('提前查询正在阅卷中的分数，不代表最终，可能导致加载缓慢'),
+                  title: const Text('提前查分'),
+                  description: const Text('提前查询正在阅卷中的分数，不代表最终成绩'),
                 ),
               /*SettingsTile.switchTile(
                 onToggle: (value) {

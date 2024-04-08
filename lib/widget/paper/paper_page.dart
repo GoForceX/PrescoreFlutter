@@ -87,6 +87,10 @@ class _PaperPageState extends State<PaperPage> {
                   child: PaperPhoto(
                       examId: widget.examId, paperId: widget.paperId, showNonFinalAlert: true),
                 ),
+                Center(
+                  child: PaperDetail(
+                      examId: widget.examId, paperId: widget.paperId, nonFinalAlert: true),
+                )
               ],
               onPageChanged: (value) {
                 setState(() {
@@ -105,11 +109,14 @@ class _PaperPageState extends State<PaperPage> {
                   label: '判卷进度',
                 ),
                 NavigationDestination(
-                  //TODO
                   icon: Icon(Icons.photo_album_outlined),
                   selectedIcon: Icon(Icons.photo_album),
                   label: '原卷',
-                )
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.list_alt_rounded),
+                  label: '小分',
+                ),
               ],
               selectedIndex: _selectedIndex,
               onDestinationSelected: (int index) {

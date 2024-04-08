@@ -165,6 +165,12 @@ class Paper {
   }
 
   Map<String, dynamic> toMap() {
+    String sourceStr = "";
+    if (source == Source.common) {
+      sourceStr = "common";
+    } else if (source == Source.preview) {
+      sourceStr = "preview";
+    }
     return {
       "examId": examId,
       "paperId": paperId,
@@ -172,6 +178,7 @@ class Paper {
       "subjectId": subjectId,
       "userScore": userScore,
       "fullScore": fullScore,
+      "source": sourceStr,
     };
   }
 }
@@ -189,6 +196,14 @@ class QuestionProgress {
   @override
   String toString() {
     return 'QuestionProgress{dispTitle: $dispTitle, allCount: $allCount, realCompleteCount: $realCompleteCount}';
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      "dispTitle": dispTitle,
+      "allCount": allCount,
+      "realCompleteCount": realCompleteCount
+    };
   }
 }
 
@@ -292,6 +307,7 @@ class Question {
   double fullScore;
   bool isSelected;
   bool isSubjective;
+  bool markingContentsExist;
   String? selectedAnswer;
   List<QuestionSubTopic> subTopic;
   double? classScoreRate;
@@ -305,6 +321,7 @@ class Question {
     required this.isSelected,
     required this.isSubjective,
     required this.subTopic,
+    required this.markingContentsExist,
     this.selectedAnswer,
     this.classScoreRate,
     required this.stepRecords,

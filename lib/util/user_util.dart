@@ -715,53 +715,63 @@ class User {
     }
 
     List<Paper> papers = [];
+    List<Future<Paper?>> fetchOperations = [];
     for (var subject in jsonDecode(json["message"])["newAdminExamSubjectDTO"]) {
-      double userScore = 0;
-      double standardScore = 0;
-      try {
-        if (requestScore) {
-          logger.d(
-              "fetchPreviewPaper $zhixueTranscriptUrl?subjectCode=${subject["subjectCode"]}&examId=${subject["examId"]}&paperId=${subject["markingPaperId"]}&token=${session?.xToken}");
-          Response response = await client.get(
-              "$zhixueTranscriptUrl?subjectCode=${subject["subjectCode"]}&examId=${subject["examId"]}&paperId=${subject["markingPaperId"]}&token=${session?.xToken}");
-          dom.Document document = parse(response.data);
-          List<dom.Element> elements = document.getElementsByTagName('script');
-          String transcriptData = "";
-          for (var element in elements) {
-            transcriptData = "$transcriptData${element.innerHtml}\n";
-          }
-          RegExp regExp = RegExp(r'var hisQueParseDetail = (.*);');
-          if (regExp.hasMatch(transcriptData)) {
-            transcriptData = regExp.firstMatch(transcriptData)!.group(1)!;
-            logger.d("transcriptData: $transcriptData");
-            List<dynamic> transcriptDataDynamic = jsonDecode(transcriptData);
-            for (var section in transcriptDataDynamic) {
-              List<dynamic> topicAnalysisDTOs = section["topicAnalysisDTOs"];
-              for (var data in topicAnalysisDTOs) {
-                userScore += data["score"] as double;
-                standardScore += data["standardScore"] as double;
+        Future<Paper?> fetchOperation() async {
+          double userScore = 0;
+          double standardScore = 0;
+          try {
+            if (requestScore) {
+              logger.d(
+                  "fetchPreviewPaper $zhixueTranscriptUrl?subjectCode=${subject["subjectCode"]}&examId=${subject["examId"]}&paperId=${subject["markingPaperId"]}&token=${session?.xToken}");
+              Response response = await client.get(
+                  "$zhixueTranscriptUrl?subjectCode=${subject["subjectCode"]}&examId=${subject["examId"]}&paperId=${subject["markingPaperId"]}&token=${session?.xToken}");
+              dom.Document document = parse(response.data);
+              List<dom.Element> elements = document.getElementsByTagName('script');
+              String transcriptData = "";
+              for (var element in elements) {
+                transcriptData = "$transcriptData${element.innerHtml}\n";
+              }
+              RegExp regExp = RegExp(r'var hisQueParseDetail = (.*);');
+              if (regExp.hasMatch(transcriptData)) {
+                transcriptData = regExp.firstMatch(transcriptData)!.group(1)!;
+                logger.d("transcriptData: $transcriptData");
+                List<dynamic> transcriptDataDynamic = jsonDecode(transcriptData);
+                for (var section in transcriptDataDynamic) {
+                  List<dynamic> topicAnalysisDTOs = section["topicAnalysisDTOs"];
+                  for (var data in topicAnalysisDTOs) {
+                    userScore += data["score"] as double;
+                    standardScore += data["standardScore"] as double;
+                  }
+                }
               }
             }
-          }
+          } catch (_) {}
+          try {
+            return Paper(
+                examId: subject["examId"],
+                paperId: subject["markingPaperId"],
+                name: subject["subjectName"],
+                subjectId: subject["subjectCode"],
+                userScore: userScore,
+                fullScore: standardScore,
+                source: Source.preview,
+                paperStatus: PaperStatus.unknown
+                //subject["markingStatus"]
+                );
+          } catch (_) {}
+          return null;
         }
-      } catch (_) {}
-      if (standardScore == 0) {
-        //continue;
-      }
-      try {
-        papers.add(Paper(
-            examId: subject["examId"],
-            paperId: subject["markingPaperId"],
-            name: subject["subjectName"],
-            subjectId: subject["subjectCode"],
-            userScore: userScore,
-            fullScore: standardScore,
-            source: Source.preview,
-            paperStatus: PaperStatus.unknown
-            //subject["markingStatus"]
-            ));
-      } catch (_) {}
+        fetchOperations.add(fetchOperation());
     }
+    await Future.wait(fetchOperations).then((result) {
+      for (Paper? paper in result) {
+        if (paper != null) {
+          papers.add(paper);
+        }
+        
+      }
+    });
     logger.d("fetchPreviewPaper: $papers");
     return Result(state: true, message: "", result: [papers, []]);
   }
@@ -1168,6 +1178,7 @@ class User {
         isSubjective: isSubjective,
         selectedAnswer: selectedAnswer,
         stepRecords: stepRecords,
+        markingContentsExist: element["markingContents"] != null,
       ));
     }
 
@@ -1715,7 +1726,7 @@ class User {
           message: "成功哒！",
           result: [result["version"], result["percent"]]);
     } else {
-      return Result(state: false, message: result["code"]);
+      return Result(state: false, message: result["code"].toString());
     }
   }
 
@@ -1797,7 +1808,7 @@ class User {
     Map<String, dynamic> result = jsonDecode(response.data);
 
     logger.d("fetchPaperClassInfo: end, $result");
-    if (result["code"] == 0) {
+    if (result["code"] == 0 && result["data"] != null) {
       List<ClassInfo> classesInfo = [];
       for (Map<String, dynamic> item in result["data"]) {
         ClassInfo classInfo = ClassInfo(
