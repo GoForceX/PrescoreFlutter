@@ -20,7 +20,7 @@ jobs:
 
       # Build and sign the ipa using a single flutter command
       - name: Building IPA
-        run: flutter build ipa --release
+        run: flutter build ipa --release --no-codesign
           
       # Collect the file and upload as artifact         
       - name: collect ipa artifacts
