@@ -30,7 +30,7 @@ jobs:
       - run: mv Runner.app/ Payload
         working-directory: build/ios/iphoneos
 
-      - run: zip -qq -r -9 PrescoreFLutter.ipa Payload
+      - run: zip -qq -r -9 PrescoreFlutter.ipa Payload
         working-directory: build/ios/iphoneos
           
       # Collect the file and upload as artifact         
@@ -40,4 +40,11 @@ jobs:
          name: release-ipa
          # Path to the release files
          path: build/ios/iphoneos/*.ipa
-         
+
+      - name: Upload R2 IPA
+        run: AWS_ACCESS_KEY_ID=${{ secrets.R2_SECRET_ID }} AWS_SECRET_ACCESS_KEY=${{ secrets.R2_SECRET_KEY }} aws s3 cp PrescoreFlutter.ipa s3://matrix-app-dist/actions/prescore_flutter_ipa/${{ github.run_number }}/ --acl public-read --no-progress --endpoint-url https://62a009fecd6c4069e4a928d203e3e493.r2.cloudflarestorage.com/
+        working-directory: build/ios/iphoneos
+
+      - name: Upload COS IPA
+        run: AWS_ACCESS_KEY_ID=${{ secrets.COS_SECRET_ID }} AWS_SECRET_ACCESS_KEY=${{ secrets.COS_SECRET_KEY }} aws s3 cp PrescoreFlutter.ipa s3://app-dist-1307054264/actions/prescore_flutter_ipa/${{ github.run_number }}/ --acl public-read --no-progress --endpoint-url https://cos.accelerate.myqcloud.com/
+        working-directory: build/ios/iphoneos
