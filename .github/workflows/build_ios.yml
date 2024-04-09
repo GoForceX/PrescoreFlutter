@@ -1,6 +1,6 @@
 # From https://medium.com/team-rockstars-it/the-easiest-way-to-build-a-flutter-ios-app-using-github-actions-plus-a-key-takeaway-for-developers-48cf2ad7c72a
 name: "Build IPA Package"
-on: workflow_dispatch
+on: [push, pull_request]
     
 jobs:
   build:
@@ -18,15 +18,19 @@ jobs:
       # Install your project's dependencies
       - run: flutter pub get
 
-      # Build and sign the ipa using a single flutter command
-      - name: Building IPA
-        run: flutter build ipa --release --no-codesign
+      - run: pod repo update
+        working-directory: ios
+      
+      - name: Flutter build
+        run: flutter build ios --release --no-codesign
 
-      - name: Package IPA file
-        run: |
-          mkdir Payload 
-          mv Runner.app/ Payload
-          zip -qq -r -9 PrescoreFlutter.ipa Payload
+      - run: mkdir Payload
+        working-directory: build/ios/iphoneos
+
+      - run: mv Runner.app/ Payload
+        working-directory: build/ios/iphoneos
+
+      - run: zip -qq -r -9 PrescoreFLutter.ipa Payload
         working-directory: build/ios/iphoneos
           
       # Collect the file and upload as artifact         
