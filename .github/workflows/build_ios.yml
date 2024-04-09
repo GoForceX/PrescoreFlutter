@@ -21,6 +21,13 @@ jobs:
       # Build and sign the ipa using a single flutter command
       - name: Building IPA
         run: flutter build ipa --release --no-codesign
+
+      - name: Package IPA file
+        run: |
+          mkdir Payload 
+          mv Runner.app/ Payload
+          zip -qq -r -9 PrescoreFlutter.ipa Payload
+        working-directory: build/ios/iphoneos
           
       # Collect the file and upload as artifact         
       - name: collect ipa artifacts
@@ -28,5 +35,5 @@ jobs:
         with:
          name: release-ipa
          # Path to the release files
-         path: build/ios/ipa/*.ipa
+         path: build/ios/iphoneos/*.ipa
          
