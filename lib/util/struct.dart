@@ -133,18 +133,18 @@ enum Source {
   preview,
 }
 
-enum PaperStatus { unknown }
+enum MarkingStatus { unknown, m4CompleteMarking, m3marking }
 
 class Paper {
   String examId;
   String paperId;
   String name;
   String subjectId;
-  double userScore;
-  double fullScore;
+  double? userScore;
+  double? fullScore;
   double? assignScore;
   double? diagnosticScore;
-  PaperStatus paperStatus = PaperStatus.unknown;
+  MarkingStatus markingStatus = MarkingStatus.unknown;
   Source source;
 
   Paper(
@@ -157,7 +157,7 @@ class Paper {
       required this.source,
       this.assignScore,
       this.diagnosticScore,
-      this.paperStatus = PaperStatus.unknown});
+      this.markingStatus = MarkingStatus.unknown});
 
   @override
   String toString() {

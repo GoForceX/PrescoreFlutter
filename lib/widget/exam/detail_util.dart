@@ -92,7 +92,7 @@ void fetchData(context, examId) {
         .user
         .fetchPreviewPaper(examId, requestScore: previewScore)
         .then((value) {
-      if (value.state) {
+      if (value.state && context.mounted) {
         Provider.of<ExamModel>(context, listen: false)
             .addPapers(value.result![0]);
         Provider.of<ExamModel>(context, listen: false)
@@ -105,7 +105,7 @@ void fetchData(context, examId) {
         .user
         .fetchPaper(examId)
         .then((value) {
-      if (value.state) {
+      if (value.state && context.mounted) {
         Provider.of<ExamModel>(context, listen: false)
             .addPapers(value.result![0]);
         Provider.of<ExamModel>(context, listen: false)

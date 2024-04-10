@@ -1,6 +1,8 @@
+//import 'package:animations/animations.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+//import 'package:prescore_flutter/widget/exam/exam.dart';
 
 import '../../main.gr.dart';
 import '../../util/user_util.dart';
@@ -118,5 +120,36 @@ class ExamCard extends StatelessWidget {
           },
           child: cardMain),
     );
+
+    /*return OpenContainer(
+        openColor: Colors.transparent,
+        closedColor: Colors.transparent,
+        closedElevation: 0,
+        openElevation: 0,
+        transitionDuration: const Duration(milliseconds: 200),
+        transitionType: ContainerTransitionType.fade,
+        openBuilder: (BuildContext buildContext, __) {
+          return ExamPage(
+            uuid: uuid,
+            user: user,
+          );
+        },
+        closedBuilder: (BuildContext buildContext, openContainer) {
+          return Card(
+            elevation: 2,
+            margin: const EdgeInsets.all(8.0),
+            shape: RoundedRectangleBorder(
+              side: BorderSide(
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
+              borderRadius: const BorderRadius.all(Radius.circular(12)),
+            ),
+            child: InkWell(
+                borderRadius:BorderRadius.circular(12.0),
+                onTap: openContainer,
+                child: cardMain),
+          );
+        },
+      );*/
   }
 }

@@ -402,8 +402,8 @@ class _SettingsPageState extends State<SettingsPage> {
                 initialValue: BaseSingleton.singleton.sharedPreferences
                     .getBool('defaultShowAllSubject'),
                 leading: const Icon(Icons.visibility),
-                title: const Text('默认显示所有科目'),
-                description: const Text('在单科查看页默认全选'),
+                title: const Text('默认展开所有科目'),
+                description: const Text('在单科查看页默认展开所有科目'),
               ),
               SettingsTile.switchTile(
                 onToggle: (value) {

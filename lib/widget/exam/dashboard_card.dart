@@ -35,7 +35,7 @@ class DashboardCard extends StatelessWidget {
           if (element.source != Source.common) {
             continue;
           }
-          userScore += element.userScore;
+          userScore += element.userScore ?? 0;
         }
 
         double assignScore = 0;
@@ -47,7 +47,7 @@ class DashboardCard extends StatelessWidget {
           if (element.assignScore == null) {
             noAssignCount += 1;
           }
-          assignScore += element.assignScore ?? element.userScore;
+          assignScore += element.assignScore ?? element.userScore ?? 0;
         }
 
         double fullScore = 0;
@@ -55,7 +55,7 @@ class DashboardCard extends StatelessWidget {
           if (element.source != Source.common) {
             continue;
           }
-          fullScore += element.fullScore;
+          fullScore += element.fullScore ?? 0;
         }
         if (noAssignCount != examModel.getLength(Source.common)) {
           Widget chart = DashboardInfo(
@@ -97,7 +97,7 @@ class DashboardCard extends StatelessWidget {
           if (element.source != Source.common) {
             continue;
           }
-          userScore += element.userScore;
+          userScore += element.userScore ?? 0;
         }
 
         return FutureBuilder(
