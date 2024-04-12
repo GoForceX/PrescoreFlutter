@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
@@ -6,6 +8,7 @@ import '../../util/struct.dart';
 
 class DashboardRanking extends StatelessWidget {
   final List<PaperDiagnosis> diagnoses;
+
   const DashboardRanking({Key? key, required this.diagnoses}) : super(key: key);
 
   @override
@@ -36,16 +39,26 @@ class DashboardRanking extends StatelessWidget {
                         .map((item) => BarChartGroupData(
                               x: item.key,
                               barRods: [
+                                // From https://github.com/qianjunakasumi/ZhiXueRank/issues/6#issuecomment-1840129499
                                 BarChartRodData(
-                                  toY: (item.value.diagnosticScore /
-                                          100 *
-                                          classCount)
-                                      .roundToDouble(),
+                                  toY: min(
+                                      max(
+                                          (item.value.diagnosticScore /
+                                                  100 *
+                                                  classCount)
+                                              .ceilToDouble(),
+                                          1),
+                                      classCount.toDouble()),
                                   gradient: LinearGradient(
-                                    begin: Alignment.bottomCenter,
-                                    end: Alignment.topCenter,
-                                    colors: [Theme.of(context).colorScheme.primary, Theme.of(context).colorScheme.primary.withOpacity(0.6)]
-                                  ),
+                                      begin: Alignment.bottomCenter,
+                                      end: Alignment.topCenter,
+                                      colors: [
+                                        Theme.of(context).colorScheme.primary,
+                                        Theme.of(context)
+                                            .colorScheme
+                                            .primary
+                                            .withOpacity(0.6)
+                                      ]),
                                 )
                               ],
                               showingTooltipIndicators: [0],
