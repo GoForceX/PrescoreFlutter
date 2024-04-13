@@ -15,11 +15,11 @@ import 'package:collection/collection.dart';
 void refreshService() {
   //供主程序调用以刷新服务状态
   var sharedPreferences = BaseSingleton.singleton.sharedPreferences;
-  var channelMainActitvy = const MethodChannel("MainActivity");
+  var channelMainActivity = const MethodChannel("MainActivity");
   if (sharedPreferences.getBool("localSessionExist") ?? false) {
     if (sharedPreferences.getBool("enableWearService")! ||
         sharedPreferences.getBool("checkExams")!) {
-      channelMainActitvy.invokeMethod("startService", {
+      channelMainActivity.invokeMethod("startService", {
         "checkExams": sharedPreferences.getBool("checkExams") ?? false,
         "checkExamsInterval":
             sharedPreferences.getInt("checkExamsInterval") ?? 6,
@@ -27,12 +27,13 @@ void refreshService() {
             sharedPreferences.getString("selectedWearDeviceUUID") ?? "",
         "enableWearService":
             sharedPreferences.getBool("enableWearService") ?? "",
+        "showMoreSubject": sharedPreferences.getBool("showMoreSubject") ?? "",
       });
     } else {
-      channelMainActitvy.invokeMethod('stopService');
+      channelMainActivity.invokeMethod('stopService');
     }
   } else {
-    channelMainActitvy.invokeMethod('stopService');
+    channelMainActivity.invokeMethod('stopService');
   }
 }
 
@@ -42,6 +43,7 @@ late Database database;
 const String tableName = "ExamList";
 const delayFinalTime = 10e6 * 60 * 60 * 24 * 5;
 const maxExamCount = 10;
+bool showMoreSubject = false;
 
 Logger logger = Logger(
     printer: PrettyPrinter(
@@ -100,11 +102,21 @@ Future<void> login({bool force = true}) async {
 
 Future<Result<String>> fetchSubjectList(
     {int retry = 0, String examId = ""}) async {
-  Result result = await user.fetchPaper(examId);
+  late Result result;
+  if (showMoreSubject) {
+    result = await user.fetchPreviewPaper(examId, requestScore: false);
+  } else {
+    result = await user.fetchPaper(examId);
+  }
+
   List subjectList = [];
   if (result.state) {
     for (Paper subject in result.result[0]) {
-      subjectList.add(subject.name);
+      if (!showMoreSubject) {
+        subjectList.add(subject.name);
+      } else if (subject.markingStatus == MarkingStatus.m4CompleteMarking) {
+        subjectList.add(subject.name);
+      }
     }
     subjectList.sort();
     return Result(state: true, message: "", result: subjectList.toString());
@@ -229,6 +241,7 @@ Future<void> serviceMain() async {
   Timer? checkExamsTimer;
   channel.setMethodCallHandler((call) async {
     if (call.method == "changeServiceStatus") {
+      showMoreSubject = call.arguments["showMoreSubject"];
       if (call.arguments["checkExams"]) {
         bool isLock = false;
         checkExamsTimer = Timer.periodic(

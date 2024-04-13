@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:auto_route/auto_route.dart';
+import 'package:dynamic_color/dynamic_color.dart';
+import 'package:material_color_utilities/palettes/core_palette.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -18,6 +20,23 @@ import '../main.dart';
 import 'package:prescore_flutter/service.dart' as service;
 import 'package:prescore_flutter/util/struct.dart';
 import 'drawer.dart';
+
+Future<bool> dynamicColorAvailable() async {
+  try {
+    CorePalette? corePalette = await DynamicColorPlugin.getCorePalette();
+    if (corePalette != null) {
+      return true;
+    }
+  } catch (_) {}
+
+  try {
+    final Color? accentColor = await DynamicColorPlugin.getAccentColor();
+    if (accentColor != null) {
+      return true;
+    }
+  } catch (_) {}
+  return false;
+}
 
 class SelectColorDialog extends StatefulWidget {
   const SelectColorDialog({super.key});
@@ -352,6 +371,7 @@ class _SettingsPageState extends State<SettingsPage> {
     });
     super.initState();
   }
+
   int lastPress = 0;
   int pressCount = 0;
   @override
@@ -433,12 +453,17 @@ class _SettingsPageState extends State<SettingsPage> {
                   description: const Text('在分数细则页显示判卷人'),
                 ),
               if (BaseSingleton.singleton.sharedPreferences
-                          .getBool("developMode") ==
-                      true)
+                      .getBool("developMode") ==
+                  true)
                 SettingsTile.switchTile(
                   onToggle: (value) {
                     BaseSingleton.singleton.sharedPreferences
                         .setBool('showMoreSubject', value);
+                    if (!value) {
+                      BaseSingleton.singleton.sharedPreferences
+                          .setBool('tryPreviewScore', false);
+                    }
+                    service.refreshService();
                     setState(() {});
                   },
                   initialValue: BaseSingleton.singleton.sharedPreferences
@@ -448,8 +473,8 @@ class _SettingsPageState extends State<SettingsPage> {
                   description: const Text('在单科查看页包含判卷中和未参加的科目'),
                 ),
               if (BaseSingleton.singleton.sharedPreferences
-                          .getBool("developMode") ==
-                      true)
+                      .getBool("developMode") ==
+                  true)
                 SettingsTile.switchTile(
                   onToggle: (value) {
                     BaseSingleton.singleton.sharedPreferences
@@ -461,6 +486,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   leading: const Icon(Icons.preview),
                   title: const Text('提前查分'),
                   description: const Text('提前查询正在阅卷中的分数，不代表最终成绩'),
+                  enabled: BaseSingleton.singleton.sharedPreferences
+                          .getBool('showMoreSubject') ==
+                      true,
                 ),
               /*SettingsTile.switchTile(
                 onToggle: (value) {
@@ -485,6 +513,14 @@ class _SettingsPageState extends State<SettingsPage> {
           SettingsSection(title: const Text('外观样式'), tiles: [
             SettingsTile.switchTile(
               onToggle: (value) {
+                if (value) {
+                  dynamicColorAvailable().then((value) {
+                    if (!value) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text('您的设备可能不支持动态取色，将使用选择的主题色')));
+                    }
+                  });
+                }
                 BaseSingleton.singleton.sharedPreferences
                     .setBool('useDynamicColor', value);
                 setState(() {});
@@ -533,8 +569,9 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ]),
           if (BaseSingleton.singleton.sharedPreferences
-                  .getBool("developMode") ==
-              true && Platform.isAndroid)
+                      .getBool("developMode") ==
+                  true &&
+              Platform.isAndroid)
             SettingsSection(
               title: const Text('后台服务(Beta)'),
               tiles: [

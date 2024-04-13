@@ -182,12 +182,14 @@ class PrescoreService : Service() {
         val checkExamsInterval : Int
         val deviceUUID : String
         val enableWearService : Boolean
+        val showMoreSubject : Boolean
         if(intent?.hasExtra("checkExams") == true) {
             Log.d(tag, "changeServiceStatus by read intent $intent")
             checkExams = intent.getBooleanExtra("checkExams", false)
             checkExamsInterval = intent.getIntExtra("checkExamsInterval",6)
             deviceUUID = intent.getStringExtra("selectedWearDeviceUUID") ?:""
             enableWearService = intent.getBooleanExtra("enableWearService", false)
+            showMoreSubject = intent.getBooleanExtra("showMoreSubject", false)
         } else {
             Log.d(tag, "changeServiceStatus by read sharedPreferences")
             val sharedPreferences: SharedPreferences = applicationContext.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
@@ -195,6 +197,7 @@ class PrescoreService : Service() {
             checkExamsInterval = sharedPreferences.getLong("flutter.checkExamsInterval", 6).toInt()
             deviceUUID = sharedPreferences.getString("flutter.selectedWearDeviceUUID", "")?:""
             enableWearService = sharedPreferences.getBoolean("flutter.enableWearService", false)
+            showMoreSubject = sharedPreferences.getBoolean("flutter.showMoreSubject", false)
         }
         Log.d(tag, "changeServiceStatus checkExams $checkExams checkExamsInterval $checkExamsInterval deviceUUID $deviceUUID enableWearService $enableWearService")
         selectedWearDeviceUUID = deviceUUID
@@ -209,7 +212,7 @@ class PrescoreService : Service() {
         }
         sleep(50)
         userUtilRequest.invoke("changeServiceStatus",
-            mapOf("checkExams" to checkExams, "checkExamsInterval" to checkExamsInterval)
+            mapOf("checkExams" to checkExams, "checkExamsInterval" to checkExamsInterval, "showMoreSubject" to showMoreSubject)
         )
         return START_STICKY
     }
