@@ -27,9 +27,13 @@ class DashboardScoreInfo extends StatefulWidget {
 class _DashboardScoreInfoState extends State<DashboardScoreInfo> {
   String dropdownValue = "full";
   ClassInfo? chosenClass;
+  Future<Result<List<ClassInfo>>>? examClassInfoFuture;
 
   @override
   Widget build(BuildContext context) {
+    examClassInfoFuture ??= Provider.of<ExamModel>(context, listen: false)
+        .user
+        .fetchExamClassInfo(widget.examId);
     return Card(
       elevation: 2,
       margin: const EdgeInsets.all(8.0),
@@ -59,9 +63,7 @@ class _DashboardScoreInfoState extends State<DashboardScoreInfo> {
                   width: 16,
                 ),
                 FutureBuilder(
-                    future: Provider.of<ExamModel>(context, listen: false)
-                        .user
-                        .fetchExamClassInfo(widget.examId),
+                    future: examClassInfoFuture,
                     builder:
                         (BuildContext futureContext, AsyncSnapshot snapshot) {
                       if (snapshot.hasData) {
@@ -97,7 +99,9 @@ class _DashboardScoreInfoState extends State<DashboardScoreInfo> {
                               // elevation: 16,
                               underline: Container(
                                 height: 2,
-                                color: Theme.of(context).colorScheme.outlineVariant,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .outlineVariant,
                               ),
                               onChanged: (String? newValue) {
                                 logger.d(newValue);
@@ -106,9 +110,9 @@ class _DashboardScoreInfoState extends State<DashboardScoreInfo> {
                                   if (dropdownValue == "full") {
                                     chosenClass = null;
                                   } else {
-                                    chosenClass = snapshot.data.result.firstWhere(
-                                            (element) =>
-                                        element.classId == dropdownValue);
+                                    chosenClass = snapshot.data.result
+                                        .firstWhere((element) =>
+                                            element.classId == dropdownValue);
                                   }
                                 });
                               },
@@ -117,7 +121,8 @@ class _DashboardScoreInfoState extends State<DashboardScoreInfo> {
                           ],
                         );
                       } else {
-                        return const Text("全年级", style: TextStyle(fontSize: 16));
+                        return const Text("全年级",
+                            style: TextStyle(fontSize: 16));
                       }
                     }),
                 const SizedBox(
@@ -130,7 +135,8 @@ class _DashboardScoreInfoState extends State<DashboardScoreInfo> {
                     return Row(children: [
                       const Icon(Icons.people),
                       Text(" ${chosenClass?.count ?? 0} 条",
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold))
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold))
                     ]);
                   }
                 }),

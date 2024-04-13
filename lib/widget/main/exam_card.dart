@@ -1,10 +1,10 @@
-//import 'package:animations/animations.dart';
-import 'package:auto_route/auto_route.dart';
+//import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-//import 'package:prescore_flutter/widget/exam/exam.dart';
+import 'package:prescore_flutter/widget/exam/exam.dart';
+import 'package:prescore_flutter/widget/open_container.dart';
 
-import '../../main.gr.dart';
+//import '../../main.gr.dart';
 import '../../util/user_util.dart';
 
 class ExamCard extends StatelessWidget {
@@ -82,29 +82,25 @@ class ExamCard extends StatelessWidget {
           const SizedBox(
             height: 8,
           ),
-          Row(
-            children: [
-              Text(
-                DateFormat('yyyy-MM-dd').format(examTime),
-                style: const TextStyle(
-                  fontSize: 16,
-                ),
+          Row(children: [
+            Text(
+              DateFormat('yyyy-MM-dd').format(examTime),
+              style: const TextStyle(
+                fontSize: 16,
               ),
-              Expanded(child: Container()),
-              Icon(isFinal ? Icons.public_off : Icons.public, size: 10),
-              Text(
-                isFinal ? " 已结束" : " 正在进行",
+            ),
+            Expanded(child: Container()),
+            Icon(isFinal ? Icons.public_off : Icons.public, size: 10),
+            Text(isFinal ? " 已结束" : " 正在进行",
                 style: const TextStyle(
                   fontSize: 10,
-                )
-              ),
-              const SizedBox(width: 6)
-            ]
-          )
+                )),
+            const SizedBox(width: 6)
+          ])
         ],
       ),
     );
-    return Card(
+    /*return Card(
       elevation: 2,
       margin: const EdgeInsets.all(8.0),
       shape: RoundedRectangleBorder(
@@ -119,37 +115,39 @@ class ExamCard extends StatelessWidget {
             context.router.navigate(ExamRoute(uuid: uuid, user: user));
           },
           child: cardMain),
+    );*/
+    ExamPage examPage = ExamPage(
+      uuid: uuid,
+      user: user,
     );
-
-    /*return OpenContainer(
-        openColor: Colors.transparent,
-        closedColor: Colors.transparent,
-        closedElevation: 0,
-        openElevation: 0,
-        transitionDuration: const Duration(milliseconds: 200),
-        transitionType: ContainerTransitionType.fade,
-        openBuilder: (BuildContext buildContext, __) {
-          return ExamPage(
-            uuid: uuid,
-            user: user,
-          );
-        },
-        closedBuilder: (BuildContext buildContext, openContainer) {
-          return Card(
-            elevation: 2,
-            margin: const EdgeInsets.all(8.0),
-            shape: RoundedRectangleBorder(
-              side: BorderSide(
-                color: Theme.of(context).colorScheme.outlineVariant,
-              ),
-              borderRadius: const BorderRadius.all(Radius.circular(12)),
+    return OpenContainer(
+      openColor: Colors.transparent,
+      closedColor: Colors.transparent,
+      closedElevation: 0,
+      openElevation: 0,
+      transitionDuration: const Duration(milliseconds: 300),
+      tappable: false,
+      clipBehavior: Clip.none,
+      transitionType: ContainerTransitionType.fade,
+      openBuilder: (BuildContext buildContext, __) {
+        return examPage;
+      },
+      closedBuilder: (BuildContext buildContext, openContainer) {
+        return Card(
+          elevation: 2,
+          margin: const EdgeInsets.all(8.0),
+          shape: RoundedRectangleBorder(
+            side: BorderSide(
+              color: Theme.of(buildContext).colorScheme.outlineVariant,
             ),
-            child: InkWell(
-                borderRadius:BorderRadius.circular(12.0),
-                onTap: openContainer,
-                child: cardMain),
-          );
-        },
-      );*/
+            borderRadius: const BorderRadius.all(Radius.circular(12)),
+          ),
+          child: InkWell(
+              borderRadius: BorderRadius.circular(12.0),
+              onTap: openContainer,
+              child: cardMain),
+        );
+      },
+    );
   }
 }

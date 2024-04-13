@@ -531,9 +531,9 @@ class BaseSingleton {
 
     dio.options.headers = commonHeaders;
     if (!kIsWeb) {
-      if (Platform.isAndroid) {
+      if (Platform.isAndroid && kReleaseMode) {
         dio.httpClientAdapter = CronetAdapter(null);
-      } else if (Platform.isIOS) {
+      } else if (Platform.isIOS || !kReleaseMode) {
         dio.httpClientAdapter = IOHttpClientAdapter();
       }
     }

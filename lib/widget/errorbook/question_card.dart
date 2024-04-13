@@ -2,7 +2,6 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
-import 'package:prescore_flutter/util/flutter_log_local/flutter_log_local.dart';
 import 'package:prescore_flutter/util/struct.dart';
 import 'package:flutter_html_table/flutter_html_table.dart';
 
@@ -120,7 +119,7 @@ class HtmlWithExtension extends StatelessWidget {
     });
     htmlContext = htmlContext?.replaceAll(RegExp(r'style="[^>]*"'), "");
     htmlContext = htmlContext?.replaceAll("<td", "<td style='border: 0.5px solid grey;'");
-    LocalLogger.write(htmlContext ?? "");
+    //LocalLogger.write(htmlContext ?? "");
     return LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
       return Html(

@@ -1,16 +1,16 @@
-//import 'package:animations/animations.dart';
-import 'package:auto_route/auto_route.dart';
+//import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:prescore_flutter/util/user_util.dart';
 import 'package:prescore_flutter/widget/component.dart';
-//import 'package:prescore_flutter/widget/paper/paper_page.dart';
+import 'package:prescore_flutter/widget/paper/paper_page.dart';
 import 'package:provider/provider.dart';
 
-import '../../main.dart';
-import '../../main.gr.dart';
-import '../../model/exam_model.dart';
-import '../../util/struct.dart';
+import 'package:prescore_flutter/main.dart';
+//import 'package:prescore_flutter/main.gr.dart';
+import 'package:prescore_flutter/model/exam_model.dart';
+import 'package:prescore_flutter/util/struct.dart';
+import 'package:prescore_flutter/widget/open_container.dart';
 
 class DetailCard extends StatefulWidget {
   final String examId;
@@ -40,290 +40,205 @@ class _DetailCardState extends State<DetailCard> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     Container infoCard;
-    if (widget.paper.fullScore == null || widget.paper.userScore == null) {
-      infoCard = Container(
-          padding: const EdgeInsets.all(12.0),
-          alignment: AlignmentDirectional.topStart,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(children: [
-                TagCard(
-                    text: widget.paper.source == Source.common ? "正式" : "预览"),
-                if (widget.paper.markingStatus == MarkingStatus.m3marking &&
-                    widget.paper.source == Source.preview)
-                  const Row(
-                      children: [SizedBox(width: 8), TagCard(text: "判卷中")]),
-                if (widget.paper.markingStatus ==
-                        MarkingStatus.m4CompleteMarking &&
-                    widget.paper.source == Source.preview)
-                  const Row(
-                      children: [SizedBox(width: 8), TagCard(text: "判卷完成")])
-              ]),
-              const SizedBox(height: 6),
-              Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: FittedBox(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            const SizedBox(
-                              height: 12,
-                            ),
-                            Text(
-                              "${widget.paper.name}  ",
-                              style: const TextStyle(fontSize: 16),
-                            ),
-                            const SizedBox(
-                              height: 12,
-                            )
-                          ],
-                        ),
-                        const Text(
-                          "无总分信息",
-                          style: TextStyle(fontSize: 40),
-                        ),
-                      ],
-                    ),
-                  )),
-            ],
-          ));
-    } else {
-      infoCard = Container(
-          padding: const EdgeInsets.all(12.0),
-          alignment: AlignmentDirectional.topStart,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(children: [
-                TagCard(
-                    text: widget.paper.source == Source.common ? "正式" : "预览"),
-                if (widget.paper.markingStatus == MarkingStatus.m3marking &&
-                    widget.paper.source == Source.preview)
-                  const Row(
-                      children: [SizedBox(width: 8), TagCard(text: "判卷中")]),
-                if (widget.paper.markingStatus ==
-                        MarkingStatus.m4CompleteMarking &&
-                    widget.paper.source == Source.preview)
-                  const Row(
-                      children: [SizedBox(width: 8), TagCard(text: "判卷完成")])
-              ]),
-              Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: FittedBox(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text(
-                              "${widget.paper.name}  ",
-                              style: const TextStyle(fontSize: 16),
-                            ),
-                            const SizedBox(
-                              height: 12,
-                            )
-                          ],
-                        ),
-                        SizeTransition(
-                            axisAlignment: 0.0,
-                            sizeFactor: CurvedAnimation(
-                                parent: Tween<double>(begin: 0, end: 1.0)
-                                    .animate(_animationController),
-                                curve: Curves.easeOut),
-                            axis: Axis.horizontal,
-                            child: Row(children: [
-                              Text(
-                                "${widget.paper.userScore}",
-                                style: const TextStyle(fontSize: 48),
-                              ),
-                              const SizedBox(
-                                width: 16,
-                              ),
-                            ])),
-                        SizeTransition(
-                            axisAlignment: 0.0,
-                            sizeFactor: CurvedAnimation(
-                                parent: Tween<double>(begin: 1.0, end: 0)
-                                    .animate(_animationController),
-                                curve: Curves.easeIn),
-                            axis: Axis.horizontal,
-                            child: Row(children: [
-                              const Text(
-                                "",
-                                style: TextStyle(fontSize: 48),
-                              ),
-                              Icon(Icons.visibility_off_outlined,
-                                  size: 40,
-                                  color: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium
-                                      ?.color),
-                              const SizedBox(
-                                width: 16,
-                              ),
-                            ])),
-                        const Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text(
-                              "/",
-                              style: TextStyle(fontSize: 16),
-                            ),
-                            SizedBox(
-                              height: 12,
-                            )
-                          ],
-                        ),
-                        const SizedBox(
-                          width: 16,
-                        ),
-                        Text(
-                          "${widget.paper.fullScore}",
-                          style: const TextStyle(fontSize: 48),
-                        ),
-                      ],
-                    ),
-                  )),
-              SizeTransition(
-                  axisAlignment: 0.0,
-                  sizeFactor: CurvedAnimation(
-                      parent: _animationController, curve: Curves.easeOut),
-                  axis: Axis.vertical,
-                  child: Column(children: [
-                    const SizedBox(
-                      height: 16,
-                    ),
-                    if (widget.paper.userScore != null &&
-                        widget.paper.fullScore != null)
-                      LinearPercentIndicator(
-                        lineHeight: 8.0,
-                        percent:
-                            widget.paper.userScore! / widget.paper.fullScore!,
-                        backgroundColor: Colors.grey,
-                        linearGradient: LinearGradient(
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
-                            //colors: [Colors.lightBlueAccent, Colors.lightBlue, Colors.blue],
-                            colors: [
-                              Theme.of(context).colorScheme.primary,
-                              Theme.of(context)
-                                  .colorScheme
-                                  .primary
-                                  .withOpacity(0.6)
-                            ]),
-                        barRadius: const Radius.circular(4),
-                      ),
-                    const SizedBox(
-                      height: 16,
-                    ),
-                    if (widget.paper.userScore != null)
-                      FutureBuilder(
-                        future: Provider.of<ExamModel>(context, listen: false)
-                            .user
-                            .fetchPaperPercentile(widget.paper.examId,
-                                widget.paper.paperId, widget.paper.userScore!),
-                        builder: (BuildContext context,
-                            AsyncSnapshot<Result<PaperPercentile>> snapshot) {
-                          logger.d("DetailPredict: ${snapshot.data}");
-                          if (snapshot.hasData) {
-                            if (snapshot.data!.state) {
-                              Widget predict = DetailPredict(
-                                  subjectId: widget.paper.subjectId,
-                                  subjectName: widget.paper.name,
-                                  version: snapshot.data!.result!.version,
-                                  percentage: snapshot.data!.result!.percentile,
-                                  official: snapshot.data!.result!.official,
-                                  count: snapshot.data!.result!.count,
-                                  assignScore: widget.paper.assignScore);
-                              return predict;
-                            } else {
-                              return Container();
-                            }
-                          } else {
-                            return DetailPredict(
-                                subjectId: widget.paper.subjectId,
-                                subjectName: widget.paper.name,
-                                version: -1,
-                                percentage: -1,
-                                official: false,
-                                count: -1,
-                                assignScore: widget.paper.assignScore);
-                          }
-                        },
-                      ),
-                    FutureBuilder(
-                      future: Provider.of<ExamModel>(context, listen: false)
-                          .user
-                          .fetchPaperScoreInfo(widget.paper.paperId),
-                      builder: (BuildContext context, AsyncSnapshot snapshot) {
-                        logger.d("DetailScoreInfo: ${snapshot.data}");
-                        if (snapshot.hasData) {
-                          if (snapshot.data.state) {
-                            Widget scoreInfo = DetailScoreInfo(
-                                paperId: widget.paper.paperId,
-                                maximum: snapshot.data.result.max,
-                                minimum: snapshot.data.result.min,
-                                avg: snapshot.data.result.avg,
-                                med: snapshot.data.result.med);
-                            return scoreInfo;
-                          } else {
-                            return Container();
-                          }
-                        } else {
-                          return DetailScoreInfo(
-                              paperId: widget.paper.paperId,
-                              maximum: -1,
-                              minimum: -1,
-                              avg: -1,
-                              med: -1);
-                        }
-                      },
-                    )
-                  ])),
-              Row(
-                children: [
-                  const Spacer(),
-                  InkWell(
-                      borderRadius: BorderRadius.circular(6),
-                      onTap: () {
-                        setState(() {
-                          detailExpanded = !detailExpanded;
-                          if (detailExpanded) {
-                            _animationController.forward(from: 0);
-                          } else {
-                            _animationController.reverse(from: 1);
-                          }
-                        });
-                      },
-                      child: Container(
-                          margin: const EdgeInsets.all(6),
-                          child: Row(
+    infoCard = Container(
+        padding: const EdgeInsets.all(12.0),
+        alignment: AlignmentDirectional.topStart,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              TagCard(text: widget.paper.source == Source.common ? "正式" : "预览"),
+              if (widget.paper.markingStatus == MarkingStatus.m3marking &&
+                  widget.paper.source == Source.preview)
+                const Row(children: [SizedBox(width: 8), TagCard(text: "判卷中")]),
+              if (widget.paper.markingStatus ==
+                      MarkingStatus.m4CompleteMarking &&
+                  widget.paper.source == Source.preview)
+                const Row(children: [SizedBox(width: 8), TagCard(text: "判卷完成")])
+            ]),
+            !(widget.paper.fullScore == null || widget.paper.userScore == null)
+                ? Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: FittedBox(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.end,
                             children: [
-                              RotationTransition(
-                                  turns: Tween<double>(begin: 0.5, end: 0)
-                                      .animate(_animationController),
-                                  child: const Icon(Icons.keyboard_arrow_up,
-                                      size: 20)),
                               Text(
-                                detailExpanded ? "折叠 " : "展开 ",
-                                style: const TextStyle(
-                                    fontSize: 10, fontWeight: FontWeight.bold),
+                                "${widget.paper.name}  ",
+                                style: const TextStyle(fontSize: 16),
                               ),
+                              const SizedBox(
+                                height: 12,
+                              )
                             ],
-                          )))
-                ],
-              )
-            ],
-          ));
-    }
-    return Card(
+                          ),
+                          SizeTransition(
+                              axisAlignment: 0.0,
+                              sizeFactor: CurvedAnimation(
+                                  parent: Tween<double>(begin: 0, end: 1.0)
+                                      .animate(_animationController),
+                                  curve: Curves.easeOut),
+                              axis: Axis.horizontal,
+                              child: Row(children: [
+                                Text(
+                                  "${widget.paper.userScore}",
+                                  style: const TextStyle(fontSize: 48),
+                                ),
+                                const SizedBox(
+                                  width: 16,
+                                ),
+                              ])),
+                          SizeTransition(
+                              axisAlignment: 0.0,
+                              sizeFactor: CurvedAnimation(
+                                  parent: Tween<double>(begin: 1.0, end: 0)
+                                      .animate(_animationController),
+                                  curve: Curves.easeIn),
+                              axis: Axis.horizontal,
+                              child: Row(children: [
+                                const Text(
+                                  "",
+                                  style: TextStyle(fontSize: 48),
+                                ),
+                                Icon(Icons.visibility_off_outlined,
+                                    size: 40,
+                                    color: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium
+                                        ?.color),
+                                const SizedBox(
+                                  width: 16,
+                                ),
+                              ])),
+                          const Column(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Text(
+                                "/",
+                                style: TextStyle(fontSize: 16),
+                              ),
+                              SizedBox(
+                                height: 12,
+                              )
+                            ],
+                          ),
+                          const SizedBox(
+                            width: 16,
+                          ),
+                          Text(
+                            "${widget.paper.fullScore}",
+                            style: const TextStyle(fontSize: 48),
+                          ),
+                        ],
+                      ),
+                    ))
+                : Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    child: FittedBox(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              const SizedBox(
+                                height: 12,
+                              ),
+                              Text(
+                                "${widget.paper.name}  ",
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                              const SizedBox(
+                                height: 12,
+                              )
+                            ],
+                          ),
+                          const Text(
+                            "无总分信息",
+                            style: TextStyle(fontSize: 40),
+                          ),
+                        ],
+                      ),
+                    )),
+            SizeTransition(
+                axisAlignment: 0.0,
+                sizeFactor: CurvedAnimation(
+                    parent: _animationController, curve: Curves.easeOut),
+                axis: Axis.vertical,
+                child: Column(children: [
+                  if (widget.paper.userScore != null)
+                    const SizedBox(
+                      height: 16,
+                    ),
+                  if (widget.paper.userScore != null)
+                    LinearPercentIndicator(
+                      lineHeight: 8.0,
+                      percent:
+                          widget.paper.userScore! / widget.paper.fullScore!,
+                      backgroundColor: Colors.grey,
+                      linearGradient: LinearGradient(
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                          //colors: [Colors.lightBlueAccent, Colors.lightBlue, Colors.blue],
+                          colors: [
+                            Theme.of(context).colorScheme.primary,
+                            Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withOpacity(0.6)
+                          ]),
+                      barRadius: const Radius.circular(4),
+                    ),
+                  if (widget.paper.userScore != null)
+                    const SizedBox(
+                      height: 16,
+                    ),
+                  if (widget.paper.userScore != null)
+                    PredictFutureBuilder(paper: widget.paper),
+                  ScoreInfoFutureBuilder(paper: widget.paper),
+                ])),
+            Row(
+              children: [
+                const Spacer(),
+                InkWell(
+                    borderRadius: BorderRadius.circular(6),
+                    onTap: () {
+                      setState(() {
+                        detailExpanded = !detailExpanded;
+                        if (detailExpanded) {
+                          _animationController.forward(from: 0);
+                        } else {
+                          _animationController.reverse(from: 1);
+                        }
+                      });
+                    },
+                    child: Container(
+                        margin: const EdgeInsets.all(6),
+                        child: Row(
+                          children: [
+                            RotationTransition(
+                                turns: Tween<double>(begin: 0.5, end: 0)
+                                    .animate(_animationController),
+                                child: const Icon(Icons.keyboard_arrow_up,
+                                    size: 20)),
+                            Text(
+                              detailExpanded ? "折叠 " : "展开 ",
+                              style: const TextStyle(
+                                  fontSize: 10, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        )))
+              ],
+            )
+          ],
+        ));
+    /*return Card(
       elevation: 2,
       margin: const EdgeInsets.all(8.0),
       shape: RoundedRectangleBorder(
@@ -343,40 +258,97 @@ class _DetailCardState extends State<DetailCard> with TickerProviderStateMixin {
         },
         child: infoCard,
       ),
+    );*/
+    return OpenContainer(
+      openColor: Colors.transparent,
+      closedColor: Colors.transparent,
+      closedElevation: 0,
+      openElevation: 0,
+      tappable: false,
+      clipBehavior: Clip.none,
+      transitionDuration: const Duration(milliseconds: 300),
+      transitionType: ContainerTransitionType.fade,
+      openBuilder: (BuildContext buildContext, _) {
+        return PaperPage(
+          examId: widget.examId,
+          paperId: widget.paper.paperId,
+          preview: widget.paper.source == Source.preview,
+          user: Provider.of<ExamModel>(context, listen: false).user,
+        );
+      },
+      closedBuilder: (BuildContext buildContext, openContainer) {
+        return Card(
+          elevation: 2,
+          margin: const EdgeInsets.all(8.0),
+          shape: RoundedRectangleBorder(
+            side: BorderSide(
+              color: Theme.of(buildContext).colorScheme.outlineVariant,
+            ),
+            borderRadius: const BorderRadius.all(Radius.circular(12)),
+          ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12.0),
+            onTap: openContainer,
+            child: infoCard,
+          ),
+        );
+      },
     );
-    /*return OpenContainer(
-        openColor: Colors.transparent,
-        closedColor: Colors.transparent,
-        closedElevation: 0,
-        openElevation: 0,
-        transitionDuration: const Duration(milliseconds: 1200),
-        transitionType: ContainerTransitionType.fade,
-        openBuilder: (BuildContext buildContext, _) {
-          return PaperPage(
-            examId: widget.examId,
-            paperId: widget.paper.paperId,
-            preview: widget.paper.source == Source.preview,
-            user: Provider.of<ExamModel>(buildContext, listen: false).user,
-          );
-        },
-        closedBuilder: (BuildContext buildContext, openContainer) {
-          return Card(
-            elevation: 2,
-            margin: const EdgeInsets.all(8.0),
-            shape: RoundedRectangleBorder(
-              side: BorderSide(
-                color: Theme.of(buildContext).colorScheme.outlineVariant,
-              ),
-              borderRadius: const BorderRadius.all(Radius.circular(12)),
-            ),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(12.0),
-              onTap: openContainer,
-              child: infoCard,
-            ),
-          );
-        },
-      );*/
+  }
+}
+
+class PredictFutureBuilder extends StatefulWidget {
+  final Paper paper;
+  const PredictFutureBuilder({Key? key, required this.paper}) : super(key: key);
+
+  @override
+  State<PredictFutureBuilder> createState() => _PredictFutureBuilderState();
+}
+
+class _PredictFutureBuilderState extends State<PredictFutureBuilder> {
+  late Future<Result<PaperPercentile>> future;
+  @override
+  void initState() {
+    super.initState();
+    future = Provider.of<ExamModel>(context, listen: false)
+        .user
+        .fetchPaperPercentile(
+            widget.paper.examId, widget.paper.paperId, widget.paper.userScore!);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: future,
+      builder: (BuildContext context,
+          AsyncSnapshot<Result<PaperPercentile>> snapshot) {
+        logger.d("DetailPredict: ${snapshot.data}");
+        if (snapshot.hasData) {
+          if (snapshot.data!.state) {
+            Widget predict = DetailPredict(
+                subjectId: widget.paper.subjectId,
+                subjectName: widget.paper.name,
+                version: snapshot.data!.result!.version,
+                percentage: snapshot.data!.result!.percentile,
+                official: snapshot.data!.result!.official,
+                count: snapshot.data!.result!.count,
+                assignScore: widget.paper.assignScore);
+            return predict;
+          } else {
+            return Container();
+          }
+        } else {
+          return DetailPredict(
+              subjectId: widget.paper.subjectId,
+              subjectName: widget.paper.name,
+              version: -1,
+              percentage: -1,
+              official: false,
+              count: -1,
+              assignScore: widget.paper.assignScore);
+        }
+      },
+    );
   }
 }
 
@@ -580,6 +552,56 @@ class DetailPredict extends StatelessWidget {
   }
 }
 
+class ScoreInfoFutureBuilder extends StatefulWidget {
+  final Paper paper;
+  const ScoreInfoFutureBuilder({Key? key, required this.paper})
+      : super(key: key);
+
+  @override
+  State<ScoreInfoFutureBuilder> createState() => _ScoreInfoFutureBuilderState();
+}
+
+class _ScoreInfoFutureBuilderState extends State<ScoreInfoFutureBuilder> {
+  late Future<Result<ScoreInfo>> future;
+  @override
+  void initState() {
+    super.initState();
+    future = Provider.of<ExamModel>(context, listen: false)
+        .user
+        .fetchPaperScoreInfo(widget.paper.paperId);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: future,
+      builder: (BuildContext context, AsyncSnapshot snapshot) {
+        logger.d("DetailScoreInfo: ${snapshot.data}");
+        if (snapshot.hasData) {
+          if (snapshot.data.state) {
+            Widget scoreInfo = DetailScoreInfo(
+                paperId: widget.paper.paperId,
+                maximum: snapshot.data.result.max,
+                minimum: snapshot.data.result.min,
+                avg: snapshot.data.result.avg,
+                med: snapshot.data.result.med);
+            return scoreInfo;
+          } else {
+            return Container();
+          }
+        } else {
+          return DetailScoreInfo(
+              paperId: widget.paper.paperId,
+              maximum: -1,
+              minimum: -1,
+              avg: -1,
+              med: -1);
+        }
+      },
+    );
+  }
+}
+
 class DetailScoreInfo extends StatefulWidget {
   final String paperId;
   final double minimum;
@@ -603,6 +625,15 @@ class _DetailScoreInfoState extends State<DetailScoreInfo> {
   String dropdownValue = "full";
   ClassInfo? chosenClass;
   num? classInfoNum;
+  late Future<Result<List<ClassInfo>>> future;
+
+  @override
+  void initState() {
+    super.initState();
+    future = Provider.of<ExamModel>(context, listen: false)
+        .user
+        .fetchPaperClassInfo(widget.paperId);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -610,9 +641,7 @@ class _DetailScoreInfoState extends State<DetailScoreInfo> {
       children: [
         FittedBox(
           child: FutureBuilder(
-              future: Provider.of<ExamModel>(context, listen: false)
-                  .user
-                  .fetchPaperClassInfo(widget.paperId),
+              future: future,
               builder: (BuildContext futureContext, AsyncSnapshot snapshot) {
                 if (snapshot.hasData) {
                   if (snapshot.data.state == false) {

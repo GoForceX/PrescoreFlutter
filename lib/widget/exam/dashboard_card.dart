@@ -12,15 +12,26 @@ import 'dashboard_predict.dart';
 import 'dashboard_ranking.dart';
 import 'detail_util.dart';
 
-class DashboardCard extends StatelessWidget {
+class DashboardCard extends StatefulWidget {
   final String examId;
   const DashboardCard({Key? key, required this.examId}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    setUploadListener(context);
-    fetchData(context, examId);
+  State<DashboardCard> createState() => _DashboardCardState();
+}
 
+class _DashboardCardState extends State<DashboardCard> {
+  Future<Result<double>>? examPredictFuture;
+  Future<Result<ScoreInfo>>? examScoreInfoFuture;
+  @override
+  void initState() {
+    super.initState();
+    setUploadListener(context);
+    fetchData(context, widget.examId);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     List<Widget> children = [];
     //总分
     Consumer totalCards = Consumer<ExamModel>(builder:
@@ -99,11 +110,11 @@ class DashboardCard extends StatelessWidget {
           }
           userScore += element.userScore ?? 0;
         }
-
+        examPredictFuture ??= Provider.of<ExamModel>(context, listen: false)
+            .user
+            .fetchExamPredict(widget.examId, userScore);
         return FutureBuilder(
-          future: Provider.of<ExamModel>(context, listen: false)
-              .user
-              .fetchExamPredict(examId, userScore),
+          future: examPredictFuture,
           builder: (BuildContext context, AsyncSnapshot snapshot) {
             logger.d("DashboardPredict: ${snapshot.data}");
             if (snapshot.hasData) {
@@ -137,16 +148,17 @@ class DashboardCard extends StatelessWidget {
 
     children.add(Consumer(builder:
         (BuildContext consumerContext, ExamModel examModel, Widget? child) {
+      examScoreInfoFuture ??= Provider.of<ExamModel>(context, listen: false)
+          .user
+          .fetchExamScoreInfo(widget.examId);
       return FutureBuilder(
-        future: Provider.of<ExamModel>(context, listen: false)
-            .user
-            .fetchExamScoreInfo(examId),
+        future: examScoreInfoFuture,
         builder: (BuildContext context, AsyncSnapshot snapshot) {
           logger.d("DashboardScoreInfo: ${snapshot.data}");
           if (snapshot.hasData) {
             if (snapshot.data.state) {
               Widget scoreInfo = DashboardScoreInfo(
-                examId: examId,
+                examId: widget.examId,
                 maximum: snapshot.data.result.max,
                 minimum: snapshot.data.result.min,
                 avg: snapshot.data.result.avg,

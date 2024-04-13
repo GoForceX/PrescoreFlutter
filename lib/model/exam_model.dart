@@ -18,6 +18,8 @@ class ExamModel extends ChangeNotifier {
   bool isPaperLoaded = false;
   bool isPreviewPaperLoaded = false;
   UploadStatus uploadStatus = UploadStatus.incomplete;
+
+  bool pageAnimationComplete = false;
   List<Paper> papers = [];
   List<Paper> absentPapers = [];
   int getLength(Source paperSource) {
@@ -51,6 +53,11 @@ class ExamModel extends ChangeNotifier {
 
   void setDiagnoses(List<PaperDiagnosis> value) {
     diagnoses = value;
+    notifyListeners();
+  }
+
+  void setPageAnimationComplete() {
+    pageAnimationComplete = true;
     notifyListeners();
   }
 
@@ -88,16 +95,13 @@ class ExamModel extends ChangeNotifier {
         papers.add(paperElement);
       }
     }
-    notifyListeners();
   }
 
   void setPapers(List<Paper> value) {
     papers = value;
-    notifyListeners();
   }
 
   void setAbsentPapers(List<Paper> value) {
     absentPapers = value;
-    notifyListeners();
   }
 }

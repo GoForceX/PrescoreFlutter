@@ -61,7 +61,7 @@ class _PaperPhotoState extends State<PaperPhoto>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    logger.d("exam id: ${widget.examId}");
+    //logger.d("exam id: ${widget.examId}");
     return Consumer<PaperModel>(builder:
         (BuildContext consumerContext, PaperModel examModel, Widget? child) {
       if (examModel.errMsg != null) {
@@ -170,7 +170,7 @@ class _PaperPhotoState extends State<PaperPhoto>
   }
 }
 
-class PaperPhotoWidget extends StatelessWidget {
+class PaperPhotoWidget extends StatefulWidget {
   final int sheetId;
   final String url;
   final String tag;
@@ -185,9 +185,14 @@ class PaperPhotoWidget extends StatelessWidget {
       required this.mark})
       : super(key: key);
 
+  @override
+  State<PaperPhotoWidget> createState() => _PaperPhotoWidgetState();
+}
+
+class _PaperPhotoWidgetState extends State<PaperPhotoWidget> {
   Future<Uint8List?> markerPainter(
       List<Marker> markers, Uint8List originalImage) async {
-    if (!mark) {
+    if (!widget.mark) {
       return originalImage;
     }
 
@@ -219,7 +224,7 @@ class PaperPhotoWidget extends StatelessWidget {
     }
 
     for (var marker in markers) {
-      if (marker.sheetId == sheetId) {
+      if (marker.sheetId == widget.sheetId) {
         switch (marker.type) {
           case MarkerType.singleChoice:
           case MarkerType.multipleChoice:
@@ -357,20 +362,23 @@ class PaperPhotoWidget extends StatelessWidget {
     return pngBytes;
   }
 
+ Future<Response<dynamic>>? getImageFuture;
+ Future<dynamic>? markerPainterFuture;
   @override
   Widget build(BuildContext context) {
     Uint8List? memoryImage;
     Dio dio = BaseSingleton.singleton.dio;
-    logger.d(url);
+    logger.d(widget.url);
+    getImageFuture ??=
+        dio.get(widget.url, options: Options(responseType: ResponseType.bytes));
     return FutureBuilder(
-        future:
-            dio.get(url, options: Options(responseType: ResponseType.bytes)),
+        future: getImageFuture,
         builder: (BuildContext context, AsyncSnapshot snapshot) {
           if (snapshot.hasData) {
             memoryImage = Uint8List.fromList(snapshot.data.data);
-
+            markerPainterFuture ??= markerPainter(widget.markers, memoryImage!);
             return FutureBuilder(
-                future: markerPainter(markers, memoryImage!),
+                future: markerPainterFuture,
                 builder: (BuildContext context, AsyncSnapshot snapshot) {
                   if (snapshot.hasData) {
                     memoryImage = snapshot.data;
@@ -386,12 +394,12 @@ class PaperPhotoWidget extends StatelessWidget {
                                     },
                                     child: PaperPhotoEnlarged(
                                       memoryImage: memoryImage!,
-                                      tag: tag,
+                                      tag: widget.tag,
                                     ))),
                           );
                         },
                         child: Hero(
-                          tag: tag,
+                          tag: widget.tag,
                           child: RepaintBoundary(
                             child: Image.memory(
                               memoryImage!,

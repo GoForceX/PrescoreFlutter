@@ -21,6 +21,13 @@ class ExamPage extends StatefulWidget {
 
 class _ExamPageState extends State<ExamPage> {
   int _selectedIndex = 0;
+  late PageController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = PageController();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,21 +43,26 @@ class _ExamPageState extends State<ExamPage> {
         builder: (BuildContext context, Widget? child) {
           ExamModel model = Provider.of<ExamModel>(context, listen: false);
           model.user = widget.user;
-          Widget chosenWidget = Container();
-          switch (_selectedIndex) {
-            case 0:
-              chosenWidget = ExamDetail(examId: widget.uuid);
-              break;
-            case 1:
-              chosenWidget = ExamDashboard(
-                examId: widget.uuid,
-              );
-              break;
-            default:
-              chosenWidget = Container();
-          }
-          return Center(
-            child: chosenWidget,
+          Future.delayed(const Duration(milliseconds: 300), () async {
+            model.setPageAnimationComplete();
+          });
+          return PageView(
+            controller: _controller,
+            children: [
+              Center(
+                child: ExamDetail(examId: widget.uuid),
+              ),
+              Center(
+                child: ExamDashboard(
+                  examId: widget.uuid,
+                ),
+              )
+            ],
+            onPageChanged: (value) {
+              setState(() {
+                _selectedIndex = value;
+              });
+            },
           );
         },
       ),
@@ -71,6 +83,7 @@ class _ExamPageState extends State<ExamPage> {
         onDestinationSelected: (int index) {
           setState(() {
             _selectedIndex = index;
+            _controller.jumpToPage(_selectedIndex);
           });
         },
       ),

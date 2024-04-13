@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:crypto/crypto.dart';
+//import 'package:crypto/crypto.dart';
 import 'package:html/parser.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:dio/dio.dart';
@@ -9,7 +9,6 @@ import 'package:encrypt/encrypt.dart';
 import 'package:flutter/material.dart';
 import 'package:pointycastle/asymmetric/api.dart';
 import 'package:prescore_flutter/main.dart';
-import 'package:prescore_flutter/util/flutter_log_local/flutter_log_local.dart';
 import 'package:prescore_flutter/util/rsa.dart';
 import 'package:prescore_flutter/util/struct.dart';
 import 'package:shared_preferences/shared_preferences.dart';
