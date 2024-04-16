@@ -138,6 +138,7 @@ class MyApp extends StatelessWidget {
       "localSessionExist": false,
       "allowTelemetry": false,
       "classCount": 45,
+      "secondClassesCount": "{}",
       "useExperimentalDraw": true,
       "defaultShowAllSubject": true,
       "enableWearService": false,

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:auto_route/auto_route.dart';
@@ -9,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:prescore_flutter/constants.dart';
 import 'package:prescore_flutter/model/login_model.dart';
+import 'package:prescore_flutter/widget/component.dart';
 import 'package:provider/provider.dart';
 import 'package:r_upgrade/r_upgrade.dart';
 import 'package:settings_ui/settings_ui.dart';
@@ -36,6 +38,126 @@ Future<bool> dynamicColorAvailable() async {
     }
   } catch (_) {}
   return false;
+}
+
+class SelectClassCountDialog extends StatefulWidget {
+  const SelectClassCountDialog({super.key});
+
+  @override
+  SelectClassCountDialogState createState() => SelectClassCountDialogState();
+}
+
+class SelectClassCountDialogState extends State<SelectClassCountDialog> {
+  final classCountController = TextEditingController();
+  Map<String, TextEditingController> secondClassesCountCtr = {};
+  @override
+  void initState() {
+    super.initState();
+    classCountController.text =
+        (BaseSingleton.singleton.sharedPreferences.getInt('classCount') ?? 45)
+            .toString();
+    jsonDecode(BaseSingleton.singleton.sharedPreferences
+                .getString('secondClassesCount') ??
+            "{}")
+        .forEach((key, value) {
+      secondClassesCountCtr[key] = TextEditingController();
+      secondClassesCountCtr[key]?.text = value.toString();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    LoginModel model = Provider.of<LoginModel>(context, listen: false);
+    List<Widget> numberPickerList = [];
+    secondClassesCountCtr.forEach((key, value) {
+      numberPickerList.add(ClipRect(
+        child: Dismissible(
+          direction: DismissDirection.startToEnd,
+          key: ValueKey(key),
+          onDismissed: (direction) {
+            setState(() {
+              secondClassesCountCtr.remove(key);
+            });
+          },
+          background: 
+             Container(
+              margin: const EdgeInsets.all(4),
+                  decoration: const BoxDecoration(
+                    color: Colors.redAccent,
+                    borderRadius: BorderRadius.all(Radius.circular(6))
+                  ),
+                  alignment: Alignment.centerLeft,
+                  padding: const EdgeInsets.only(left: 12),
+                  child: const Icon(Icons.delete)),
+          child: NumberPicker(controller: value, labelText: "$key (滑动以删除)"),
+        ),
+      ));
+    });
+    return AlertDialog(
+      title: const Text('你的班级有多少人？'),
+      content: SingleChildScrollView(
+          child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+            NumberPicker(controller: classCountController, labelText: "行政(默认值)"),
+            ...numberPickerList,
+            const SizedBox(height: 8),
+            FutureBuilder(
+              future: model.user.fetchClassmate(),
+              builder: (BuildContext context, AsyncSnapshot snapshot) {
+                if (snapshot.hasData) {
+                  return Row(children: [
+                    const Icon(Icons.people, size: 18),
+                    Text(
+                        " ${model.user.studentInfo?.gradeName}${model.user.studentInfo?.className}: ",
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text(" ${snapshot.data.length} 人")
+                  ]);
+                } else {
+                  return const Text("");
+                }
+              },
+            )
+          ])),
+      actions: <Widget>[
+        PopupMenuButton(
+          itemBuilder: (BuildContext context) {
+            List<String> secondSubjects = ["物理", "化学", "生物", "历史", "地理", "政治"];
+            secondClassesCountCtr
+                .forEach((key, value) => secondSubjects.remove(key));
+            return secondSubjects
+                .map((subject) => PopupMenuItem(
+                      value: subject,
+                      child: Text(subject),
+                    ))
+                .toList();
+          },
+          onSelected: (String value) {
+            setState(() {
+              secondClassesCountCtr[value] = TextEditingController();
+              secondClassesCountCtr[value]?.text = "45";
+            });
+          },
+          child: Text("添加选科班",
+              style: TextStyle(color: Theme.of(context).colorScheme.primary)),
+        ),
+        TextButton(
+          onPressed: () async {
+            BaseSingleton.singleton.sharedPreferences.setInt(
+                'classCount', int.tryParse(classCountController.text) ?? 45);
+            BaseSingleton.singleton.sharedPreferences.setString(
+                'secondClassesCount',
+                jsonEncode(secondClassesCountCtr
+                    .map((key, value) => MapEntry(key, int.parse(value.text)))));
+            setState(() {});
+            Navigator.pop(context, '确定');
+          },
+          child: const Text('确定'),
+        ),
+      ],
+    );
+  }
 }
 
 class SelectColorDialog extends StatefulWidget {
@@ -251,59 +373,9 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> showChangeCountDialog(BuildContext context) async {
-    final classCountController = TextEditingController();
-    LoginModel model = Provider.of<LoginModel>(context, listen: false);
-
     showDialog<String>(
       context: context,
-      builder: (BuildContext dialogContext) => AlertDialog(
-        title: const Text('你的班级有多少人？'),
-        content: SingleChildScrollView(
-            child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-              TextField(
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'\d')),
-                  ],
-                  obscureText: false,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: '班级人数',
-                  ),
-                  controller: classCountController),
-              const SizedBox(height: 8),
-              FutureBuilder(
-                future: model.user.fetchClassmate(),
-                builder: (BuildContext context, AsyncSnapshot snapshot) {
-                  if (snapshot.hasData) {
-                    return Row(children: [
-                      const Icon(Icons.people, size: 18),
-                      Text(
-                          " ${model.user.studentInfo?.gradeName}${model.user.studentInfo?.className}: ",
-                          style: const TextStyle(fontWeight: FontWeight.bold)),
-                      Text(" ${snapshot.data.length} 人")
-                    ]);
-                  } else {
-                    return Container();
-                  }
-                },
-              )
-            ])),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () async {
-              BaseSingleton.singleton.sharedPreferences.setInt(
-                  'classCount', int.tryParse(classCountController.text) ?? 45);
-              setState(() {});
-              Navigator.pop(dialogContext, '确定');
-            },
-            child: const Text('确定'),
-          ),
-        ],
-      ),
+      builder: (BuildContext dialogContext) => const SelectClassCountDialog(),
     );
   }
 
@@ -395,8 +467,7 @@ class _SettingsPageState extends State<SettingsPage> {
               SettingsTile.navigation(
                 leading: const Icon(Icons.numbers_rounded),
                 title: const Text('班级人数'),
-                description: Text(
-                    "${BaseSingleton.singleton.sharedPreferences.getInt("classCount") ?? 45}"),
+                description: const Text("设置行政及选科班人数，计算班排"),
                 onPressed: (BuildContext context) {
                   showChangeCountDialog(context);
                 },
@@ -470,7 +541,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       .getBool('showMoreSubject'),
                   leading: const Icon(Icons.more_horiz),
                   title: const Text('更多科目'),
-                  description: const Text('在单科查看页包含判卷中和未参加的科目'),
+                  description: const Text('在单科查看页包含判卷中的科目(可能含未参加科目)'),
                 ),
               if (BaseSingleton.singleton.sharedPreferences
                       .getBool("developMode") ==

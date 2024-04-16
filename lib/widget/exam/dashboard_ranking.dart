@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:fl_chart/fl_chart.dart';
@@ -15,7 +16,10 @@ class DashboardRanking extends StatelessWidget {
   Widget build(BuildContext context) {
     int classCount =
         BaseSingleton.singleton.sharedPreferences.getInt("classCount") ?? 45;
-
+    Map<String, dynamic> secondClassesCount = jsonDecode(BaseSingleton
+            .singleton.sharedPreferences
+            .getString('secondClassesCount') ??
+        "{}");
     if (diagnoses.length >= 3) {
       Container chartCard = Container(
           padding: const EdgeInsets.all(12.0),
@@ -25,8 +29,10 @@ class DashboardRanking extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text("设置中可以修改班级人数，获得更精准的计算。\n现在设置的班级人数是: $classCount",
-                  style: const TextStyle(fontSize: 12)),
+              const Text("设置中可以修改班级人数，获得更精准的计算",
+                  style: TextStyle(fontSize: 12)),
+              const Text("包括行政班和对应科目的选科班人数",
+                  style: TextStyle(fontSize: 12)),
               const SizedBox(
                 height: 16,
               ),
@@ -45,10 +51,10 @@ class DashboardRanking extends StatelessWidget {
                                       max(
                                           (item.value.diagnosticScore /
                                                   100 *
-                                                  classCount)
+                                                  (secondClassesCount[item.value.subjectName] ?? classCount))
                                               .ceilToDouble(),
                                           1),
-                                      classCount.toDouble()),
+                                      (secondClassesCount[item.value.subjectName] ?? classCount).toDouble()),
                                   gradient: LinearGradient(
                                       begin: Alignment.bottomCenter,
                                       end: Alignment.topCenter,
