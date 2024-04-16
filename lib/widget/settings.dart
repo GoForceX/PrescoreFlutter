@@ -508,9 +508,6 @@ class _SettingsPageState extends State<SettingsPage> {
                 title: const Text('允许上传数据'),
                 description: const Text('向服务器上传考试数据'),
               ),
-              if (BaseSingleton.singleton.sharedPreferences
-                      .getBool("developMode") ==
-                  true)
                 SettingsTile.switchTile(
                   onToggle: (value) {
                     BaseSingleton.singleton.sharedPreferences
@@ -523,9 +520,6 @@ class _SettingsPageState extends State<SettingsPage> {
                   title: const Text('显示判卷记录'),
                   description: const Text('在分数细则页显示判卷人'),
                 ),
-              if (BaseSingleton.singleton.sharedPreferences
-                      .getBool("developMode") ==
-                  true)
                 SettingsTile.switchTile(
                   onToggle: (value) {
                     BaseSingleton.singleton.sharedPreferences
