@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:prescore_flutter/main.dart';
 import 'package:prescore_flutter/main.gr.dart';
 import 'package:prescore_flutter/model/login_model.dart';
@@ -138,78 +139,85 @@ class _LoginWidgetState extends State<LoginWidget> {
                     ),
                     borderRadius: const BorderRadius.all(Radius.circular(12)),
                   ),
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                          child: TextField(
-                            controller: usernameController,
-                            decoration: InputDecoration(
-                                prefixIcon: const Icon(Icons.account_box),
-                                suffixIcon:
-                                    ClearButton(controller: usernameController),
-                                labelText: '用户名',
-                                hintText: '请输入用户名',
-                                filled: true,
-                                enabled: !model.isLoading),
-                            onChanged: (text) {
-                              saveAccount();
-                            },
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                          child: TextField(
-                            controller: passwordController,
-                            obscureText: _isObscured,
-                            decoration: InputDecoration(
-                              prefixIcon: const Icon(Icons.password),
-                              suffixIcon: IconButton(
-                                icon: _isObscured
-                                    ? const Icon(Icons.visibility_off)
-                                    : const Icon(Icons.visibility),
-                                onPressed: () =>
-                                    setState(() => _isObscured = !_isObscured),
-                              ),
-                              labelText: '密码',
-                              hintText: '请输入密码',
-                              filled: true,
-                              enabled: !model.isLoading,
+                  child: AutofillGroup(
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                            child: TextField(
+                              controller: usernameController,
+                              decoration: InputDecoration(
+                                  prefixIcon: const Icon(Icons.account_box),
+                                  suffixIcon: ClearButton(
+                                      controller: usernameController),
+                                  labelText: '用户名',
+                                  hintText: '请输入用户名',
+                                  filled: true,
+                                  enabled: !model.isLoading),
+                              onChanged: (text) {
+                                saveAccount();
+                              },
+                              autofillHints: const [AutofillHints.username],
                             ),
-                            onChanged: (text) {
-                              saveAccount();
-                            },
                           ),
-                        ),
-                        Container(
-                          margin: const EdgeInsets.only(left: 16),
-                          child: FilterChip(
-                            label: const Text('保持登录'),
-                            selected: sharedPrefs.getBool("keepLogin") ?? true,
-                            onSelected: model.isLoading
-                                ? null
-                                : (bool selected) => setState(() {
-                                      if (!selected) {
-                                        if (sharedPrefs.getBool(
-                                                    "enableWearService") ==
-                                                true ||
-                                            sharedPrefs.getBool("checkExams") ==
-                                                true) {
-                                          SnackBar snackBar = const SnackBar(
-                                              content: Text('注意：启用后台服务必须保持登录'));
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(snackBar);
-                                          //sharedPrefs.setBool("keepLogin", true);
-                                          //return;
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                            child: TextField(
+                              controller: passwordController,
+                              obscureText: _isObscured,
+                              decoration: InputDecoration(
+                                prefixIcon: const Icon(Icons.password),
+                                suffixIcon: IconButton(
+                                  icon: _isObscured
+                                      ? const Icon(Icons.visibility_off)
+                                      : const Icon(Icons.visibility),
+                                  onPressed: () => setState(
+                                      () => _isObscured = !_isObscured),
+                                ),
+                                labelText: '密码',
+                                hintText: '请输入密码',
+                                filled: true,
+                                enabled: !model.isLoading,
+                              ),
+                              autofillHints: const [AutofillHints.password],
+                              onChanged: (text) {
+                                saveAccount();
+                              },
+                            ),
+                          ),
+                          Container(
+                            margin: const EdgeInsets.only(left: 16),
+                            child: FilterChip(
+                              label: const Text('保持登录'),
+                              selected:
+                                  sharedPrefs.getBool("keepLogin") ?? true,
+                              onSelected: model.isLoading
+                                  ? null
+                                  : (bool selected) => setState(() {
+                                        if (!selected) {
+                                          if (sharedPrefs.getBool(
+                                                      "enableWearService") ==
+                                                  true ||
+                                              sharedPrefs
+                                                      .getBool("checkExams") ==
+                                                  true) {
+                                            SnackBar snackBar = const SnackBar(
+                                                content:
+                                                    Text('注意：启用后台服务必须保持登录'));
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(snackBar);
+                                            //sharedPrefs.setBool("keepLogin", true);
+                                            //return;
+                                          }
                                         }
-                                      }
-                                      sharedPrefs.setBool(
-                                          "keepLogin", selected);
-                                    }),
-                          ),
-                        )
-                      ]),
+                                        sharedPrefs.setBool(
+                                            "keepLogin", selected);
+                                      }),
+                            ),
+                          )
+                        ]),
+                  ),
                 ),
                 Positioned(
                     right: 0,
@@ -217,10 +225,13 @@ class _LoginWidgetState extends State<LoginWidget> {
                     child: FloatingActionButton.extended(
                       onPressed: model.isLoading
                           ? null
-                          : () => login(
-                              useLocalSession: false,
-                              keepLocalSession:
-                                  sharedPrefs.getBool("keepLogin") ?? true),
+                          : () {
+                              login(
+                                  useLocalSession: false,
+                                  keepLocalSession:
+                                      sharedPrefs.getBool("keepLogin") ?? true);
+                              TextInput.finishAutofillContext();
+                            },
                       icon: model.isLoading
                           ? Container(
                               height: 10,
