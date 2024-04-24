@@ -162,13 +162,16 @@ class ExamsState extends State<Exams> {
         }
       });
     }).catchError((e) {
-      (e as DioException);
       setState(() {
         retry--;
         if (retry <= 0) {
           result ??= [];
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(e.error.toString())));
+          if (e is DioException) {
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text(e.error.toString())));
+          } else {
+            throw e;
+          }
         }
       });
     });

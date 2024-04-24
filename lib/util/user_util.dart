@@ -13,10 +13,12 @@ import 'package:prescore_flutter/util/rsa.dart';
 import 'package:prescore_flutter/util/struct.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:synchronized/synchronized.dart';
 import 'package:path/path.dart' as path;
 import '../constants.dart';
 
 const String userSession = "userSession";
+final Lock databaseLock = Lock();
 
 Future<Database> initLocalSessionDataBase() async {
   return await openDatabase(
@@ -58,64 +60,68 @@ class User {
 
   Future<void> readLocalSession() async {
     SharedPreferences sharedPrefs = BaseSingleton.singleton.sharedPreferences;
-    Database database = await initLocalSessionDataBase();
-    List<Map<String, Object?>> list =
-        await database.rawQuery('SELECT * FROM $userSession');
-    if (list.length == 1) {
-      sharedPrefs.setBool("localSessionExist", true);
-      Session localSession = Session(
-        list[0]['st'] as String,
-        list[0]['sessionId'] as String,
-        list[0]['xToken'] as String,
-        list[0]['userId'] as String,
-        serverToken: list[0]['serverToken'] as String?,
-      );
-      if (list[0]['basicInfo_id'] != null) {
-        basicInfo = BasicInfo(
-            list[0]['basicInfo_id'] as String,
-            list[0]['basicInfo_loginName'] as String,
-            list[0]['basicInfo_name'] as String,
-            list[0]['basicInfo_role'] as String,
-            list[0]['basicInfo_avatar'] as String);
-        isBasicInfoLoaded = true;
+    return await databaseLock.synchronized(() async {
+      Database database = await initLocalSessionDataBase();
+      List<Map<String, Object?>> list =
+          await database.rawQuery('SELECT * FROM $userSession');
+      if (list.length == 1) {
+        sharedPrefs.setBool("localSessionExist", true);
+        Session localSession = Session(
+          list[0]['st'] as String,
+          list[0]['sessionId'] as String,
+          list[0]['xToken'] as String,
+          list[0]['userId'] as String,
+          serverToken: list[0]['serverToken'] as String?,
+        );
+        if (list[0]['basicInfo_id'] != null) {
+          basicInfo = BasicInfo(
+              list[0]['basicInfo_id'] as String,
+              list[0]['basicInfo_loginName'] as String,
+              list[0]['basicInfo_name'] as String,
+              list[0]['basicInfo_role'] as String,
+              list[0]['basicInfo_avatar'] as String);
+          isBasicInfoLoaded = true;
+        }
+        session = localSession;
+        Dio client = BaseSingleton.singleton.dio;
+        client.options.headers["XToken"] = localSession.xToken;
+        loginCredential.userName = list[0]['userName'] as String;
+        loginCredential.password = list[0]['password'] as String;
+        await database.close();
+        return;
+      } else {
+        await database.close();
+        throw Exception("Too many Local Session");
       }
-      session = localSession;
-      Dio client = BaseSingleton.singleton.dio;
-      client.options.headers["XToken"] = localSession.xToken;
-      loginCredential.userName = list[0]['userName'] as String;
-      loginCredential.password = list[0]['password'] as String;
-      await database.close();
-      return;
-    } else {
-      await database.close();
-      throw Exception("Too many Local Session");
-    }
+    });
   }
 
   Future<void> saveLocalSession() async {
     SharedPreferences sharedPrefs = BaseSingleton.singleton.sharedPreferences;
-    Database database = await initLocalSessionDataBase();
-    await database.rawDelete('DELETE FROM $userSession');
-    await database.insert(
-      userSession,
-      {
-        "userName": loginCredential.userName,
-        "password": loginCredential.password,
-        "serverToken": session?.serverToken,
-        "sessionId": session?.sessionId,
-        "st": session?.st,
-        "userId": session?.userId,
-        "xToken": session?.xToken,
-        "basicInfo_id": basicInfo?.id,
-        "basicInfo_loginName": basicInfo?.loginName,
-        "basicInfo_name": basicInfo?.name,
-        "basicInfo_role": basicInfo?.role,
-        "basicInfo_avatar": basicInfo?.avatar
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-    await database.close();
-    sharedPrefs.setBool("localSessionExist", true);
+    return await databaseLock.synchronized(() async {
+      Database database = await initLocalSessionDataBase();
+      await database.rawDelete('DELETE FROM $userSession');
+      await database.insert(
+        userSession,
+        {
+          "userName": loginCredential.userName,
+          "password": loginCredential.password,
+          "serverToken": session?.serverToken,
+          "sessionId": session?.sessionId,
+          "st": session?.st,
+          "userId": session?.userId,
+          "xToken": session?.xToken,
+          "basicInfo_id": basicInfo?.id,
+          "basicInfo_loginName": basicInfo?.loginName,
+          "basicInfo_name": basicInfo?.name,
+          "basicInfo_role": basicInfo?.role,
+          "basicInfo_avatar": basicInfo?.avatar
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+      await database.close();
+      sharedPrefs.setBool("localSessionExist", true);
+    });
   }
 
   Future<void> updateLoginStatus({bool force = false}) async {
@@ -131,32 +137,38 @@ class User {
           force: true);
       //if(!result.state && (result.message.contains("用户不存在") || result.message.contains("凭证有误"))) {
       if (!result.state) {
-        logoff();
+        await logoff();
         reLoginFailedCallback();
       }
     }
   }
 
   /// Remove **all** cookies and session data to logoff
-  void logoff() async {
+  Future<bool> logoff() async {
     SharedPreferences sharedPrefs = BaseSingleton.singleton.sharedPreferences;
     session = null;
     loginCredential.password = "";
     loginCredential.userName = "";
     basicInfo = null;
+    studentInfo = null;
     isLoading = false;
     isBasicInfoLoaded = false;
     keepLocalSession = false;
+    BaseSingleton.singleton.dio.options.headers["XToken"] = null;
 
     // Remove all cookies from related sites.
     CookieJar cookieJar = BaseSingleton.singleton.cookieJar;
     cookieJar.delete(Uri.parse("https://www.zhixue.com/"));
     cookieJar.delete(Uri.parse("https://open.changyan.com/"));
-    initLocalSessionDataBase().then((value) async {
-      await value.rawDelete('DELETE FROM $userSession');
-      await value.close();
+    
+    return await databaseLock.synchronized(() async {
+      Database database = await initLocalSessionDataBase();
+      await database.rawDelete('DELETE FROM $userSession');
+      await database.close();
+      sharedPrefs.setBool("localSessionExist", false);
+      return true;
     });
-    sharedPrefs.setBool("localSessionExist", false);
+    
   }
 
   /// Use RSA to encrypt [password].
@@ -314,9 +326,6 @@ class User {
         }
         isLoading = false;
         //LocalLogger.write("本地Session登录成功", isError: false);
-        try {
-          fetchStudentInfo();
-        } catch (_) {}
         return Result(state: true, message: "本地Session登录成功");
       } catch (_) {}
     }
@@ -413,9 +422,6 @@ class User {
     }
     isLoading = false;
     //LocalLogger.write("登录成功", isError: false);
-    try {
-      fetchStudentInfo();
-    } catch (_) {}
     return Result(state: true, message: "登录成功");
   }
 

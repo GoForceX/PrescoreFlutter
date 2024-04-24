@@ -158,7 +158,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                               onChanged: (text) {
                                 saveAccount();
                               },
-                              autofillHints: const [AutofillHints.username],
+                              autofillHints: !model.isLoading ? const [AutofillHints.username] : null,
                             ),
                           ),
                           Padding(
@@ -180,7 +180,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                                 filled: true,
                                 enabled: !model.isLoading,
                               ),
-                              autofillHints: const [AutofillHints.password],
+                              autofillHints: !model.isLoading ? const [AutofillHints.password] : null,
                               onChanged: (text) {
                                 saveAccount();
                               },

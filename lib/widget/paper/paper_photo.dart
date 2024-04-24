@@ -41,18 +41,14 @@ class _PaperPhotoState extends State<PaperPhoto>
   @override
   void initState() {
     super.initState();
-    if (!Provider.of<PaperModel>(context, listen: false).isDataLoaded) {
-      Provider.of<PaperModel>(context, listen: false)
-          .user
-          .fetchPaperData(widget.examId, widget.paperId)
-          .then((value) {
+    PaperModel model = Provider.of<PaperModel>(context, listen: false);
+    if (!model.isDataLoaded) {
+      model.user.fetchPaperData(widget.examId, widget.paperId).then((value) {
         if (value.state) {
-          Provider.of<PaperModel>(context, listen: false)
-              .setPaperData(value.result);
-          Provider.of<PaperModel>(context, listen: false).setDataLoaded(true);
+          model.setPaperData(value.result);
+          model.setDataLoaded(true);
         } else {
-          Provider.of<PaperModel>(context, listen: false)
-              .setErrMsg(value.message);
+          model.setErrMsg(value.message);
         }
       });
     }
@@ -362,8 +358,8 @@ class _PaperPhotoWidgetState extends State<PaperPhotoWidget> {
     return pngBytes;
   }
 
- Future<Response<dynamic>>? getImageFuture;
- Future<dynamic>? markerPainterFuture;
+  Future<Response<dynamic>>? getImageFuture;
+  Future<dynamic>? markerPainterFuture;
   @override
   Widget build(BuildContext context) {
     Uint8List? memoryImage;

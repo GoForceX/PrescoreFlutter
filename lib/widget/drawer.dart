@@ -82,16 +82,15 @@ class _MainDrawerState extends State<MainDrawer> {
           ),
           TextButton(
             onPressed: () async {
+              StackRouter router = dialogContext.router;
+              LoginModel model = Provider.of<LoginModel>(context, listen: false);
               Navigator.pop(dialogContext, '果断退出');
               Navigator.pop(context);
-              Provider.of<LoginModel>(context, listen: false)
-                  .setLoggedIn(false);
-              Provider.of<LoginModel>(context, listen: false).setLoading(false);
-              Provider.of<LoginModel>(context, listen: false).user.logoff();
-              Provider.of<LoginModel>(context, listen: false).setUser(User());
-              dialogContext.router.replaceAll([const HomeRoute()]);
-              //MethodChannel channel = const MethodChannel('MainActivity');
-              //channel.invokeMethod('stopService');
+              await model.user.logoff();
+              model.setLoggedIn(false);
+              model.setLoading(false);
+              model.setUser(User());
+              router.replaceAll([const HomeRoute()]);
               refreshService();
             },
             child: const Text('果断退出'),
