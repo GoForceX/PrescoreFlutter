@@ -41,7 +41,7 @@ serviceEntry() async {
   if (sentryAnalyseEnable) {
     await SentryFlutter.init((options) {
       options.dsn =
-          'https://baab724bcf3cc8b40759a031edd478eb@o4506218740776960.ingest.sentry.io/4506218743857152';
+          'https://dea0fae8a2ec43f788c16534b902b4c4@o1288716.ingest.sentry.io/6506171';
       // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
       // We recommend adjusting this value in production.
       options.tracesSampleRate = 1.0;
@@ -448,6 +448,7 @@ class HomePageState extends State<HomePage> {
                     noMoreText: '太多啦 TwT',
                     failedText: '失败了 TwT',
                     messageText: '上次更新于 %T',
+                    hapticFeedback: true,
                   ),
                   footer: const ClassicFooter(
                     infiniteOffset: 0,
