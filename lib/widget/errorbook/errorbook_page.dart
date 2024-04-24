@@ -50,43 +50,49 @@ class ErrorBookPage extends StatelessWidget {
             });
             return Consumer<ErrorBookModel>(
               builder: (context, model, widget) {
-                List<Widget> questions = [];
+                int? totalPage = Provider.of<ErrorBookModel>(context, listen: false).totalPage;
                 ErrorBookData? errorBookData =
                     Provider.of<ErrorBookModel>(context, listen: false)
                         .errorBookData;
-                if (errorBookData != null) {
-                  questions.add(Row(children: [
-                    const SizedBox(width: 8),
-                    const Icon(Icons.format_list_numbered_rounded, size: 18),
-                    Text(
-                        " 共 ${errorBookData.totalQuestion} 道, ${errorBookData.totalPage} 页",
-                        style: const TextStyle(
-                            fontSize: 12, fontWeight: FontWeight.bold))
-                  ]));
-                  for (var errorQuestion in errorBookData.errorQuestions) {
-                    questions
-                        .add(ErrorQuestionCard(errorQuestion: errorQuestion));
-                  }
-                } else {
-                  questions
-                      .add(const Center(child: CircularProgressIndicator()));
-                }
-                int? totalPage =
-                    Provider.of<ErrorBookModel>(context, listen: false)
-                        .totalPage;
-                if (totalPage != null) {
-                  questions
-                      .add(Center(child: PageChooser(totalPage: totalPage)));
-                }
-                return ListView(children: [
-                  SubjectFilter(
-                      subjectList:
-                          Provider.of<ErrorBookModel>(context, listen: false)
-                                  .subjectCodeList ??
-                              []),
-                  const DateChooser(),
-                  ...questions,
-                ]);
+                return CustomScrollView(
+                      slivers: [
+                        SliverToBoxAdapter(
+                          child: SubjectFilter(
+                            subjectList: Provider.of<ErrorBookModel>(context, listen: false).subjectCodeList ?? [],
+                          ),
+                        ),
+                        const SliverToBoxAdapter(
+                          child: DateChooser()
+                        ),
+                        if (errorBookData != null)
+                          SliverToBoxAdapter(
+                            child: Row(children: [
+                              const SizedBox(width: 8),
+                              const Icon(Icons.format_list_numbered_rounded, size: 18),
+                              Text(
+                                  " 共 ${errorBookData.totalQuestion} 道, ${errorBookData.totalPage} 页",
+                                  style: const TextStyle(
+                                      fontSize: 12, fontWeight: FontWeight.bold))
+                            ]),
+                          ),
+                        if (errorBookData != null)
+                          SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              childCount: Provider.of<ErrorBookModel>(context, listen: false).totalPage ?? 0,
+                              (context, index) => ErrorQuestionCard(errorQuestion: errorBookData.errorQuestions[index]),
+                              
+                            ),
+                          ),
+                        if (errorBookData == null)
+                          const SliverToBoxAdapter(child: 
+                            Center(child: CircularProgressIndicator()),
+                          ),
+                        if (totalPage != null)
+                          SliverToBoxAdapter(child: 
+                            Center(child: PageChooser(totalPage: totalPage)),
+                          ),
+                      ],
+                    );
               },
             );
           }),
