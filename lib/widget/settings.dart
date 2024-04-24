@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:auto_route/auto_route.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:material_color_utilities/palettes/core_palette.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -79,16 +78,14 @@ class SelectClassCountDialogState extends State<SelectClassCountDialog> {
               secondClassesCountCtr.remove(key);
             });
           },
-          background: 
-             Container(
+          background: Container(
               margin: const EdgeInsets.all(4),
-                  decoration: const BoxDecoration(
-                    color: Colors.redAccent,
-                    borderRadius: BorderRadius.all(Radius.circular(6))
-                  ),
-                  alignment: Alignment.centerLeft,
-                  padding: const EdgeInsets.only(left: 12),
-                  child: const Icon(Icons.delete)),
+              decoration: const BoxDecoration(
+                  color: Colors.redAccent,
+                  borderRadius: BorderRadius.all(Radius.circular(6))),
+              alignment: Alignment.centerLeft,
+              padding: const EdgeInsets.only(left: 12),
+              child: const Icon(Icons.delete)),
           child: NumberPicker(controller: value, labelText: "$key (滑动以删除)"),
         ),
       ));
@@ -100,7 +97,8 @@ class SelectClassCountDialogState extends State<SelectClassCountDialog> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-            NumberPicker(controller: classCountController, labelText: "行政(默认值)"),
+            NumberPicker(
+                controller: classCountController, labelText: "行政(默认值)"),
             ...numberPickerList,
             const SizedBox(height: 8),
             FutureBuilder(
@@ -148,8 +146,8 @@ class SelectClassCountDialogState extends State<SelectClassCountDialog> {
                 'classCount', int.tryParse(classCountController.text) ?? 45);
             BaseSingleton.singleton.sharedPreferences.setString(
                 'secondClassesCount',
-                jsonEncode(secondClassesCountCtr
-                    .map((key, value) => MapEntry(key, int.parse(value.text)))));
+                jsonEncode(secondClassesCountCtr.map(
+                    (key, value) => MapEntry(key, int.parse(value.text)))));
             setState(() {});
             Navigator.pop(context, '确定');
           },
@@ -448,9 +446,6 @@ class _SettingsPageState extends State<SettingsPage> {
   int pressCount = 0;
   @override
   Widget build(BuildContext context) {
-    bool isPushEnabled =
-        BaseSingleton.singleton.sharedPreferences.getBool('checkExams') ??
-            false;
     return Scaffold(
       appBar: AppBar(
         title: const Text('设置'),
@@ -508,35 +503,35 @@ class _SettingsPageState extends State<SettingsPage> {
                 title: const Text('允许上传数据'),
                 description: const Text('向服务器上传考试数据'),
               ),
-                SettingsTile.switchTile(
-                  onToggle: (value) {
+              SettingsTile.switchTile(
+                onToggle: (value) {
+                  BaseSingleton.singleton.sharedPreferences
+                      .setBool('showMarkingRecords', value);
+                  setState(() {});
+                },
+                initialValue: BaseSingleton.singleton.sharedPreferences
+                    .getBool('showMarkingRecords'),
+                leading: const Icon(Icons.update),
+                title: const Text('显示判卷记录'),
+                description: const Text('在分数细则页显示判卷人'),
+              ),
+              SettingsTile.switchTile(
+                onToggle: (value) {
+                  BaseSingleton.singleton.sharedPreferences
+                      .setBool('showMoreSubject', value);
+                  if (!value) {
                     BaseSingleton.singleton.sharedPreferences
-                        .setBool('showMarkingRecords', value);
-                    setState(() {});
-                  },
-                  initialValue: BaseSingleton.singleton.sharedPreferences
-                      .getBool('showMarkingRecords'),
-                  leading: const Icon(Icons.update),
-                  title: const Text('显示判卷记录'),
-                  description: const Text('在分数细则页显示判卷人'),
-                ),
-                SettingsTile.switchTile(
-                  onToggle: (value) {
-                    BaseSingleton.singleton.sharedPreferences
-                        .setBool('showMoreSubject', value);
-                    if (!value) {
-                      BaseSingleton.singleton.sharedPreferences
-                          .setBool('tryPreviewScore', false);
-                    }
-                    service.refreshService();
-                    setState(() {});
-                  },
-                  initialValue: BaseSingleton.singleton.sharedPreferences
-                      .getBool('showMoreSubject'),
-                  leading: const Icon(Icons.more_horiz),
-                  title: const Text('更多科目'),
-                  description: const Text('在单科查看页包含判卷中的科目(可能含未参加科目)'),
-                ),
+                        .setBool('tryPreviewScore', false);
+                  }
+                  service.refreshService();
+                  setState(() {});
+                },
+                initialValue: BaseSingleton.singleton.sharedPreferences
+                    .getBool('showMoreSubject'),
+                leading: const Icon(Icons.more_horiz),
+                title: const Text('更多科目'),
+                description: const Text('在单科查看页包含判卷中的科目(可能含未参加科目)'),
+              ),
               if (BaseSingleton.singleton.sharedPreferences
                       .getBool("developMode") ==
                   true)
@@ -653,53 +648,49 @@ class _SettingsPageState extends State<SettingsPage> {
                 title: const Text('使用唤醒锁'),
                 description: const Text('当出分啦在后台运行时，保持 CPU 唤醒状态'),
               ),*/
-                if (!kReleaseMode)
-                  SettingsTile.switchTile(
-                    onToggle: (value) async {
-                      if (value &&
-                          BaseSingleton.singleton.sharedPreferences
-                                  .getBool("keepLogin") ==
-                              false) {
+                SettingsTile.switchTile(
+                  onToggle: (value) async {
+                    if (value &&
+                        BaseSingleton.singleton.sharedPreferences
+                                .getBool("keepLogin") ==
+                            false) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('请启用"保持登录", 否则服务不会启动')));
+                      return;
+                    }
+                    if (value) {
+                      await service.initDataBase();
+                      Result result = await service.checkExams(firstRun: true);
+                      if (!result.state) {
+                        if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                                content: Text('请启用"保持登录", 否则服务不会启动')));
+                                content: Text('考试变动推送初始化失败，请检查凭证和网络')));
                         return;
                       }
-                      if (value) {
-                        await service.initDataBase();
-                        Result result =
-                            await service.checkExams(firstRun: true);
-                        if (!result.state) {
-                          if (!context.mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text('考试变动推送初始化失败，请检查凭证和网络')));
-                          return;
-                        }
-                      }
-                      await BaseSingleton.singleton.sharedPreferences
-                          .setBool('checkExams', value);
-                      service.refreshService();
-                      setState(() {
-                        isPushEnabled = value;
-                      });
+                    }
+                    await BaseSingleton.singleton.sharedPreferences
+                        .setBool('checkExams', value);
+                    service.refreshService();
+                    setState(() {});
+                  },
+                  initialValue: BaseSingleton.singleton.sharedPreferences
+                      .getBool('checkExams'),
+                  leading: const Icon(Icons.notifications),
+                  title: const Text('考试变动推送'),
+                  description: const Text('当发布新的成绩时通知，需后台定期查询数据，可能造成异常！'),
+                ),
+                SettingsTile.navigation(
+                    leading: const Icon(Icons.timer),
+                    title: const Text("后台轮询时间间隔"),
+                    description: Text(
+                        "${BaseSingleton.singleton.sharedPreferences.getInt("checkExamsInterval") ?? "Null"} 分钟"),
+                    onPressed: (BuildContext context) {
+                      showChangeTimerDialog(context);
                     },
-                    initialValue: BaseSingleton.singleton.sharedPreferences
-                        .getBool('checkExams'),
-                    leading: const Icon(Icons.notifications),
-                    title: const Text('考试变动推送'),
-                    description: const Text('当发布新的成绩时通知，需后台定期查询数据，可能造成异常！'),
-                  ),
-                if (!kReleaseMode)
-                  SettingsTile.navigation(
-                      leading: const Icon(Icons.timer),
-                      title: const Text("后台轮询时间间隔"),
-                      description: Text(
-                          "${BaseSingleton.singleton.sharedPreferences.getInt("checkExamsInterval") ?? "Null"} 分钟"),
-                      onPressed: (BuildContext context) {
-                        showChangeTimerDialog(context);
-                      },
-                      enabled: isPushEnabled),
+                    enabled: BaseSingleton.singleton.sharedPreferences
+                            .getBool('checkExams') ??
+                        true),
                 SettingsTile.switchTile(
                   onToggle: (value) async {
                     if (value &&
