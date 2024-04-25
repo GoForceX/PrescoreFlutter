@@ -193,8 +193,11 @@ Future<Result> checkExams(
               !newExam &&
               firstRun == false) {
             //科目变动
-            channel.invokeMethod("sendNotification",
-                {"text": "考试 ${examRemote.examName} 发布了新的科目"});
+            channel.invokeMethod("sendNotification", {
+              "text": showMoreSubject
+                  ? "考试 ${examRemote.examName} 新的科目完成判卷"
+                  : "考试 ${examRemote.examName} 发布了新的科目"
+            });
           }
           if (remoteSubjectList.result != examLocal[0]["subjectList"] ||
               examRemote.isFinal) {
@@ -239,6 +242,11 @@ Future<void> serviceMain() async {
   await BaseSingleton.singleton.init();
   await initDataBase();
   Timer? checkExamsTimer;
+  if (!user.isLoggedIn()) {
+    try {
+      await login(force: false);
+    } catch (_) {}
+  }
   channel.setMethodCallHandler((call) async {
     if (call.method == "changeServiceStatus") {
       showMoreSubject = call.arguments["showMoreSubject"];

@@ -254,7 +254,7 @@ class QuestionCardState extends State<QuestionCard>
             Builder(builder: (BuildContext context) {
               if (widget.question.classScoreRate != null) {
                 return Container(
-                  padding: const EdgeInsets.all(12.0),
+                  padding: const EdgeInsets.symmetric(vertical: 12.0),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -354,29 +354,6 @@ class QuestionCardState extends State<QuestionCard>
                 return const SizedBox.shrink();
               }
             }),
-            /*Builder(builder: (BuildContext context) {
-              if (widget.question.classScoreRate != null) {
-                return LinearPercentIndicator(
-                  lineHeight: 8.0,
-                  percent: widget.question.classScoreRate ?? 0,
-                  backgroundColor: Colors.grey,
-                  linearGradient: const LinearGradient(
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                    colors: [
-                      Colors.lightBlueAccent,
-                      Colors.lightBlue,
-                      Colors.blue
-                    ],
-                  ),
-                  barRadius: const Radius.circular(4),
-                );
-              } else {
-                return const SizedBox.shrink();
-              }
-            },
-            ),
-            const SizedBox(height: 8),*/
             SizeTransition(
               axisAlignment: 0.0,
               sizeFactor: animationCurve,
@@ -385,6 +362,40 @@ class QuestionCardState extends State<QuestionCard>
                 children: subTopicWidget,
               ),
             ),
+            if (widget.question.subTopic.length > 1 || complexMarking)
+            Row(
+              children: [
+                const Spacer(),
+                InkWell(
+                    borderRadius: BorderRadius.circular(6),
+                    onTap: () {
+                      setState(() {
+                        detailExpanded = !detailExpanded;
+                        if (detailExpanded) {
+                          _animationController.forward(from: 0);
+                        } else {
+                          _animationController.reverse(from: 1);
+                        }
+                      });
+                    },
+                    child: Container(
+                        margin: const EdgeInsets.all(6),
+                        child: Row(
+                          children: [
+                            RotationTransition(
+                                turns: Tween<double>(begin: 0.5, end: 0)
+                                    .animate(_animationController),
+                                child: const Icon(Icons.keyboard_arrow_up,
+                                    size: 20)),
+                            Text(
+                              detailExpanded ? "折叠 " : "展开 ",
+                              style: const TextStyle(
+                                  fontSize: 10, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        )))
+              ],
+            )
           ],
         ));
     return Card(
@@ -396,20 +407,6 @@ class QuestionCardState extends State<QuestionCard>
           ),
           borderRadius: const BorderRadius.all(Radius.circular(12)),
         ),
-        child: widget.question.subTopic.length > 1 || complexMarking
-            ? InkWell(
-                borderRadius: BorderRadius.circular(12.0),
-                onTap: () {
-                  setState(() {
-                    detailExpanded = !detailExpanded;
-                    if (detailExpanded) {
-                      _animationController.forward(from: 0);
-                    } else {
-                      _animationController.reverse(from: 1);
-                    }
-                  });
-                },
-                child: infoCard)
-            : infoCard);
+        child: infoCard);
   }
 }
