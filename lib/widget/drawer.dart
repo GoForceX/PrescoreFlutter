@@ -2,7 +2,6 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:prescore_flutter/model/login_model.dart';
-import 'package:prescore_flutter/widget/user_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:prescore_flutter/main.dart';
 import '../../util/user_util.dart';
@@ -19,8 +18,8 @@ Future<void> initDataBase() async {
   database = await openDatabase(
     path.join(await getDatabasesPath(), 'UserSession.db'),
     onCreate: (db, version) async {
-      var tableExists = await db
-          .rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='$tableName'");
+      var tableExists = await db.rawQuery(
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='$tableName'");
       if (tableExists.isEmpty) {
         logger.d("tableNotExists, CREATE TABLE $tableName");
         db.execute(
@@ -32,7 +31,6 @@ Future<void> initDataBase() async {
   );
 }
 
-
 class MainDrawer extends StatefulWidget {
   const MainDrawer({super.key});
 
@@ -41,7 +39,8 @@ class MainDrawer extends StatefulWidget {
 }
 
 class Destination {
-  const Destination(this.label, this.icon, this.selectedIcon, this.router, this.enabled);
+  const Destination(
+      this.label, this.icon, this.selectedIcon, this.router, this.enabled);
 
   final String label;
   final Widget icon;
@@ -61,12 +60,14 @@ class _MainDrawerState extends State<MainDrawer> {
     }
     return 0;
   }
+
   List<dynamic> destinations = [
-    const Destination('考试列表', Icon(Icons.home_outlined), Icon(Icons.home), HomeRoute(), true),
     const Destination(
-        '设置', Icon(Icons.settings_applications_outlined), Icon(Icons.settings_applications), SettingsRoute(), true),
-    const Destination(
-        '错题集', Icon(Icons.book_outlined), Icon(Icons.book_rounded), ErrorBookRoute(), true),
+        '考试列表', Icon(Icons.home_outlined), Icon(Icons.home), HomeRoute(), true),
+    const Destination('设置', Icon(Icons.settings_applications_outlined),
+        Icon(Icons.settings_applications), SettingsRoute(), true),
+    const Destination('错题集', Icon(Icons.book_outlined),
+        Icon(Icons.book_rounded), ErrorBookRoute(), true),
   ];
 
   void logout(context) async {
@@ -83,7 +84,8 @@ class _MainDrawerState extends State<MainDrawer> {
           TextButton(
             onPressed: () async {
               StackRouter router = dialogContext.router;
-              LoginModel model = Provider.of<LoginModel>(context, listen: false);
+              LoginModel model =
+                  Provider.of<LoginModel>(context, listen: false);
               Navigator.pop(dialogContext, '果断退出');
               Navigator.pop(context);
               await model.user.logoff();
@@ -108,7 +110,7 @@ class _MainDrawerState extends State<MainDrawer> {
           onDestinationSelected: (selectedIndex) {
             setState(() {
               //currentIndex = selectedIndex;
-              if(selectedIndex == destinations.length) {
+              if (selectedIndex == destinations.length) {
                 logout(context);
                 return;
               }
@@ -122,21 +124,22 @@ class _MainDrawerState extends State<MainDrawer> {
             const MainAppbarWidget(),
             const Divider(indent: 36, endIndent: 36, height: 55),
             ...destinations.map((destination) {
-              if(destination.runtimeType != Destination) {
+              if (destination.runtimeType != Destination) {
                 return destination;
-              } 
+              }
               return NavigationDrawerDestination(
-                label: Text(destination.label, style: const TextStyle(fontSize: 18)),
+                label: Text(destination.label,
+                    style: const TextStyle(fontSize: 18)),
                 icon: destination.icon,
                 selectedIcon: destination.selectedIcon,
-                enabled: destination.enabled || sharedPrefs.getBool("developMode") == true,
+                enabled: destination.enabled ||
+                    sharedPrefs.getBool("developMode") == true,
               );
             }),
             const Divider(indent: 36, endIndent: 36),
             const NavigationDrawerDestination(
-              label: Text("登出", style: TextStyle(fontSize: 18)),
-              icon: Icon(Icons.logout)
-            )
+                label: Text("登出", style: TextStyle(fontSize: 18)),
+                icon: Icon(Icons.logout))
             //const Divider(indent: 36, endIndent: 36),
           ],
         ),
@@ -150,5 +153,90 @@ class _MainDrawerState extends State<MainDrawer> {
         ),*/
       ],
     );
+  }
+}
+
+class MainAppbarWidget extends StatelessWidget {
+  const MainAppbarWidget({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<LoginModel>(
+        builder: (BuildContext context, LoginModel value, Widget? child) {
+      return FittedBox(
+        child: Card(
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            side: BorderSide(
+              color: Theme.of(context).colorScheme.outlineVariant,
+            ),
+            borderRadius: const BorderRadius.all(Radius.circular(20)),
+          ),
+          color: Theme.of(context).colorScheme.onSecondary,
+          margin: const EdgeInsets.only(left: 10, right: 10),
+          child: Consumer<LoginModel>(
+              builder: (BuildContext context, LoginModel value, Widget? child) {
+            return FutureBuilder(
+                future: value.user.fetchBasicInfo(),
+                builder: (BuildContext context, AsyncSnapshot snapshot) {
+                  Widget image = Image.asset('assets/akarin.webp');
+                  String title = "";
+                  String subtitle = "";
+                  if (snapshot.hasData) {
+                    logger.d("basicInfo: ${snapshot.data}");
+                    if (snapshot.data.avatar != "" &&
+                        !(snapshot.data.avatar as String).contains('default')) {
+                      image = FadeInImage.assetNetwork(
+                          image: snapshot.data.avatar,
+                          placeholder: 'assets/akarin.webp');
+                    }
+                    if (snapshot.data.name != "") {
+                      title = snapshot.data.name;
+                    }
+                    if (snapshot.data.loginName != "") {
+                      subtitle = snapshot.data.loginName;
+                    }
+                  }
+                  return Container(
+                      margin: const EdgeInsets.all(15),
+                      width: 180,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircleAvatar(
+                            radius: 26,
+                            child: ClipOval(child: image),
+                          ),
+                          const SizedBox(
+                            width: 10,
+                          ),
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Row(children: [
+                                Text(
+                                  title,
+                                  style: const TextStyle(fontSize: 22),
+                                )
+                              ]),
+                              Row(children: [
+                                Text(
+                                  subtitle,
+                                  style: const TextStyle(
+                                      fontSize: 11, color: Colors.grey),
+                                ),
+                              ]),
+                            ],
+                          ),
+                        ],
+                      ));
+                });
+          }),
+        ),
+      );
+    });
   }
 }

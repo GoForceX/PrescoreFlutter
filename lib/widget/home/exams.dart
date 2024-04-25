@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:prescore_flutter/main.dart';
 import 'package:prescore_flutter/model/login_model.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../util/struct.dart';
 import 'exam_card.dart';
@@ -23,17 +24,99 @@ List<Widget> generateCardsFromExams(BuildContext context, List<Exam> exams) {
   return cards;
 }
 
-class Exams extends StatefulWidget {
-  final EasyRefreshController controller;
-  const Exams({Key? key, required this.controller}) : super(key: key);
+class Exams extends StatelessWidget {
+  const Exams({Key? key}) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() => ExamsState();
+  Widget build(BuildContext context) {
+    List<Widget> slivers = [];
+    EasyRefreshController controller = EasyRefreshController(
+      controlFinishRefresh: true,
+      controlFinishLoad: true,
+    );
+    //slivers.add(const SliverHeader());
+    slivers.add(SliverAppBar(
+      //title: Text("考试列表"),
+      forceElevated: true,
+      flexibleSpace: FlexibleSpaceBar(
+        title: Text("考试列表",
+            style: Theme.of(context).textTheme.titleLarge),
+        titlePadding:
+            const EdgeInsetsDirectional.only(start: 56, bottom: 14),
+        expandedTitleScale: 1.8,
+      ),
+      actions: [
+        IconButton(
+            onPressed: () => launchUrl(Uri.parse("https://bjbybbs.com/t/Revealer")),
+            icon: const Icon(Icons.insert_comment))
+      ],
+      expandedHeight: 200.0,
+      floating: false,
+      pinned: true,
+      snap: false,
+    ));
+    slivers.add(const HeaderLocator.sliver());
+    GlobalKey<ExamsListState> key = GlobalKey();
+    ExamsList exams = ExamsList(key: key, controller: controller);
+    slivers.add(exams);
+    slivers.add(const FooterLocator.sliver());
+    LoginModel model = Provider.of<LoginModel>(context, listen: false);
+    return EasyRefresh.builder(
+        controller: controller,
+        header: const ClassicHeader(
+          position: IndicatorPosition.locator,
+          dragText: '下滑刷新 (´ρ`)',
+          armedText: '松开刷新 (´ρ`)',
+          readyText: '获取数据中... (›´ω`‹)',
+          processingText: '获取数据中... (›´ω`‹)',
+          processedText: '成功！(`ヮ´)',
+          noMoreText: '太多啦 TwT',
+          failedText: '失败了 TwT',
+          messageText: '上次更新于 %T',
+          hapticFeedback: true,
+        ),
+        footer: const ClassicFooter(
+          infiniteOffset: 0,
+          position: IndicatorPosition.locator,
+          dragText: '下滑刷新 (´ρ`)',
+          armedText: '松开刷新 (´ρ`)',
+          readyText: '获取数据中... (›´ω`‹)',
+          processingText: '获取数据中... (›´ω`‹)',
+          processedText: '成功！(`ヮ´)',
+          noMoreText: '我一点都没有了... TwT',
+          failedText: '失败了 TwT',
+          messageText: '上次更新于 %T',
+        ),
+        onRefresh: (model.isLoggedIn)
+            ? () async {
+                await key.currentState?.refresh();
+              }
+            : null,
+        onLoad: (model.isLoggedIn)
+            ? () async {
+                await key.currentState?.load();
+              }
+            : null,
+        childBuilder: (BuildContext ct, ScrollPhysics sp) =>
+            CustomScrollView(
+              physics: sp,
+              slivers: slivers,
+            ));
+  }
+}
+
+
+class ExamsList extends StatefulWidget {
+  final EasyRefreshController controller;
+  const ExamsList({Key? key, required this.controller}) : super(key: key);
+
+  @override
+  State<StatefulWidget> createState() => ExamsListState();
 }
 
 enum PageType { exam, homework }
 
-class ExamsState extends State<Exams> {
+class ExamsListState extends State<ExamsList> {
   int pageIndex = 1;
   int retry = 4;
   bool lastFetched = false;
@@ -133,6 +216,7 @@ class ExamsState extends State<Exams> {
           onSelectionChanged: (newSelection) {
             setState(() {
               pageType = newSelection.first;
+              pageIndex = 1;
               result = null;
               lastFetched = false;
               isLoading = true;
@@ -152,6 +236,9 @@ class ExamsState extends State<Exams> {
         .then((value) {
       setState(() {
         result = value.result;
+        if (result != null) {
+          widget.controller.finishLoad();
+        }
         retry--;
         if (retry <= 0) {
           result ??= [];
@@ -184,44 +271,5 @@ class ExamsState extends State<Exams> {
               margin: const EdgeInsets.all(10),
               child: const CircularProgressIndicator()))
     ]));
-  }
-}
-
-class ExamsBuilder extends StatelessWidget {
-  final Future future;
-  const ExamsBuilder({Key? key, required this.future}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder(
-        future: future,
-        builder: (BuildContext context, AsyncSnapshot snapshot) {
-          logger.d("snapshot.data: ${snapshot.data}");
-          if (snapshot.connectionState == ConnectionState.done) {
-            if (!snapshot.data.state) {
-              SnackBar snackBar = SnackBar(
-                content: Text('呜呜呜，考试数据获取失败了……\n失败原因：${snapshot.data.message}'),
-                //backgroundColor: Colors.grey.withOpacity(0.5),
-              );
-              ScaffoldMessenger.of(context).showSnackBar(snackBar);
-              return SliverList(
-                  delegate: SliverChildListDelegate(
-                      generateCardsFromExams(context, [])));
-            }
-            return SliverList(
-                delegate: SliverChildListDelegate(
-                    generateCardsFromExams(context, snapshot.data.result)));
-          } else {
-            return const SliverFillRemaining(
-              hasScrollBody: false,
-              child: Center(
-                  child: SizedBox(
-                height: 40,
-                width: 40,
-                child: CircularProgressIndicator(),
-              )),
-            );
-          }
-        });
   }
 }

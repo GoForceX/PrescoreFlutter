@@ -1,7 +1,7 @@
 //import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:prescore_flutter/widget/exam/exam.dart';
+import 'package:prescore_flutter/widget/exam/exam_page.dart';
 import 'package:prescore_flutter/widget/open_container.dart';
 
 //import '../../main.gr.dart';

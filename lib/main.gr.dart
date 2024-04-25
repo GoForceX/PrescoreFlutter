@@ -10,10 +10,10 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:auto_route/auto_route.dart' as _i6;
 import 'package:flutter/material.dart' as _i7;
-import 'package:prescore_flutter/main.dart' as _i3;
 import 'package:prescore_flutter/util/user_util.dart' as _i8;
 import 'package:prescore_flutter/widget/errorbook/errorbook_page.dart' as _i1;
-import 'package:prescore_flutter/widget/exam/exam.dart' as _i2;
+import 'package:prescore_flutter/widget/exam/exam_page.dart' as _i2;
+import 'package:prescore_flutter/widget/home/home_page.dart' as _i3;
 import 'package:prescore_flutter/widget/paper/paper_page.dart' as _i4;
 import 'package:prescore_flutter/widget/settings.dart' as _i5;
 
