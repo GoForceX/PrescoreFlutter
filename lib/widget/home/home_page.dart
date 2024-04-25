@@ -11,6 +11,7 @@ import 'package:r_upgrade/r_upgrade.dart';
 import 'package:prescore_flutter/widget/drawer.dart';
 import 'exams.dart';
 import 'login.dart';
+import 'update_log.dart';
 
 @RoutePage()
 class HomePage extends StatefulWidget {
@@ -120,6 +121,58 @@ class HomePageState extends State<HomePage> {
             );
           }
         }
+      }
+    }
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    String? preVersion =
+        BaseSingleton.singleton.sharedPreferences.getString('preVersion');
+    if (context.mounted) {
+      if (preVersion == null ||
+          Version.parse(packageInfo.version) > Version.parse(preVersion)) {
+        showDialog<String>(
+          context: context,
+          builder: (BuildContext dialogContext) => AlertDialog(
+            title: const Text('升级日志'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: updateLog.entries.map((entry) {
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          "⋄ ${entry.key}",
+                          textAlign: TextAlign.left,
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                        ),
+                      ),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          entry.value,
+                          textAlign: TextAlign.left,
+                        ),
+                      ),
+                      const Divider(),
+                    ],
+                  );
+                }).toList(),
+              ),
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(dialogContext, '确定');
+                },
+                child: const Text('确定'),
+              ),
+            ],
+          ),
+        );
+        BaseSingleton.singleton.sharedPreferences
+            .setString('preVersion', packageInfo.version);
       }
     }
   }
