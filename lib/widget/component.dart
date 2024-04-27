@@ -11,7 +11,7 @@ class TagCard extends StatelessWidget {
         height: 20,
         width: null,
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.outlineVariant,
+          color: Theme.of(context).highlightColor,
           borderRadius: const BorderRadius.all(
             Radius.circular(4),
           ),

@@ -7,9 +7,11 @@ import '../component.dart';
 class QuestionCard extends StatefulWidget {
   final Question question;
   final bool nonFinalAlert;
+
   const QuestionCard(
       {Key? key, required this.question, this.nonFinalAlert = false})
       : super(key: key);
+
   @override
   QuestionCardState createState() => QuestionCardState();
 }
@@ -236,7 +238,7 @@ class QuestionCardState extends State<QuestionCard>
                 children: allTeachersWidget,
               ),
             const SizedBox(
-              height: 16,
+              height: 4,
             ),
             LinearPercentIndicator(
               lineHeight: 8.0,
@@ -256,93 +258,47 @@ class QuestionCardState extends State<QuestionCard>
                 return Container(
                   padding: const EdgeInsets.symmetric(vertical: 12.0),
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       FittedBox(
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.end,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            const Column(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Text(
-                                  "班级得分率：",
-                                  style: TextStyle(fontSize: 16),
-                                ),
-                                SizedBox(
-                                  height: 12,
-                                )
-                              ],
-                            ),
-                            Text(
-                              ((widget.question.classScoreRate ?? 0) * 100)
-                                  .toStringAsFixed(2),
-                              style: const TextStyle(fontSize: 48),
-                            ),
                             const SizedBox(
-                              width: 16,
+                              width: 8,
                             ),
-                            const Column(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Text(
-                                  "%",
-                                  style: TextStyle(fontSize: 16),
-                                ),
-                                SizedBox(
-                                  height: 12,
-                                )
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      FittedBox(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            const Column(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Text(
-                                  "班级平均分：",
-                                  style: TextStyle(fontSize: 16),
-                                ),
-                                SizedBox(
-                                  height: 12,
-                                )
-                              ],
+                            const Text(
+                              "班级平均分：",
+                              style: TextStyle(fontSize: 12),
                             ),
                             Text(
                               ((widget.question.classScoreRate ?? 0) *
                                       widget.question.fullScore)
                                   .toStringAsFixed(2),
-                              style: const TextStyle(fontSize: 48),
+                              style: const TextStyle(fontSize: 32),
                             ),
                             const SizedBox(
-                              width: 16,
+                              width: 8,
                             ),
-                            const Column(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Text(
-                                  "/",
-                                  style: TextStyle(fontSize: 16),
-                                ),
-                                SizedBox(
-                                  height: 12,
-                                )
-                              ],
+                            const Text(
+                              "/",
+                              style: TextStyle(fontSize: 16),
                             ),
                             const SizedBox(
-                              width: 16,
+                              width: 8,
                             ),
                             Text(
                               "${widget.question.fullScore}",
-                              style: const TextStyle(fontSize: 48),
+                              style: const TextStyle(fontSize: 32),
+                            ),
+                            const SizedBox(
+                              width: 8,
+                            ),
+                            TagCard(
+                              text:
+                                  "${((widget.question.classScoreRate ?? 0) * 100).toStringAsFixed(2)}%",
                             ),
                           ],
                         ),
@@ -363,50 +319,43 @@ class QuestionCardState extends State<QuestionCard>
               ),
             ),
             if (widget.question.subTopic.length > 1 || complexMarking)
-            Row(
-              children: [
-                const Spacer(),
-                InkWell(
-                    borderRadius: BorderRadius.circular(6),
-                    onTap: () {
-                      setState(() {
-                        detailExpanded = !detailExpanded;
-                        if (detailExpanded) {
-                          _animationController.forward(from: 0);
-                        } else {
-                          _animationController.reverse(from: 1);
-                        }
-                      });
-                    },
-                    child: Container(
-                        margin: const EdgeInsets.all(6),
-                        child: Row(
-                          children: [
-                            RotationTransition(
-                                turns: Tween<double>(begin: 0.5, end: 0)
-                                    .animate(_animationController),
-                                child: const Icon(Icons.keyboard_arrow_up,
-                                    size: 20)),
-                            Text(
-                              detailExpanded ? "折叠 " : "展开 ",
-                              style: const TextStyle(
-                                  fontSize: 10, fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        )))
-              ],
-            )
+              Row(
+                children: [
+                  const Spacer(),
+                  InkWell(
+                      borderRadius: BorderRadius.circular(6),
+                      onTap: () {
+                        setState(() {
+                          detailExpanded = !detailExpanded;
+                          if (detailExpanded) {
+                            _animationController.forward(from: 0);
+                          } else {
+                            _animationController.reverse(from: 1);
+                          }
+                        });
+                      },
+                      child: Container(
+                          margin: const EdgeInsets.all(6),
+                          child: Row(
+                            children: [
+                              RotationTransition(
+                                  turns: Tween<double>(begin: 0.5, end: 0)
+                                      .animate(_animationController),
+                                  child: const Icon(Icons.keyboard_arrow_up,
+                                      size: 20)),
+                              Text(
+                                detailExpanded ? "折叠 " : "展开 ",
+                                style: const TextStyle(
+                                    fontSize: 10, fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          )))
+                ],
+              )
           ],
         ));
-    return Card(
-        elevation: 2,
-        margin: const EdgeInsets.all(8.0),
-        shape: RoundedRectangleBorder(
-          side: BorderSide(
-            color: Theme.of(context).colorScheme.outlineVariant,
-          ),
-          borderRadius: const BorderRadius.all(Radius.circular(12)),
-        ),
+    return Card.filled(
+        margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
         child: infoCard);
   }
 }
