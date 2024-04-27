@@ -298,7 +298,7 @@ class QuestionCardState extends State<QuestionCard>
                             ),
                             TagCard(
                               text:
-                              "${((widget.question.classScoreRate ?? 0) * 100).toStringAsFixed(2)}%",
+                                  "${((widget.question.classScoreRate ?? 0) * 100).toStringAsFixed(2)}%",
                             ),
                           ],
                         ),

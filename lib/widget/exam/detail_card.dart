@@ -1,7 +1,5 @@
 //import 'package:auto_route/auto_route.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:prescore_flutter/util/user_util.dart';
 import 'package:prescore_flutter/widget/component.dart';
