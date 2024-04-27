@@ -64,10 +64,10 @@ class _PaperPageState extends State<PaperPage> {
                   child: PaperDetail(
                       examId: widget.examId, paperId: widget.paperId),
                 ),
-                Center(
-                  child: PaperDistributionPhoto(
-                      examId: widget.examId, paperId: widget.paperId),
-                ),
+                // Center(
+                //   child: PaperDistributionPhoto(
+                //       examId: widget.examId, paperId: widget.paperId),
+                // ),
               ],
               onPageChanged: (value) {
                 setState(() {
@@ -137,10 +137,10 @@ class _PaperPageState extends State<PaperPage> {
                   icon: Icon(Icons.list_alt_rounded),
                   label: '小分',
                 ),
-                NavigationDestination(
-                  icon: Icon(Icons.line_axis),
-                  label: '分布',
-                ),
+                // NavigationDestination(
+                //   icon: Icon(Icons.line_axis),
+                //   label: '分布',
+                // ),
               ],
               selectedIndex: _selectedIndex,
               onDestinationSelected: (int index) {
