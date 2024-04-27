@@ -168,6 +168,7 @@ class _DetailCardState extends State<DetailCard> with TickerProviderStateMixin {
                         ],
                       ),
                     )),
+            if (!(widget.paper.fullScore == null || widget.paper.userScore == null))
             SizeTransition(
                 axisAlignment: 0.0,
                 sizeFactor: CurvedAnimation(
@@ -205,6 +206,7 @@ class _DetailCardState extends State<DetailCard> with TickerProviderStateMixin {
                     PredictFutureBuilder(paper: widget.paper),
                   ScoreInfoFutureBuilder(paper: widget.paper),
                 ])),
+            if (!(widget.paper.fullScore == null || widget.paper.userScore == null))
             Row(
               children: [
                 const Spacer(),
