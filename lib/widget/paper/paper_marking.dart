@@ -252,15 +252,8 @@ class QuestionProgressCardState extends State<QuestionProgressCard>
             ),
           ],
         ));
-    return Card(
-        elevation: 2,
+    return Card.filled(
         margin: const EdgeInsets.all(8.0),
-        shape: RoundedRectangleBorder(
-          side: BorderSide(
-            color: Theme.of(context).colorScheme.outlineVariant,
-          ),
-          borderRadius: const BorderRadius.all(Radius.circular(12)),
-        ),
         child: body);
   }
 }
