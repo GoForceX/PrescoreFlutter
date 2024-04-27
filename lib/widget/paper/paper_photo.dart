@@ -19,6 +19,7 @@ class PaperPhoto extends StatefulWidget {
   final String examId;
   final String paperId;
   final bool showNonFinalAlert;
+
   const PaperPhoto(
       {Key? key,
       required this.paperId,
@@ -84,7 +85,7 @@ class _PaperPhotoState extends State<PaperPhoto>
               mark: true));
         }
         markedphotos = ListView(
-          children: photos,
+          children: photos + [const SizedBox(height: 84)], // to avoid FAB covering last item
         );
       }
       if (BaseSingleton.singleton.sharedPreferences
@@ -102,7 +103,7 @@ class _PaperPhotoState extends State<PaperPhoto>
               mark: false));
         }
         unMarkedphotos = ListView(
-          children: photos,
+          children: photos + [const SizedBox(height: 84)], // to avoid FAB covering last item
         );
       }
 
@@ -172,6 +173,7 @@ class PaperPhotoWidget extends StatefulWidget {
   final String tag;
   final List<Marker> markers;
   final bool mark;
+
   const PaperPhotoWidget(
       {Key? key,
       required this.sheetId,
@@ -360,6 +362,7 @@ class _PaperPhotoWidgetState extends State<PaperPhotoWidget> {
 
   Future<Response<dynamic>>? getImageFuture;
   Future<dynamic>? markerPainterFuture;
+
   @override
   Widget build(BuildContext context) {
     Uint8List? memoryImage;
@@ -425,6 +428,7 @@ class _PaperPhotoWidgetState extends State<PaperPhotoWidget> {
 class PaperPhotoEnlarged extends StatefulWidget {
   final Uint8List? memoryImage;
   final String tag;
+
   const PaperPhotoEnlarged(
       {Key? key, required this.memoryImage, required this.tag})
       : super(key: key);

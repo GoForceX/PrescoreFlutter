@@ -153,7 +153,8 @@ class _PaperDetailState extends State<PaperDetail>
                               size: 16, color: Colors.red),
                           Text(" 判卷未完成，不代表最终成绩，可能误标零分")
                         ]),
-                  ...questionCards
+                  ...questionCards,
+                  const SizedBox(height: 84), // to avoid FAB covering last item
                 ]),
               ),
             ],

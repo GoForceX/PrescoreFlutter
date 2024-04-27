@@ -133,15 +133,8 @@ class ExamCard extends StatelessWidget {
         return examPage;
       },
       closedBuilder: (BuildContext buildContext, openContainer) {
-        return Card(
-          elevation: 2,
+        return Card.filled(
           margin: const EdgeInsets.all(8.0),
-          shape: RoundedRectangleBorder(
-            side: BorderSide(
-              color: Theme.of(buildContext).colorScheme.outlineVariant,
-            ),
-            borderRadius: const BorderRadius.all(Radius.circular(12)),
-          ),
           child: InkWell(
               borderRadius: BorderRadius.circular(12.0),
               onTap: openContainer,

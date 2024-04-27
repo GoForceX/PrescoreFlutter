@@ -1,5 +1,7 @@
 //import 'package:auto_route/auto_route.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:prescore_flutter/util/user_util.dart';
 import 'package:prescore_flutter/widget/component.dart';
@@ -7,6 +9,7 @@ import 'package:prescore_flutter/widget/paper/paper_page.dart';
 import 'package:provider/provider.dart';
 
 import 'package:prescore_flutter/main.dart';
+
 //import 'package:prescore_flutter/main.gr.dart';
 import 'package:prescore_flutter/model/exam_model.dart';
 import 'package:prescore_flutter/util/struct.dart';
@@ -15,6 +18,7 @@ import 'package:prescore_flutter/widget/open_container.dart';
 class DetailCard extends StatefulWidget {
   final String examId;
   final Paper paper;
+
   const DetailCard({Key? key, required this.paper, required this.examId})
       : super(key: key);
 
@@ -62,18 +66,18 @@ class _DetailCardState extends State<DetailCard> with TickerProviderStateMixin {
                     child: FittedBox(
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Column(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
+                              const SizedBox(
+                                height: 4,
+                              ),
                               Text(
                                 "${widget.paper.name}  ",
                                 style: const TextStyle(fontSize: 16),
                               ),
-                              const SizedBox(
-                                height: 12,
-                              )
                             ],
                           ),
                           SizeTransition(
@@ -86,7 +90,7 @@ class _DetailCardState extends State<DetailCard> with TickerProviderStateMixin {
                               child: Row(children: [
                                 Text(
                                   "${widget.paper.userScore}",
-                                  style: const TextStyle(fontSize: 48),
+                                  style: const TextStyle(fontSize: 40),
                                 ),
                                 const SizedBox(
                                   width: 16,
@@ -102,10 +106,10 @@ class _DetailCardState extends State<DetailCard> with TickerProviderStateMixin {
                               child: Row(children: [
                                 const Text(
                                   "",
-                                  style: TextStyle(fontSize: 48),
+                                  style: TextStyle(fontSize: 40),
                                 ),
                                 Icon(Icons.visibility_off_outlined,
-                                    size: 40,
+                                    size: 32,
                                     color: Theme.of(context)
                                         .textTheme
                                         .titleMedium
@@ -117,13 +121,13 @@ class _DetailCardState extends State<DetailCard> with TickerProviderStateMixin {
                           const Column(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
+                              SizedBox(
+                                height: 4,
+                              ),
                               Text(
                                 "/",
                                 style: TextStyle(fontSize: 16),
                               ),
-                              SizedBox(
-                                height: 12,
-                              )
                             ],
                           ),
                           const SizedBox(
@@ -131,7 +135,7 @@ class _DetailCardState extends State<DetailCard> with TickerProviderStateMixin {
                           ),
                           Text(
                             "${widget.paper.fullScore}",
-                            style: const TextStyle(fontSize: 48),
+                            style: const TextStyle(fontSize: 40),
                           ),
                         ],
                       ),
@@ -169,12 +173,12 @@ class _DetailCardState extends State<DetailCard> with TickerProviderStateMixin {
             SizeTransition(
                 axisAlignment: 0.0,
                 sizeFactor: CurvedAnimation(
-                    parent: _animationController, curve: Curves.easeOut),
+                    parent: _animationController, curve: Curves.easeInOut),
                 axis: Axis.vertical,
                 child: Column(children: [
                   if (widget.paper.userScore != null)
                     const SizedBox(
-                      height: 16,
+                      height: 8,
                     ),
                   if (widget.paper.userScore != null)
                     LinearPercentIndicator(
@@ -197,7 +201,7 @@ class _DetailCardState extends State<DetailCard> with TickerProviderStateMixin {
                     ),
                   if (widget.paper.userScore != null)
                     const SizedBox(
-                      height: 16,
+                      height: 8,
                     ),
                   if (widget.paper.userScore != null)
                     PredictFutureBuilder(paper: widget.paper),
@@ -277,15 +281,8 @@ class _DetailCardState extends State<DetailCard> with TickerProviderStateMixin {
         );
       },
       closedBuilder: (BuildContext buildContext, openContainer) {
-        return Card(
-          elevation: 2,
+        return Card.filled(
           margin: const EdgeInsets.all(8.0),
-          shape: RoundedRectangleBorder(
-            side: BorderSide(
-              color: Theme.of(buildContext).colorScheme.outlineVariant,
-            ),
-            borderRadius: const BorderRadius.all(Radius.circular(12)),
-          ),
           child: InkWell(
             borderRadius: BorderRadius.circular(12.0),
             onTap: openContainer,
@@ -299,6 +296,7 @@ class _DetailCardState extends State<DetailCard> with TickerProviderStateMixin {
 
 class PredictFutureBuilder extends StatefulWidget {
   final Paper paper;
+
   const PredictFutureBuilder({Key? key, required this.paper}) : super(key: key);
 
   @override
@@ -307,6 +305,7 @@ class PredictFutureBuilder extends StatefulWidget {
 
 class _PredictFutureBuilderState extends State<PredictFutureBuilder> {
   late Future<Result<PaperPercentile>> future;
+
   @override
   void initState() {
     super.initState();
@@ -360,6 +359,7 @@ class DetailPredict extends StatelessWidget {
   final double? assignScore;
   final bool official;
   final int count;
+
   const DetailPredict(
       {Key? key,
       required this.subjectId,
@@ -388,28 +388,13 @@ class DetailPredict extends StatelessWidget {
                   }
                   return Row(
                     children: [
-                      Container(
-                        height: 20,
-                        width: official ? 56 : 32,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.withOpacity(0.5),
-                          borderRadius: const BorderRadius.all(
-                            Radius.circular(4),
-                          ),
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: Center(
-                            child: FittedBox(
-                          child: Text(
-                            official
-                                ? '${(percentage * count).ceil()} / $count'
-                                : 'v$version',
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                        )),
+                      TagCard(
+                        text: official
+                            ? '${(percentage * count).ceil()} / $count'
+                            : 'v$version',
                       ),
                       const SizedBox(
-                        width: 16,
+                        width: 8,
                       ),
                     ],
                   );
@@ -554,6 +539,7 @@ class DetailPredict extends StatelessWidget {
 
 class ScoreInfoFutureBuilder extends StatefulWidget {
   final Paper paper;
+
   const ScoreInfoFutureBuilder({Key? key, required this.paper})
       : super(key: key);
 
@@ -563,6 +549,7 @@ class ScoreInfoFutureBuilder extends StatefulWidget {
 
 class _ScoreInfoFutureBuilderState extends State<ScoreInfoFutureBuilder> {
   late Future<Result<ScoreInfo>> future;
+
   @override
   void initState() {
     super.initState();
@@ -608,6 +595,7 @@ class DetailScoreInfo extends StatefulWidget {
   final double maximum;
   final double avg;
   final double med;
+
   const DetailScoreInfo(
       {Key? key,
       required this.paperId,
@@ -684,11 +672,6 @@ class _DetailScoreInfoState extends State<DetailScoreInfo> {
                       ),*/
                       DropdownButton<String>(
                         value: dropdownValue,
-                        // elevation: 16,
-                        underline: Container(
-                          height: 2,
-                          color: Theme.of(context).colorScheme.outlineVariant,
-                        ),
                         onChanged: (String? newValue) {
                           logger.d(newValue);
                           setState(() {
@@ -759,6 +742,7 @@ class DetailScoreInfoData extends StatelessWidget {
   final double maximum;
   final double avg;
   final double med;
+
   const DetailScoreInfoData(
       {Key? key,
       required this.minimum,
@@ -769,81 +753,69 @@ class DetailScoreInfoData extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Flexible(
-                child: FittedBox(
-              child: Column(
-                children: [
-                  const Text(
-                    "最低分",
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  Text(
-                    minimum != -1 ? minimum.toStringAsFixed(2) : "-",
-                    style: const TextStyle(fontSize: 32),
-                  ),
-                ],
+        Flexible(
+            child: FittedBox(
+          child: Column(
+            children: [
+              const Text(
+                "最低分",
+                style: TextStyle(fontSize: 12),
               ),
-            )),
-            Flexible(
-                child: FittedBox(
-              child: Column(
-                children: [
-                  const Text(
-                    "最高分",
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  Text(
-                    maximum != -1 ? maximum.toStringAsFixed(2) : "-",
-                    style: const TextStyle(fontSize: 32),
-                  ),
-                ],
+              Text(
+                minimum != -1 ? minimum.toStringAsFixed(2) : "-",
+                style: const TextStyle(fontSize: 20),
               ),
-            )),
-          ],
-        ),
-        const SizedBox(
-          height: 16,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Flexible(
-                child: FittedBox(
-              child: Column(
-                children: [
-                  const Text(
-                    "平均分",
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  Text(
-                    avg != -1 ? avg.toStringAsFixed(2) : "-",
-                    style: const TextStyle(fontSize: 32),
-                  ),
-                ],
+            ],
+          ),
+        )),
+        Flexible(
+            child: FittedBox(
+          child: Column(
+            children: [
+              const Text(
+                "最高分",
+                style: TextStyle(fontSize: 12),
               ),
-            )),
-            Flexible(
-                child: FittedBox(
-              child: Column(
-                children: [
-                  const Text(
-                    "中位数",
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  Text(
-                    med != -1 ? med.toStringAsFixed(2) : "-",
-                    style: const TextStyle(fontSize: 32),
-                  ),
-                ],
+              Text(
+                maximum != -1 ? maximum.toStringAsFixed(2) : "-",
+                style: const TextStyle(fontSize: 20),
               ),
-            )),
-          ],
-        )
+            ],
+          ),
+        )),
+        Flexible(
+            child: FittedBox(
+          child: Column(
+            children: [
+              const Text(
+                "平均分",
+                style: TextStyle(fontSize: 12),
+              ),
+              Text(
+                avg != -1 ? avg.toStringAsFixed(2) : "-",
+                style: const TextStyle(fontSize: 20),
+              ),
+            ],
+          ),
+        )),
+        Flexible(
+            child: FittedBox(
+          child: Column(
+            children: [
+              const Text(
+                "中位数",
+                style: TextStyle(fontSize: 12),
+              ),
+              Text(
+                med != -1 ? med.toStringAsFixed(2) : "-",
+                style: const TextStyle(fontSize: 20),
+              ),
+            ],
+          ),
+        )),
       ],
     );
   }
