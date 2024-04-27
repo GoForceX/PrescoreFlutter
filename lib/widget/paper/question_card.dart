@@ -230,13 +230,15 @@ class QuestionCardState extends State<QuestionCard>
                     ],
                   ),
                 )),
-            const SizedBox(height: 4),
+            //const SizedBox(height: 4),
             if (BaseSingleton.singleton.sharedPreferences
                     .getBool("showMarkingRecords") ==
-                true)
+                true) ...[
               Row(
                 children: allTeachersWidget,
               ),
+              const SizedBox(height: 8),
+            ],
             const SizedBox(
               height: 4,
             ),

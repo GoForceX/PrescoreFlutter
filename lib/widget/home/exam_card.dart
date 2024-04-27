@@ -30,13 +30,13 @@ class ExamCard extends StatelessWidget {
     Color indicatorColor() {
       switch (examType) {
         case "weeklyExam":
-          return Colors.green;
+          return const Color.fromRGBO(140, 194, 105, 1);
         case "monthlyExam":
-          return Colors.yellow;
+          return const Color.fromRGBO(222, 158, 68, 1);
         case "midtermExam":
-          return Colors.purpleAccent;
+          return const Color.fromRGBO(137, 66, 118, 1);
         case "terminalExam":
-          return Colors.red;
+          return const Color.fromRGBO(234, 114, 147, 1);
         default:
           return Colors.grey;
       }
@@ -48,10 +48,12 @@ class ExamCard extends StatelessWidget {
         Expanded(
             flex: 0,
             child: SizedBox(
-              width: 8,
+              width: 6,
               height: double.infinity,
               child: DecoratedBox(
-                decoration: BoxDecoration(color: indicatorColor()),
+                decoration: BoxDecoration(
+                    color: indicatorColor(),
+                    borderRadius: const BorderRadius.all(Radius.circular(4))),
               ),
             )),
         const SizedBox(
@@ -134,6 +136,7 @@ class ExamCard extends StatelessWidget {
       },
       closedBuilder: (BuildContext buildContext, openContainer) {
         return Card.filled(
+          borderOnForeground: false,
           margin: const EdgeInsets.all(8.0),
           child: InkWell(
               borderRadius: BorderRadius.circular(12.0),
