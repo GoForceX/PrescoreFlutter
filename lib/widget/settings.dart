@@ -268,32 +268,25 @@ class _SettingsPageState extends State<SettingsPage> {
             return Text('${snapshot.error}');
           } else {
             if (snapshot.data != null) {
-              return SizedBox(
-                  height: 80,
-                  child: ListView.separated(
-                    itemCount: snapshot.data!.length,
-                    separatorBuilder: (BuildContext context, int index) =>
-                        const Divider(),
-                    itemBuilder: (BuildContext context, int index) {
-                      return ListTile(
-                        title: Text(snapshot.data![index].values.join(" ")),
-                        onTap: () {
-                          BaseSingleton.singleton.sharedPreferences.setString(
-                              'selectedWearDeviceName',
-                              snapshot.data![index].values.join(" "));
-                          BaseSingleton.singleton.sharedPreferences.setString(
-                              'selectedWearDeviceUUID',
-                              snapshot.data![index].keys.join(" "));
-                          setState(() {
-                            selectedDeviceName =
-                                snapshot.data![index].values.join(" ");
-                          });
-                          service.refreshService();
-                          Navigator.of(context).pop();
-                        },
-                      );
+              return SingleChildScrollView(
+                  child: Column(
+                children: snapshot.data!.map((device) {
+                  return ListTile(
+                    title: Text(device.values.join(" ")),
+                    onTap: () {
+                      BaseSingleton.singleton.sharedPreferences.setString(
+                          'selectedWearDeviceName', device.values.join(" "));
+                      BaseSingleton.singleton.sharedPreferences.setString(
+                          'selectedWearDeviceUUID', device.keys.join(" "));
+                      setState(() {
+                        selectedDeviceName = device.values.join(" ");
+                      });
+                      service.refreshService();
+                      Navigator.of(context).pop();
                     },
-                  ));
+                  );
+                }).toList(),
+              ));
             } else {
               return const Text("未发现设备");
             }

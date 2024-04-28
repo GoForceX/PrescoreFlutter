@@ -136,7 +136,6 @@ class ExamCard extends StatelessWidget {
       },
       closedBuilder: (BuildContext buildContext, openContainer) {
         return Card.filled(
-          borderOnForeground: false,
           margin: const EdgeInsets.all(8.0),
           child: InkWell(
               borderRadius: BorderRadius.circular(12.0),

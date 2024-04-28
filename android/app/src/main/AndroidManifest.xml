@@ -59,4 +59,7 @@
             android:name="flutterEmbedding"
             android:value="2" />
     </application>
+    <queries>
+        <package android:name="com.huawei.health" />
+    </queries>
 </manifest>
