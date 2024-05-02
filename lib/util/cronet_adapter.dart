@@ -5,7 +5,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:cronet_http_embedded/cronet_http.dart';
+import 'package:cronet_http/cronet_http.dart';
 import 'package:dio/dio.dart';
 import 'package:http/http.dart';
 

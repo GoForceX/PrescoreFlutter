@@ -13,8 +13,8 @@ jobs:
         with:
           channel: 'stable'
       - run: flutter pub get
-      - run: flutter build apk
-      - run: flutter build appbundle
+      - run: flutter build apk --dart-define=cronetHttpNoPlay=true
+      - run: flutter build appbundle --dart-define=cronetHttpNoPlay=true
       
       - run: zip -d build/app/outputs/bundle/release/app-release.aab META-INF/\*
 

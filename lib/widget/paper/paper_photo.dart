@@ -1,19 +1,19 @@
 import 'dart:typed_data';
-import 'dart:ui' as ui;
 
+import 'package:async/async.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:photo_view/photo_view.dart';
-import 'package:prescore_flutter/assets/draw_icons.dart';
+import 'package:photo_view/photo_view_gallery.dart';
 import 'package:prescore_flutter/main.dart';
+import 'package:prescore_flutter/util/paper_draw.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:io';
 
 import '../../model/paper_model.dart';
-import '../../util/struct.dart';
 
 class PaperPhoto extends StatefulWidget {
   final String examId;
@@ -39,6 +39,9 @@ class _PaperPhotoState extends State<PaperPhoto>
   ListView? markedphotos;
   ListView? unMarkedphotos;
 
+  late final AsyncMemoizer<List<Uint8List?>> _fetchAndDraw;
+  late final AsyncMemoizer<List<Uint8List?>> _fetch;
+
   @override
   void initState() {
     super.initState();
@@ -53,6 +56,9 @@ class _PaperPhotoState extends State<PaperPhoto>
         }
       });
     }
+
+    _fetchAndDraw = AsyncMemoizer();
+    _fetch = AsyncMemoizer();
   }
 
   @override
@@ -70,75 +76,162 @@ class _PaperPhotoState extends State<PaperPhoto>
                 margin: const EdgeInsets.all(10),
                 child: const CircularProgressIndicator()));
       }
-      if (BaseSingleton.singleton.sharedPreferences
-                  .getBool("useExperimentalDraw") ==
-              true &&
-          markedphotos == null) {
-        List<Marker> markers = examModel.paperData?.markers ?? [];
-        List<Widget> photos = [];
-        for (var i = 0; i < examModel.paperData!.sheetImages.length; i++) {
-          photos.add(PaperPhotoWidget(
-              sheetId: i,
-              url: examModel.paperData!.sheetImages[i],
-              tag: const Uuid().v4(),
-              markers: markers,
-              mark: true));
-        }
-        markedphotos = ListView(
-          children: photos + [const SizedBox(height: 84)], // to avoid FAB covering last item
-        );
-      }
-      if (BaseSingleton.singleton.sharedPreferences
-                  .getBool("useExperimentalDraw") ==
-              false &&
-          unMarkedphotos == null) {
-        List<Marker> markers = examModel.paperData?.markers ?? [];
-        List<Widget> photos = [];
-        for (var i = 0; i < examModel.paperData!.sheetImages.length; i++) {
-          photos.add(PaperPhotoWidget(
-              sheetId: i,
-              url: examModel.paperData!.sheetImages[i],
-              tag: const Uuid().v4(),
-              markers: markers,
-              mark: false));
-        }
-        unMarkedphotos = ListView(
-          children: photos + [const SizedBox(height: 84)], // to avoid FAB covering last item
-        );
-      }
+      // if (BaseSingleton.singleton.sharedPreferences
+      //             .getBool("useExperimentalDraw") ==
+      //         true &&
+      //     markedphotos == null) {
+      //   List<Marker> markers = examModel.paperData?.markers ?? [];
+      //   List<Widget> photos = [];
+      //   for (var i = 0; i < examModel.paperData!.sheetImages.length; i++) {
+      //     photos.add(PaperPhotoWidget(
+      //         sheetId: i,
+      //         url: examModel.paperData!.sheetImages[i],
+      //         tag: const Uuid().v4(),
+      //         markers: markers,
+      //         mark: true));
+      //   }
+      //   markedphotos = ListView(
+      //     children: photos +
+      //         [const SizedBox(height: 84)], // to avoid FAB covering last item
+      //   );
+      // }
+      // if (BaseSingleton.singleton.sharedPreferences
+      //             .getBool("useExperimentalDraw") ==
+      //         false &&
+      //     unMarkedphotos == null) {
+      //   List<Marker> markers = examModel.paperData?.markers ?? [];
+      //   List<Widget> photos = [];
+      //   for (var i = 0; i < examModel.paperData!.sheetImages.length; i++) {
+      //     photos.add(PaperPhotoWidget(
+      //         sheetId: i,
+      //         url: examModel.paperData!.sheetImages[i],
+      //         tag: const Uuid().v4(),));
+      //   }
+      //   unMarkedphotos = ListView(
+      //     children: photos +
+      //         [const SizedBox(height: 84)], // to avoid FAB covering last item
+      //   );
+      // }
 
       return Stack(children: [
-        Center(
-            child: Column(children: [
-          if (widget.showNonFinalAlert)
-            Container(
-                margin: const EdgeInsets.only(bottom: 10),
-                child: const Row(children: [
-                  SizedBox(width: 20),
-                  Icon(Icons.warning_amber_rounded,
-                      size: 16, color: Colors.red),
-                  Text(" 判卷未完成，不代表最终成绩，可能误标零分")
-                ])),
-          Expanded(
-              child: Visibility(
-            visible: BaseSingleton.singleton.sharedPreferences
-                    .getBool("useExperimentalDraw") ==
-                true,
-            maintainState: true,
-            child: markedphotos ?? Container(),
-          )),
-        ])),
-        Center(
-            child: Column(children: [
-          Expanded(
-              child: Visibility(
-            visible: BaseSingleton.singleton.sharedPreferences
-                    .getBool("useExperimentalDraw") ==
-                false,
-            maintainState: true,
-            child: unMarkedphotos ?? Container(),
-          ))
-        ])),
+        if (BaseSingleton.singleton.sharedPreferences
+                .getBool("useExperimentalDraw") ==
+            true)
+          Center(
+              child: Column(children: [
+            if (widget.showNonFinalAlert)
+              Container(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  child: const Row(children: [
+                    SizedBox(width: 20),
+                    Icon(Icons.warning_amber_rounded,
+                        size: 16, color: Colors.red),
+                    Text(" 判卷未完成，不代表最终成绩，可能误标零分")
+                  ])),
+            Expanded(
+                child: Visibility(
+              visible: BaseSingleton.singleton.sharedPreferences
+                      .getBool("useExperimentalDraw") ==
+                  true,
+              maintainState: true,
+              child: FutureBuilder(
+                  future: _fetchAndDraw.runOnce(() =>
+                      fetchImageListAndDrawMarker(
+                          examModel.paperData?.markers ?? [],
+                          examModel.paperData!.sheetImages)),
+                  builder: (BuildContext context,
+                      AsyncSnapshot<List<Uint8List?>> snapshot) {
+                    if (snapshot.hasData) {
+                      List<Uint8List?> memoryImages = snapshot.data!;
+                      List<Widget> photos = [];
+                      for (var i = 0; i < memoryImages.length; i++) {
+                        var tag = const Uuid().v4();
+                        if (memoryImages[i] != null) {
+                          photos.add(PaperPhotoWidget(
+                            sheetId: i,
+                            data: memoryImages[i]!,
+                            tag: tag,
+                            galleryItems: memoryImages
+                                .map((e) => GalleryItem(id: tag, data: e!))
+                                .toList(),
+                          ));
+                        }
+                      }
+                      markedphotos = ListView(
+                        children: photos +
+                            [
+                              const SizedBox(height: 84)
+                            ], // to avoid FAB covering last item
+                      );
+                      return markedphotos ?? const CircularProgressIndicator();
+                    } else {
+                      return Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.max,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const CircularProgressIndicator(),
+                            const SizedBox(height: 8),
+                            Text(
+                                "请稍等，正在加载图片……共 ${examModel.paperData!.sheetImages.length} 页"),
+                            const Text("你知道吗？其实可以通过滑动切换到其他页")
+                          ],
+                        ),
+                      );
+                    }
+                  }),
+            ))
+          ])),
+        if (BaseSingleton.singleton.sharedPreferences
+                .getBool("useExperimentalDraw") ==
+            false)
+          Center(
+              child: Column(children: [
+            Expanded(
+                child: Visibility(
+              visible: BaseSingleton.singleton.sharedPreferences
+                      .getBool("useExperimentalDraw") ==
+                  false,
+              maintainState: true,
+              child: FutureBuilder(
+                  future: _fetch.runOnce(
+                      () => fetchImageList(examModel.paperData!.sheetImages)),
+                  builder: (BuildContext context,
+                      AsyncSnapshot<List<Uint8List?>> snapshot) {
+                    if (snapshot.hasData) {
+                      List<Uint8List?> memoryImages = snapshot.data!;
+                      List<Widget> photos = [];
+                      logger.d(memoryImages.length);
+                      for (var i = 0; i < memoryImages.length; i++) {
+                        var tag = const Uuid().v4();
+                        if (memoryImages[i] != null) {
+                          photos.add(PaperPhotoWidget(
+                            sheetId: i,
+                            data: memoryImages[i]!,
+                            tag: tag,
+                            galleryItems: memoryImages
+                                .map((e) => GalleryItem(id: tag, data: e!))
+                                .toList(),
+                          ));
+                        }
+                      }
+                      unMarkedphotos = ListView(
+                        children: photos +
+                            [
+                              const SizedBox(height: 84)
+                            ], // to avoid FAB covering last item
+                      );
+                      return unMarkedphotos ??
+                          const CircularProgressIndicator();
+                    } else {
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }
+                  }),
+            ))
+          ])),
         Positioned(
           bottom: 20,
           right: 20,
@@ -169,18 +262,16 @@ class _PaperPhotoState extends State<PaperPhoto>
 
 class PaperPhotoWidget extends StatefulWidget {
   final int sheetId;
-  final String url;
+  final Uint8List data;
   final String tag;
-  final List<Marker> markers;
-  final bool mark;
+  final List<GalleryItem> galleryItems;
 
   const PaperPhotoWidget(
       {Key? key,
       required this.sheetId,
-      required this.url,
+      required this.data,
       required this.tag,
-      required this.markers,
-      required this.mark})
+      required this.galleryItems})
       : super(key: key);
 
   @override
@@ -188,240 +279,194 @@ class PaperPhotoWidget extends StatefulWidget {
 }
 
 class _PaperPhotoWidgetState extends State<PaperPhotoWidget> {
-  Future<Uint8List?> markerPainter(
-      List<Marker> markers, Uint8List originalImage) async {
-    if (!widget.mark) {
-      return originalImage;
-    }
-
-    /*
-    img.Image? originalImg = img.decodeImage(originalImage);
-    if (originalImg == null) {
-      return originalImage;
-    }
-     */
-
-    var pictureRecorder = ui.PictureRecorder();
-    var canvas = Canvas(pictureRecorder);
-
-    Paint linePaint = Paint();
-
-    ui.Codec codec = await ui.instantiateImageCodec(originalImage);
-    ui.FrameInfo frameInfo = await codec.getNextFrame();
-
-    canvas.drawImage(frameInfo.image, const Offset(0, 0), linePaint);
-
-    double widthRate = 420 / frameInfo.image.width;
-    double heightRate = 297 / frameInfo.image.height;
-
-    for (var marker in markers) {
-      if (marker.left > 420) {
-        widthRate = 1;
-        heightRate = 1;
-      }
-    }
-
-    for (var marker in markers) {
-      if (marker.sheetId == widget.sheetId) {
-        switch (marker.type) {
-          case MarkerType.singleChoice:
-          case MarkerType.multipleChoice:
-            linePaint.color = marker.color;
-            linePaint.strokeWidth = 5;
-            linePaint.style = PaintingStyle.fill;
-
-            canvas.drawRect(
-                Rect.fromLTWH(
-                    marker.left / widthRate + marker.leftOffset,
-                    marker.top / heightRate + marker.topOffset,
-                    marker.width,
-                    marker.height),
-                linePaint);
-            break;
-          case MarkerType.shortAnswer:
-            break;
-          case MarkerType.sectionEnd:
-            ui.ParagraphBuilder pb = ui.ParagraphBuilder(ui.ParagraphStyle(
-                textAlign: TextAlign.left,
-                fontWeight: FontWeight.w800,
-                fontStyle: FontStyle.normal,
-                fontSize: 64.0));
-            pb.pushStyle(ui.TextStyle(color: marker.color));
-            pb.addText(marker.message);
-            ui.ParagraphConstraints pc =
-                const ui.ParagraphConstraints(width: 200);
-            ui.Paragraph paragraph = pb.build()..layout(pc);
-            canvas.drawParagraph(
-                paragraph,
-                Offset(marker.left / widthRate + marker.leftOffset,
-                    marker.top / heightRate + marker.topOffset));
-            break;
-          case MarkerType.detailScoreEnd:
-            ui.ParagraphBuilder pb = ui.ParagraphBuilder(ui.ParagraphStyle(
-                textAlign: TextAlign.right,
-                fontWeight: FontWeight.w400,
-                fontStyle: FontStyle.normal,
-                fontSize: 40.0));
-            pb.pushStyle(ui.TextStyle(color: marker.color));
-            pb.addText(marker.message);
-            ui.ParagraphConstraints pc =
-                const ui.ParagraphConstraints(width: 300);
-            ui.Paragraph paragraph = pb.build()..layout(pc);
-            canvas.drawParagraph(
-                paragraph,
-                Offset(marker.left / widthRate + marker.leftOffset,
-                    marker.top / heightRate + marker.topOffset));
-            break;
-          case MarkerType.svgPicture:
-            logger.d("svg: ${marker.type}, ${marker.message}");
-            switch (marker.message) {
-              case "wrong":
-                drawWrong(
-                    canvas,
-                    100,
-                    100,
-                    marker.top / heightRate + marker.topOffset,
-                    marker.left / widthRate + marker.leftOffset,
-                    marker.color);
-                break;
-              case "half":
-                drawHalfCorrect(
-                    canvas,
-                    100,
-                    100,
-                    marker.top / heightRate + marker.topOffset,
-                    marker.left / widthRate + marker.leftOffset,
-                    marker.color);
-                break;
-              case "correct":
-                drawCorrect(
-                    canvas,
-                    100,
-                    100,
-                    marker.top / heightRate + marker.topOffset,
-                    marker.left / widthRate + marker.leftOffset,
-                    marker.color);
-                break;
-            }
-            break;
-          case MarkerType.cutBlock:
-            linePaint.color = marker.color.withOpacity(0.1);
-            linePaint.style = PaintingStyle.fill;
-            canvas.drawRRect(
-                RRect.fromLTRBR(
-                    marker.left / widthRate + marker.leftOffset,
-                    marker.top / heightRate + marker.topOffset,
-                    marker.left / widthRate + marker.leftOffset + marker.width,
-                    marker.top / heightRate + marker.topOffset + marker.height,
-                    const Radius.circular(16)),
-                linePaint);
-            linePaint.color = marker.color.withOpacity(0.8);
-            linePaint.strokeWidth = 2;
-            linePaint.style = PaintingStyle.stroke;
-            canvas.drawRRect(
-                RRect.fromLTRBR(
-                    marker.left / widthRate + marker.leftOffset,
-                    marker.top / heightRate + marker.topOffset,
-                    marker.left / widthRate + marker.leftOffset + marker.width,
-                    marker.top / heightRate + marker.topOffset + marker.height,
-                    const Radius.circular(16)),
-                linePaint);
-            ui.ParagraphBuilder pb = ui.ParagraphBuilder(ui.ParagraphStyle(
-                textAlign: TextAlign.left,
-                fontWeight: FontWeight.w800,
-                fontStyle: FontStyle.normal,
-                fontSize: 32.0));
-            pb.pushStyle(ui.TextStyle(color: marker.color));
-            pb.addText(marker.message);
-            ui.ParagraphConstraints pc =
-                const ui.ParagraphConstraints(width: 200);
-            ui.Paragraph paragraph = pb.build()..layout(pc);
-            canvas.drawParagraph(
-                paragraph,
-                Offset(marker.left / widthRate + marker.leftOffset,
-                    marker.top / heightRate + marker.topOffset));
-            break;
-        }
-      }
-    }
-
-    var picture = await pictureRecorder
-        .endRecording()
-        .toImage(frameInfo.image.width, frameInfo.image.height);
-
-    var pngImageBytes =
-        await picture.toByteData(format: ui.ImageByteFormat.png);
-
-    if (pngImageBytes == null) {
-      return originalImage;
-    }
-    Uint8List pngBytes = Uint8List.view(pngImageBytes.buffer);
-
-    return pngBytes;
-  }
-
   Future<Response<dynamic>>? getImageFuture;
   Future<dynamic>? markerPainterFuture;
 
   @override
   Widget build(BuildContext context) {
-    Uint8List? memoryImage;
-    Dio dio = BaseSingleton.singleton.dio;
-    logger.d(widget.url);
-    getImageFuture ??=
-        dio.get(widget.url, options: Options(responseType: ResponseType.bytes));
-    return FutureBuilder(
-        future: getImageFuture,
-        builder: (BuildContext context, AsyncSnapshot snapshot) {
-          if (snapshot.hasData) {
-            memoryImage = Uint8List.fromList(snapshot.data.data);
-            markerPainterFuture ??= markerPainter(widget.markers, memoryImage!);
-            return FutureBuilder(
-                future: markerPainterFuture,
-                builder: (BuildContext context, AsyncSnapshot snapshot) {
-                  if (snapshot.hasData) {
-                    memoryImage = snapshot.data;
+    Uint8List memoryImage = widget.data;
+    return GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => GalleryPhotoViewWrapper(
+                      galleryItems: widget.galleryItems,
+                      backgroundDecoration: const BoxDecoration(
+                        color: Colors.black,
+                      ),
+                      initialIndex: widget.sheetId,
+                      scrollDirection: Axis.horizontal,
+                    )),
+            // builder: (subContext) => GestureDetector(
+            //     onTap: () {
+            //       Navigator.pop(subContext);
+            //     },
+            //     child: PaperPhotoEnlarged(
+            //       memoryImage: memoryImage!,
+            //       tag: widget.tag,
+            //     ))),
+          );
+        },
+        child: Hero(
+          tag: widget.tag,
+          child: RepaintBoundary(
+            child: Image.memory(
+              memoryImage,
+              width: 350.0,
+            ),
+          ),
+        ));
+  }
+}
 
-                    return GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (subContext) => GestureDetector(
-                                    onTap: () {
-                                      Navigator.pop(subContext);
-                                    },
-                                    child: PaperPhotoEnlarged(
-                                      memoryImage: memoryImage!,
-                                      tag: widget.tag,
-                                    ))),
-                          );
-                        },
-                        child: Hero(
-                          tag: widget.tag,
-                          child: RepaintBoundary(
-                            child: Image.memory(
-                              memoryImage!,
-                              width: 350.0,
-                            ),
-                          ),
-                        ));
-                  } else {
-                    return Center(
-                      child: Container(
-                          margin: const EdgeInsets.all(10),
-                          child: const CircularProgressIndicator()),
-                    );
-                  }
-                });
+class GalleryItem {
+  GalleryItem({
+    required this.id,
+    required this.data,
+  });
+
+  final String id;
+  final Uint8List data;
+}
+
+class GalleryPhotoViewWrapper extends StatefulWidget {
+  GalleryPhotoViewWrapper({
+    super.key,
+    this.loadingBuilder,
+    this.backgroundDecoration,
+    this.minScale,
+    this.maxScale,
+    this.initialIndex = 0,
+    required this.galleryItems,
+    this.scrollDirection = Axis.horizontal,
+  }) : pageController = PageController(initialPage: initialIndex);
+
+  final LoadingBuilder? loadingBuilder;
+  final BoxDecoration? backgroundDecoration;
+  final dynamic minScale;
+  final dynamic maxScale;
+  final int initialIndex;
+  final PageController pageController;
+  final List<GalleryItem> galleryItems;
+  final Axis scrollDirection;
+
+  @override
+  State<StatefulWidget> createState() {
+    return _GalleryPhotoViewWrapperState();
+  }
+}
+
+class _GalleryPhotoViewWrapperState extends State<GalleryPhotoViewWrapper> {
+  late int currentIndex = widget.initialIndex;
+
+  void onPageChanged(int index) {
+    setState(() {
+      currentIndex = index;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          if (Platform.isAndroid) {
+            PermissionStatus storageStatus = await Permission.storage.status;
+            PermissionStatus photoStatus = await Permission.photos.status;
+            if (!storageStatus.isGranted | !photoStatus.isGranted) {
+              logger.d('req');
+              await Permission.storage.request();
+              await Permission.photos.request();
+            }
+
+            storageStatus = await Permission.storage.status;
+            photoStatus = await Permission.photos.status;
+            logger.d([storageStatus, photoStatus]);
+
+            if (storageStatus.isGranted | photoStatus.isGranted) {
+              final result = await ImageGallerySaver.saveImage(
+                  widget.galleryItems[currentIndex].data,
+                  name:
+                      "prescore_${(DateTime.now().millisecondsSinceEpoch / 100).round()}");
+              if (mounted) {
+                if (result["isSuccess"]) {
+                  SnackBar snackBar = const SnackBar(
+                    content: Text('保存大成功！'),
+                    //backgroundColor: Colors.grey.withOpacity(0.5),
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                } else {
+                  SnackBar snackBar = SnackBar(
+                    content: Text('呜呜呜，失败了……\n失败原因：${result["errorMessage"]}'),
+                    //backgroundColor: Colors.grey.withOpacity(0.5),
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                }
+              }
+            } else {
+              if (mounted) {
+                SnackBar snackBar = const SnackBar(
+                  content: Text('呜呜呜，失败了……\n失败原因：无保存权限……'),
+                  //backgroundColor: Colors.grey.withOpacity(0.5),
+                );
+                ScaffoldMessenger.of(context).showSnackBar(snackBar);
+              }
+            }
           } else {
-            return Center(
-              child: Container(
-                  margin: const EdgeInsets.all(10),
-                  child: const CircularProgressIndicator()),
+            SnackBar snackBar = const SnackBar(
+              content: Text('呜呜呜，失败了……\n还不支持其他系统保存图片哦……'),
+              //backgroundColor: Colors.grey.withOpacity(0.5),
             );
+            ScaffoldMessenger.of(context).showSnackBar(snackBar);
           }
-        });
+        },
+        child: const Icon(Icons.save_alt_rounded),
+      ),
+      body: Container(
+        decoration: widget.backgroundDecoration,
+        constraints: BoxConstraints.expand(
+          height: MediaQuery.of(context).size.height,
+        ),
+        child: Stack(
+          alignment: Alignment.bottomLeft,
+          children: <Widget>[
+            PhotoViewGallery.builder(
+              scrollPhysics: const BouncingScrollPhysics(),
+              builder: _buildItem,
+              itemCount: widget.galleryItems.length,
+              loadingBuilder: widget.loadingBuilder,
+              backgroundDecoration: widget.backgroundDecoration,
+              pageController: widget.pageController,
+              onPageChanged: onPageChanged,
+              scrollDirection: widget.scrollDirection,
+            ),
+            Container(
+              padding: const EdgeInsets.all(20.0),
+              child: Text(
+                "第 ${currentIndex + 1} 页",
+                style: const TextStyle(
+                  fontSize: 17.0,
+                ),
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  PhotoViewGalleryPageOptions _buildItem(BuildContext context, int index) {
+    final GalleryItem item = widget.galleryItems[index];
+    return PhotoViewGalleryPageOptions(
+      imageProvider: MemoryImage(
+        item.data,
+      ),
+      initialScale: PhotoViewComputedScale.contained,
+      minScale: PhotoViewComputedScale.contained * (0.5 + index / 10),
+      maxScale: PhotoViewComputedScale.covered * 4.1,
+      heroAttributes: PhotoViewHeroAttributes(tag: item.id),
+    );
   }
 }
 

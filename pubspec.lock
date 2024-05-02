@@ -58,7 +58,7 @@ packages:
     source: hosted
     version: "1.5.2"
   async:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: async
       sha256: "947bfcf187f74dbc5e146c9eb9c0f10c9f8b30743e341481c1e2ed3ecc18c20c"
@@ -225,14 +225,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.7.2"
-  cronet_http_embedded:
+  cronet_http:
     dependency: "direct main"
     description:
-      name: cronet_http_embedded
-      sha256: dd9879d5612de0cfb3bcffa0d6194e80eb68095cab6bc5d13314e7a4b3d9caec
+      name: cronet_http
+      sha256: "9b9f00ae48971bc8a8cbdd4528bd35511adce00fb79d1ebf9f9907667056640f"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "0.2.1"
+    version: "1.2.0"
   crypto:
     dependency: "direct main"
     description:
@@ -297,6 +297,22 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "5.4.3+1"
+  dio_cache_interceptor:
+    dependency: "direct main"
+    description:
+      name: dio_cache_interceptor
+      sha256: fb7905c0d12075d8786a6b63bffd64ae062d053f682cfaf28d145a2686507308
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "3.5.0"
+  dio_cache_interceptor_hive_store:
+    dependency: "direct main"
+    description:
+      name: dio_cache_interceptor_hive_store
+      sha256: "449b36541216cb20543228081125ad2995eb9712ec35bd030d85663ea1761895"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "3.2.2"
   dio_cookie_manager:
     dependency: "direct main"
     description:
@@ -541,6 +557,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.3.1"
+  hive:
+    dependency: transitive
+    description:
+      name: hive
+      sha256: "8dcf6db979d7933da8217edcec84e9df1bdb4e4edc7fc77dbd5aa74356d6d941"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "2.2.3"
   html:
     dependency: "direct main"
     description:
@@ -621,6 +645,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.0.4"
+  jni:
+    dependency: transitive
+    description:
+      name: jni
+      sha256: "499558e919997adfc45809a66caf0b95b91393e23289dd2826b152f8f04e6611"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.7.3"
   js:
     dependency: transitive
     description:
@@ -1033,10 +1065,10 @@ packages:
     dependency: transitive
     description:
       name: sentry
-      sha256: "19a267774906ca3a3c4677fc7e9582ea9da79ae9a28f84bbe4885dac2c269b70"
+      sha256: e572d33a3ff1d69549f33ee828a8ff514047d43ca8eea4ab093d72461205aa3e
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "7.20.0"
+    version: "7.20.1"
   sentry_dart_plugin:
     dependency: "direct main"
     description:
@@ -1049,10 +1081,10 @@ packages:
     dependency: "direct main"
     description:
       name: sentry_flutter
-      sha256: "2d2917f7d795167e33a790db9bc5e1104d2035569ecf83e09a3f491bc6978cfe"
+      sha256: ac8cf6bb849f3560353ae33672e17b2713809a4e8de0d3cf372e9e9c42013757
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "7.20.0"
+    version: "7.20.1"
   settings_ui:
     dependency: "direct main"
     description:

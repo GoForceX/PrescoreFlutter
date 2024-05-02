@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:cookie_jar/cookie_jar.dart';
-import 'package:cronet_http_embedded/cronet_http.dart';
+import 'package:cronet_http/cronet_http.dart';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
@@ -46,17 +46,22 @@ serviceEntry() async {
 
 bool firebaseAnalyseEnable = kReleaseMode;
 bool sentryAnalyseEnable = kReleaseMode;
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await BaseSingleton.singleton.init();
   var clientFactory = Client.new; // Constructs the default
   if (!kIsWeb) {
     if (Platform.isAndroid) {
-      Future<CronetEngine>? engine;
+      late CronetEngine engine;
       clientFactory = () {
-        engine ??= CronetEngine.build(
-            cacheMode: CacheMode.memory, userAgent: userAgent);
-        return CronetClient.fromCronetEngineFuture(engine!);
+        engine = CronetEngine.build(
+            cacheMode: CacheMode.memory,
+            enableBrotli: true,
+            enableHttp2: true,
+            enableQuic: true,
+            userAgent: userAgent);
+        return CronetClient.fromCronetEngine(engine);
       };
     } else if (Platform.isIOS) {
       clientFactory = () {
