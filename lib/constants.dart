@@ -30,6 +30,7 @@ const String zhixueDiagnosisUrl =
 const String zhixueChecksheetUrl = "$zhixueServiceUrl/report/checksheet/";
 const String zhixueTrendUrl = "$zhixueServiceUrl/report/paper/getLevelTrend";
 const String zhixueTranscriptUrl = "$zhixueServiceUrl/zhixuebao/transcript/analysis/main/";
+const String zhixuePaperClassList = "$zhixueBaseUrl/api-cloudmarking-scan/scanImageRecord/findPaperClassList/";
 
 const String zhixueErrorbookSubjectListUrl = "$zhixueBaseUrl/addon/app/errorbook/getSubjects";
 const String zhixueErrorbookPapersListUrl = "$zhixueBaseUrl/addon/app/errorbook/getPapers";

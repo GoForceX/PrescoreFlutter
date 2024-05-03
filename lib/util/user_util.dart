@@ -160,7 +160,7 @@ class User {
     CookieJar cookieJar = BaseSingleton.singleton.cookieJar;
     cookieJar.delete(Uri.parse("https://www.zhixue.com/"));
     cookieJar.delete(Uri.parse("https://open.changyan.com/"));
-    
+
     return await databaseLock.synchronized(() async {
       Database database = await initLocalSessionDataBase();
       await database.rawDelete('DELETE FROM $userSession');
@@ -168,7 +168,6 @@ class User {
       sharedPrefs.setBool("localSessionExist", false);
       return true;
     });
-    
   }
 
   /// Use RSA to encrypt [password].
@@ -1030,6 +1029,31 @@ class User {
     }
   }
 
+  Future<Result<List<PaperClass>>> fetchPaperClassList(String paperId) async {
+    Dio client = BaseSingleton.singleton.dio;
+    if (session == null) {
+      return Result(state: false, message: "未登录");
+    }
+    Response response =
+        await client.get("$zhixuePaperClassList?markingPaperId=$paperId");
+    Map<String, dynamic> result = jsonDecode(response.data);
+    if (result["result"] == "success") {
+      List<PaperClass> paperClassList = [];
+      for (var element in jsonDecode(result["message"])) {
+        paperClassList.add(PaperClass(
+          absentCount: element["absentCount"],
+          clazzId: element["clazzId"],
+          clazzName: element["clazzName"],
+          planNumber: element["planNumber"],
+          scanCount: element["scanCount"],
+        ));
+      }
+      return Result(state: true, result: paperClassList, message: "");
+    } else {
+      return Result(state: false, message: result["message"]);
+    }
+  }
+
   Future<Result<PaperData>> fetchPaperData(
       String examId, String paperId) async {
     Dio client = BaseSingleton.singleton.dio;
@@ -1707,6 +1731,43 @@ class User {
     );
 
     logger.d("uploadPaperData: response: ${response.data}");
+    return Result(state: true, message: "成功哒！", result: response.data);
+  }
+
+  Future<Result<String>> uploadPaperClassData(
+      List<PaperClass> paperClassList, String paperId) async {
+    SharedPreferences shared = await SharedPreferences.getInstance();
+    bool? allowed = shared.getBool("allowTelemetry");
+    if (allowed == null || !allowed) {
+      logger.d("uploadPaperClassData 不允许数据上传");
+      return Result(state: true, message: "不允许数据上传");
+    }
+
+    Dio client = BaseSingleton.singleton.dio;
+    List<Map<String, dynamic>> mapList =
+        paperClassList.map((element) => element.toMap()).toList();
+    logger.d("uploadPaperClassData: start, data: ${{
+      "paper_id": paperId,
+      "data": mapList,
+    }}");
+    //String rawData =
+    //    "user_id=${basicInfo?.id}&exam_id=${paper.examId}&paper_id=${paper.paperId}&subject_id=${paper.subjectId}&subject_name=${paper.name}&standard_score=${paper.fullScore}&user_score=${paper.userScore}&diagnostic_score=${paper.diagnosticScore}";
+    Response response = await client.post(
+      'https://matrix.bjbybbs.com/api/exam/submit/exam_data',
+      data: {
+        "paper_id": paperId,
+        "data": mapList,
+      },
+      options: Options(
+        headers: {
+          'Authorization': 'Bearer ${session?.serverToken}',
+          //'Signature': Hmac(sha256, utf8.encode(uploadKey)).convert(utf8.encode(rawData))
+        },
+        contentType: Headers.jsonContentType,
+      ),
+    );
+
+    logger.d("uploadPaperClassData: response: ${response.data}");
     return Result(state: true, message: "成功哒！", result: response.data);
   }
 

@@ -300,6 +300,37 @@ class QuestionSubTopic {
   }
 }
 
+class PaperClass {
+  int? absentCount;
+  String? clazzId;
+  String? clazzName;
+  int? planNumber;
+  int? scanCount;
+
+  PaperClass({
+    this.absentCount,
+    this.clazzId,
+    this.clazzName,
+    this.planNumber,
+    this.scanCount,
+  });
+
+  @override
+  String toString() {
+    return 'PaperClass{absentCount: $absentCount, clazzId: $clazzId, clazzName: $clazzName, planNumber: $planNumber, scanCount: $scanCount}';
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      "absentCount": absentCount,
+      "clazzId": clazzId,
+      "clazzName": clazzName,
+      "planNumber": planNumber,
+      "scanCount": scanCount,
+    };
+  }
+}
+
 class Question {
   String questionId;
   int topicNumber;

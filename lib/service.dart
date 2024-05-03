@@ -301,12 +301,8 @@ Future<void> serviceMain() async {
           case "fetchPaper":
             {
               Future normalPaper = user.fetchPaper(call.arguments["examId"]);
-              Future<Result> previewPaper = Future<Result>(() async {
-                return Result(state: true, result: [[], []], message: '');
-              });
-              if (BaseSingleton.singleton.sharedPreferences
-                      .getBool("showMoreSubject") ==
-                  true) {
+              Future<Result> previewPaper = Future.value(Result(state: true, result: [[], []], message: ''));
+              if (showMoreSubject) {
                 bool previewScore = BaseSingleton.singleton.sharedPreferences
                         .getBool('tryPreviewScore') ==
                     true;

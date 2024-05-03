@@ -48,9 +48,19 @@ void setUploadListener(context) {
           Provider.of<ExamModel>(context, listen: false)
               .user
               .uploadPaperData(processedPaper);
+          Provider.of<ExamModel>(context, listen: false)
+              .user
+              .fetchPaperClassList(paper.paperId)
+              .then((value) {
+            if (value.state && value.result != null) {
+              Provider.of<ExamModel>(context, listen: false)
+                  .user
+                  .uploadPaperClassData(value.result!, paper.paperId);
+            }
+          });
         } catch (e) {
           Provider.of<ExamModel>(context, listen: false)
-          .setUploadStatus(UploadStatus.incomplete);
+              .setUploadStatus(UploadStatus.incomplete);
           logger.e(e);
         }
       }

@@ -44,7 +44,9 @@ class _ExamPageState extends State<ExamPage> {
           ExamModel model = Provider.of<ExamModel>(context, listen: false);
           model.user = widget.user;
           Future.delayed(const Duration(milliseconds: 300), () async {
-            model.setPageAnimationComplete();
+            try {
+              model.setPageAnimationComplete();
+            } catch (_) {}
           });
           return PageView(
             controller: _controller,

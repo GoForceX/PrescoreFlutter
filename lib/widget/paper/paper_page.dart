@@ -1,7 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:prescore_flutter/widget/paper/paper_detail.dart';
-import 'package:prescore_flutter/widget/paper/paper_distrib.dart';
 import 'package:prescore_flutter/widget/paper/paper_marking.dart';
 import 'package:prescore_flutter/widget/paper/paper_photo.dart';
 import 'package:provider/provider.dart';
