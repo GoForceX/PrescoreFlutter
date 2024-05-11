@@ -11,6 +11,7 @@ const String changyanSSOUrl =
     "https://open.changyan.com/sso/login?sso_from=zhixuesso&service=https%3A%2F%2Fwww.zhixue.com:443%2Fssoservice.jsp";
 
 const String zhixueBaseUrl = "https://www.zhixue.com";
+const String zhixueBaseUrl_2 = "https://pt-ali-bj.zhixue.com";
 
 const String zhixueLoginUrl = "$zhixueBaseUrl/ssoservice.jsp";
 const String zhixueXTokenUrl = "$zhixueBaseUrl/addon/error/book/index";
@@ -31,12 +32,14 @@ const String zhixueChecksheetUrl = "$zhixueServiceUrl/report/checksheet/";
 const String zhixueTrendUrl = "$zhixueServiceUrl/report/paper/getLevelTrend";
 const String zhixueTranscriptUrl = "$zhixueServiceUrl/zhixuebao/transcript/analysis/main/";
 const String zhixuePaperClassList = "$zhixueBaseUrl/api-cloudmarking-scan/scanImageRecord/findPaperClassList/";
+const String zhixuePaperClassList_2 = "$zhixueBaseUrl_2/api-cloudmarking-scan/scanImageRecord/findPaperClassList/";
 
 const String zhixueErrorbookSubjectListUrl = "$zhixueBaseUrl/addon/app/errorbook/getSubjects";
 const String zhixueErrorbookPapersListUrl = "$zhixueBaseUrl/addon/app/errorbook/getPapers";
 const String zhixueErrorbookListUrl = "$zhixueBaseUrl/addon/app/errorbook/getErrorbookList";
 
-const String telemetryBaseUrl = "https://matrix.bjbybbs.com/api";
+//const String telemetryBaseUrl = "https://matrix.bjbybbs.com/api";
+const String telemetryBaseUrl = "https://prescore.inquoro.com/api";
 
 const String telemetryLoginUrl = "$telemetryBaseUrl/token";
 const String telemetrySubmitUrl = "$telemetryBaseUrl/exam/submit";

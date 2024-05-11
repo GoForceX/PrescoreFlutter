@@ -54,6 +54,7 @@ class StudentInfo {
   String className = "";
   String classId = "";
   String schoolName = "";
+  String schoolId = "";
 
   StudentInfo(
       {required this.id,
@@ -65,7 +66,8 @@ class StudentInfo {
       required this.gradeName,
       required this.className,
       required this.classId,
-      required this.schoolName});
+      required this.schoolName,
+      required this.schoolId});
 
   @override
   String toString() {

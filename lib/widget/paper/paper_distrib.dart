@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:photo_view/photo_view.dart';
+import 'package:prescore_flutter/constants.dart';
 import 'package:prescore_flutter/main.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:io';
@@ -40,7 +41,7 @@ class _PaperDistributionPhotoState extends State<PaperDistributionPhoto>
     ));
     photos.add(PaperDistributionPhotoWidget(
         url:
-            "https://matrix.bjbybbs.com/api/img/paper/triple/${widget.paperId}",
+            "$telemetryBaseUrl/img/paper/triple/${widget.paperId}",
         tag: const Uuid().v4()));
   }
 

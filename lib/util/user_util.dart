@@ -533,6 +533,7 @@ class User {
       className: json["student"]["clazz"]["name"],
       classId: json["student"]["clazz"]["id"],
       schoolName: json["student"]["clazz"]["school"]["name"],
+      schoolId: json["student"]["clazz"]["school"]["id"],
     );
     this.studentInfo = studentInfo;
     logger.d("fetchStudentInfo: $studentInfo");
@@ -1030,13 +1031,24 @@ class User {
   }
 
   Future<Result<List<PaperClass>>> fetchPaperClassList(String paperId) async {
+    await fetchStudentInfo();
     Dio client = BaseSingleton.singleton.dio;
     if (session == null) {
       return Result(state: false, message: "未登录");
     }
+    
     Response response =
-        await client.get("$zhixuePaperClassList?markingPaperId=$paperId");
+        await client.get(
+          "$zhixuePaperClassList_2?markingPaperId=$paperId&isViewUser=false&schoolId=${studentInfo?.schoolId}", 
+          options: Options(headers: {"Token" : session?.xToken}));
     Map<String, dynamic> result = jsonDecode(response.data);
+    if (result["result"] != "success") {
+      response =
+        await client.get(
+          "$zhixuePaperClassList?markingPaperId=$paperId&isViewUser=false&schoolId=${studentInfo?.schoolId}", 
+          options: Options(headers: {"Token" : session?.xToken}));
+      result = jsonDecode(response.data);
+    }
     if (result["result"] == "success") {
       List<PaperClass> paperClassList = [];
       for (var element in jsonDecode(result["message"])) {
@@ -1710,7 +1722,7 @@ class User {
     //String rawData =
     //    "user_id=${basicInfo?.id}&exam_id=${paper.examId}&paper_id=${paper.paperId}&subject_id=${paper.subjectId}&subject_name=${paper.name}&standard_score=${paper.fullScore}&user_score=${paper.userScore}&diagnostic_score=${paper.diagnosticScore}";
     Response response = await client.post(
-      'https://matrix.bjbybbs.com/api/exam/submit',
+      '$telemetryBaseUrl/exam/submit',
       data: {
         "user_id": basicInfo?.id,
         "exam_id": paper.examId,
@@ -1745,7 +1757,13 @@ class User {
 
     Dio client = BaseSingleton.singleton.dio;
     List<Map<String, dynamic>> mapList =
-        paperClassList.map((element) => element.toMap()).toList();
+        paperClassList
+        .where((element) => element.scanCount != 0)
+        .map((element) => element.toMap()).toList();
+    if (mapList.isEmpty) {
+      logger.d("uploadPaperClassData: 无数据");
+      return Result(state: false, message: "无数据");
+    }
     logger.d("uploadPaperClassData: start, data: ${{
       "paper_id": paperId,
       "data": mapList,
@@ -1753,7 +1771,7 @@ class User {
     //String rawData =
     //    "user_id=${basicInfo?.id}&exam_id=${paper.examId}&paper_id=${paper.paperId}&subject_id=${paper.subjectId}&subject_name=${paper.name}&standard_score=${paper.fullScore}&user_score=${paper.userScore}&diagnostic_score=${paper.diagnosticScore}";
     Response response = await client.post(
-      'https://matrix.bjbybbs.com/api/exam/submit/exam_data',
+      '$telemetryBaseUrl/exam/submit/exam_data',
       data: {
         "paper_id": paperId,
         "data": mapList,

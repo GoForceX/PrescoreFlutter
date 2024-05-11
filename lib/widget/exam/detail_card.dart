@@ -453,24 +453,9 @@ class DetailPredict extends StatelessWidget {
                         }
                         return Row(
                           children: [
-                            Container(
-                              height: 20,
-                              width: 32,
-                              decoration: BoxDecoration(
-                                color: Colors.grey.withOpacity(0.5),
-                                borderRadius: const BorderRadius.all(
-                                  Radius.circular(4),
-                                ),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  'v$version',
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                              ),
-                            ),
+                            TagCard(text: 'v$version'),
                             const SizedBox(
-                              width: 16,
+                              width: 8,
                             ),
                           ],
                         );
