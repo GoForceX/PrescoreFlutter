@@ -39,7 +39,7 @@ const String zhixueErrorbookPapersListUrl = "$zhixueBaseUrl/addon/app/errorbook/
 const String zhixueErrorbookListUrl = "$zhixueBaseUrl/addon/app/errorbook/getErrorbookList";
 
 //const String telemetryBaseUrl = "https://matrix.bjbybbs.com/api";
-const String telemetryBaseUrl = "https://prescore.inquoro.com/api";
+const String telemetryBaseUrl = "https://matrix.npcstation.com/api";
 
 const String telemetryLoginUrl = "$telemetryBaseUrl/token";
 const String telemetrySubmitUrl = "$telemetryBaseUrl/exam/submit";
