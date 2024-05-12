@@ -516,10 +516,51 @@ class User {
       return this.studentInfo;
     }
 
+    BasicInfo? basicInfo = await fetchBasicInfo();
+
+    if (basicInfo != null && basicInfo.role == "parent") {
+      Response response = await client.get(zhixueFriendManageUrl);
+      logger.d("fetchStudentInfo: ${response.data}");
+      Map<String, dynamic> json = jsonDecode(response.data);
+      logger.d("fetchStudentInfo: $json");
+      if (!json.containsKey("clazzs")) {
+        logger.d("fetchStudentInfo: failed");
+        return null;
+      }
+
+      StudentInfo studentInfo = StudentInfo(
+        id: basicInfo.id,
+        loginName: basicInfo.loginName,
+        name: basicInfo.name,
+        role: basicInfo.role,
+        avatar: basicInfo.avatar,
+        studentNo: "",
+        gradeName: json["studentClazz"]["division"]["grade"]["name"],
+        className: json["studentClazz"]["name"],
+        classId: json["studentClazz"]["id"],
+        schoolName: json["studentClazz"]["division"]["school"]["name"],
+        schoolId: json["studentClazz"]["division"]["school"]["id"],
+      );
+      this.studentInfo = studentInfo;
+      logger.d("fetchStudentInfo: $studentInfo");
+
+      isStudentInfoLoaded = true;
+      if (callback != null) {
+        logger.d("callback");
+        callback(studentInfo);
+      }
+      logger.d("fetchStudentInfo: success, $studentInfo");
+      return studentInfo;
+    }
+
     Response response = await client.get(zhixueStudentAccountUrl);
     logger.d("fetchStudentInfo: ${response.data}");
     Map<String, dynamic> json = jsonDecode(response.data);
     logger.d("fetchStudentInfo: $json");
+
+    if (!json.containsKey("student")) {
+      return null;
+    }
     String avatar = json["student"]["avatar"] ?? "";
 
     StudentInfo studentInfo = StudentInfo(
@@ -1030,29 +1071,56 @@ class User {
     }
   }
 
-  Future<Result<List<PaperClass>>> fetchPaperClassList(String paperId) async {
-    await fetchStudentInfo();
+  @Deprecated("Unstable API, use [studentInfo.schoolId] instead.")
+  Future<Result<List<String>>> fetchSchoolList(String paperId) async {
     Dio client = BaseSingleton.singleton.dio;
     if (session == null) {
       return Result(state: false, message: "未登录");
     }
-    
+
     Response response =
-        await client.get(
-          "$zhixuePaperClassList?markingPaperId=$paperId&isViewUser=false&schoolId=${studentInfo?.schoolId}", 
-          options: Options(headers: {"Token" : session?.xToken}));
+        await client.get("$zhixueSchoolListUrl?markingPaperId=$paperId");
+    logger.d("fetchSchoolList: ${response.data}, $paperId");
+    Map<String, dynamic> json = jsonDecode(response.data);
+    if (json["result"] != "success") {
+      return Result(state: false, message: json["message"]);
+    }
+
+    List<String> schoolList = [];
+    for (var element in jsonDecode(json["message"])) {
+      schoolList.add(element["schoolId"]);
+    }
+
+    return Result(state: true, result: schoolList, message: "");
+  }
+
+  Future<Result<List<PaperClass>>> fetchPaperClassList(String paperId) async {
+    StudentInfo? stuInfo = await fetchStudentInfo();
+    if (stuInfo == null) {
+      return Result(state: false, message: "未登录");
+    }
+
+    Dio client = BaseSingleton.singleton.dio;
+    if (session == null) {
+      return Result(state: false, message: "未登录");
+    }
+
+    Response response = await client.get(
+        "$zhixuePaperClassList?markingPaperId=$paperId&isViewUser=false&schoolId=${stuInfo.schoolId}",
+        options: Options(headers: {"Token": session?.xToken}));
     Map<String, dynamic> result = jsonDecode(response.data);
     bool validData = false;
-    for (var element in jsonDecode(result["message"])) {
-      if (element["scanCount"] != 0) {
-        validData = true;
+    if (result["result"] == "success") {
+      for (var element in jsonDecode(result["message"])) {
+        if (element["scanCount"] != 0) {
+          validData = true;
+        }
       }
     }
     if (!validData) {
-      response =
-        await client.get(
-          "$zhixuePaperClassList_2?markingPaperId=$paperId&isViewUser=false&schoolId=${studentInfo?.schoolId}", 
-          options: Options(headers: {"Token" : session?.xToken}));
+      response = await client.get(
+          "$zhixuePaperClassList_2?mdarkingPaperId=$paperId&isViewUser=false&schoolId=${stuInfo.schoolId}",
+          options: Options(headers: {"Token": session?.xToken}));
       result = jsonDecode(response.data);
     }
     if (result["result"] == "success") {
@@ -1762,10 +1830,10 @@ class User {
     }
 
     Dio client = BaseSingleton.singleton.dio;
-    List<Map<String, dynamic>> mapList =
-        paperClassList
+    List<Map<String, dynamic>> mapList = paperClassList
         .where((element) => element.scanCount != 0)
-        .map((element) => element.toMap()).toList();
+        .map((element) => element.toMap())
+        .toList();
     if (mapList.isEmpty) {
       logger.d("uploadPaperClassData: 无数据");
       return Result(state: false, message: "无数据");

@@ -33,6 +33,8 @@ const String zhixueTrendUrl = "$zhixueServiceUrl/report/paper/getLevelTrend";
 const String zhixueTranscriptUrl = "$zhixueServiceUrl/zhixuebao/transcript/analysis/main/";
 const String zhixuePaperClassList = "$zhixueBaseUrl/api-cloudmarking-scan/scanImageRecord/findPaperClassList/";
 const String zhixuePaperClassList_2 = "$zhixueBaseUrl_2/api-cloudmarking-scan/scanImageRecord/findPaperClassList/";
+const String zhixueSchoolListUrl = "$zhixueBaseUrl/api-cloudmarking-scan/common/findSchoolList/";
+const String zhixueFriendManageUrl = "$zhixueServiceUrl/zhixuebao/friendmanage/";
 
 const String zhixueErrorbookSubjectListUrl = "$zhixueBaseUrl/addon/app/errorbook/getSubjects";
 const String zhixueErrorbookPapersListUrl = "$zhixueBaseUrl/addon/app/errorbook/getPapers";
