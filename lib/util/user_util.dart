@@ -1039,13 +1039,19 @@ class User {
     
     Response response =
         await client.get(
-          "$zhixuePaperClassList_2?markingPaperId=$paperId&isViewUser=false&schoolId=${studentInfo?.schoolId}", 
+          "$zhixuePaperClassList?markingPaperId=$paperId&isViewUser=false&schoolId=${studentInfo?.schoolId}", 
           options: Options(headers: {"Token" : session?.xToken}));
     Map<String, dynamic> result = jsonDecode(response.data);
-    if (result["result"] != "success") {
+    bool validData = false;
+    for (var element in jsonDecode(result["message"])) {
+      if (element["scanCount"] != 0) {
+        validData = true;
+      }
+    }
+    if (!validData) {
       response =
         await client.get(
-          "$zhixuePaperClassList?markingPaperId=$paperId&isViewUser=false&schoolId=${studentInfo?.schoolId}", 
+          "$zhixuePaperClassList_2?markingPaperId=$paperId&isViewUser=false&schoolId=${studentInfo?.schoolId}", 
           options: Options(headers: {"Token" : session?.xToken}));
       result = jsonDecode(response.data);
     }
