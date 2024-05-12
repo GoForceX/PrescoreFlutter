@@ -150,6 +150,7 @@ class MyApp extends StatelessWidget {
       "showMoreSubject": false,
       "tryPreviewScore": false,
       "developMode": false,
+      "telemetryBaseUrl": "https://matrix.npcstation.com/api",
     };
     defaultSetting.forEach((key, value) {
       if (value.runtimeType == int) {

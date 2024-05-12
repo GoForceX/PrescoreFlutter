@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:prescore_flutter/main.dart';
 
 const Map<String, String> commonHeaders = {
   "user-agent":
@@ -41,16 +42,18 @@ const String zhixueErrorbookPapersListUrl = "$zhixueBaseUrl/addon/app/errorbook/
 const String zhixueErrorbookListUrl = "$zhixueBaseUrl/addon/app/errorbook/getErrorbookList";
 
 //const String telemetryBaseUrl = "https://matrix.bjbybbs.com/api";
-const String telemetryBaseUrl = "https://matrix.npcstation.com/api";
+//const String telemetryBaseUrl = "https://matrix.npcstation.com/api";
 
-const String telemetryLoginUrl = "$telemetryBaseUrl/token";
-const String telemetrySubmitUrl = "$telemetryBaseUrl/exam/submit";
-const String telemetryExamPredictUrl = "$telemetryBaseUrl/exam/predict";
-const String telemetryPaperPredictUrl = "$telemetryBaseUrl/paper/predict";
-const String telemetryExamScoreInfoUrl = "$telemetryBaseUrl/exam/score_info";
-const String telemetryPaperScoreInfoUrl = "$telemetryBaseUrl/paper/score_info";
-const String telemetryExamClassInfoUrl = "$telemetryBaseUrl/exam/class_info";
-const String telemetryPaperClassInfoUrl = "$telemetryBaseUrl/paper/class_info";
+String get telemetryBaseUrl => BaseSingleton.singleton.sharedPreferences.getString('telemetryBaseUrl') ?? "https://matrix.npcstation.com/api";
+
+String get telemetryLoginUrl => "$telemetryBaseUrl/token";
+String get telemetrySubmitUrl => "$telemetryBaseUrl/exam/submit";
+String get telemetryExamPredictUrl => "$telemetryBaseUrl/exam/predict";
+String get telemetryPaperPredictUrl => "$telemetryBaseUrl/paper/predict";
+String get telemetryExamScoreInfoUrl => "$telemetryBaseUrl/exam/score_info";
+String get telemetryPaperScoreInfoUrl => "$telemetryBaseUrl/paper/score_info";
+String get telemetryExamClassInfoUrl => "$telemetryBaseUrl/exam/class_info";
+String get telemetryPaperClassInfoUrl => "$telemetryBaseUrl/paper/class_info";
 
 const Map<String, Color> brandColorMap = {
   "红粉色": Colors.pink,

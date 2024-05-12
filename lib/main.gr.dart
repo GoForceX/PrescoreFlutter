@@ -15,7 +15,7 @@ import 'package:prescore_flutter/widget/errorbook/errorbook_page.dart' as _i1;
 import 'package:prescore_flutter/widget/exam/exam_page.dart' as _i2;
 import 'package:prescore_flutter/widget/home/home_page.dart' as _i3;
 import 'package:prescore_flutter/widget/paper/paper_page.dart' as _i4;
-import 'package:prescore_flutter/widget/settings.dart' as _i5;
+import 'package:prescore_flutter/widget/settings/settings.dart' as _i5;
 
 abstract class $AppRouter extends _i6.RootStackRouter {
   $AppRouter({super.navigatorKey});
