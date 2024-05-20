@@ -122,15 +122,15 @@ class _DashboardChartState extends State<DashboardChart> {
             ],
           ));
 
-      return Card(
-        elevation: 2,
+      return Card.filled(
+        //elevation: 2,
         margin: const EdgeInsets.all(8.0),
-        shape: RoundedRectangleBorder(
+        /*shape: RoundedRectangleBorder(
           side: BorderSide(
             color: Theme.of(context).colorScheme.outlineVariant,
           ),
           borderRadius: const BorderRadius.all(Radius.circular(12)),
-        ),
+        ),*/
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
