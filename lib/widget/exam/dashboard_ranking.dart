@@ -127,18 +127,11 @@ class DashboardRanking extends StatelessWidget {
             ],
           ));
 
-      return Card(
+      return Card.filled(
         /*margin: const EdgeInsets.all(12.0),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
         elevation: 8,*/
-        elevation: 2,
         margin: const EdgeInsets.all(8.0),
-        shape: RoundedRectangleBorder(
-          side: BorderSide(
-            color: Theme.of(context).colorScheme.outlineVariant,
-          ),
-          borderRadius: const BorderRadius.all(Radius.circular(12)),
-        ),
         child: chartCard,
       );
     } else {
