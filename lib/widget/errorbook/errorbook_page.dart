@@ -82,10 +82,7 @@ class ErrorBookPage extends StatelessWidget {
                     if (errorBookData != null)
                       SliverList(
                         delegate: SliverChildBuilderDelegate(
-                          childCount: Provider.of<ErrorBookModel>(context,
-                                      listen: false)
-                                  .totalPage ??
-                              0,
+                          childCount: errorBookData.errorQuestions.length,
                           (context, index) => ErrorQuestionCard(
                               errorQuestion:
                                   errorBookData.errorQuestions[index]),
