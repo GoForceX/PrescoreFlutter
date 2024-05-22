@@ -50,6 +50,7 @@ String get telemetryLoginUrl => "$telemetryBaseUrl/token";
 String get telemetrySubmitUrl => "$telemetryBaseUrl/exam/submit";
 String get telemetryExamPredictUrl => "$telemetryBaseUrl/exam/predict";
 String get telemetryPaperPredictUrl => "$telemetryBaseUrl/paper/predict";
+String get telemetryPaperDistributionUrl => "$telemetryBaseUrl/paper/distribute";
 String get telemetryExamScoreInfoUrl => "$telemetryBaseUrl/exam/score_info";
 String get telemetryPaperScoreInfoUrl => "$telemetryBaseUrl/paper/score_info";
 String get telemetryExamClassInfoUrl => "$telemetryBaseUrl/exam/class_info";
