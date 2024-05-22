@@ -75,4 +75,5 @@ flutter {
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.20"
     implementation 'com.huawei.hms:wearengine:5.0.1.300'
+    implementation 'androidx.multidex:multidex:2.0.1'
 }
