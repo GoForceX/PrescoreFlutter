@@ -175,7 +175,6 @@ class _PaperPhotoState extends State<PaperPhoto>
                             const SizedBox(height: 8),
                             Text(
                                 "请稍等，正在加载图片……共 ${examModel.paperData!.sheetImages.length} 页"),
-                            const Text("你知道吗？其实可以通过滑动切换到其他页")
                           ],
                         ),
                       );
