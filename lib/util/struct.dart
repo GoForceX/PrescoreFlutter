@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:ui';
 
 class Session {
@@ -617,5 +618,84 @@ class ExamPercentile {
   @override
   String toString() {
     return 'ExamPercentile{percentile: $percentile, count: $count, official: $official}';
+  }
+}
+
+class DistributionData {
+  List<DistributionScoreItem> distribute;
+  List<DistributionScoreItem> prefix;
+  List<DistributionScoreItem> suffix;
+
+  DistributionData({List<DistributionScoreItem>? distribute, List<DistributionScoreItem>? prefix, List<DistributionScoreItem>? suffix}) 
+      : distribute = distribute ?? [],
+        prefix = prefix ?? [],
+        suffix = suffix ?? [];
+
+  @override
+  String toString() {
+    return 'PaperDistribution{distribute: $distribute, prefix: $prefix, suffix: $suffix}';
+  }
+}
+
+extension DistributionScoreItemExtension on List<DistributionScoreItem> {
+  List<DistributionScoreItem> withStep(int step) {
+    Map<int, int> score = {};
+    for (var element in this) {
+      int index = element.score ~/ step;
+      score[index] = (score[index] ?? 0) + element.sum;
+    }
+    List<DistributionScoreItem> res = [];
+    score.forEach((key, value) {
+      res.add(DistributionScoreItem(score: (key * step).toDouble(), sum: value));
+    });
+    res.sort((a, b) => a.score.compareTo(b.score));
+    return res;
+  }
+
+  List<DistributionScoreItem> removeFrontZero() {
+    bool allZero = true;
+    List<DistributionScoreItem> res = [];
+    for (var element in this) {
+      if (element.sum == 0 && allZero) continue;
+      allZero = false;
+      res.add(element);
+    }
+    return res;
+  }
+
+  List<DistributionScoreItem> removeEndMax() {
+    bool allMax = true;
+    List<DistributionScoreItem> res = [];
+    for (var i = length - 1; i >= 0; i--) {
+      var element = this[i];
+      if (element.sum == getMaxSum() && allMax) continue;
+      allMax = false;
+      res.add(element);
+    }
+    return res;
+  }
+
+  int getMaxSum() {
+    int res = 0;
+    for (var element in this) {
+      res = max(res, element.sum);
+    }
+    return res;
+  }
+
+  int getTotalSum() {
+    return fold(0, (sum, item) => sum + item.sum);
+  }
+}
+
+class DistributionScoreItem {
+  double score;
+  int sum;
+
+  DistributionScoreItem({required this.score, required this.sum});
+
+  @override
+  String toString() {
+    return 'DistributionScoreItem{score: $score, sum: $sum}';
   }
 }

@@ -1898,6 +1898,32 @@ class User {
     }
   }
 
+    Future<Result<DistributionData>> fetchPaperDistribution(
+      {required String paperId, double step = 1}) async {
+    Dio client = BaseSingleton.singleton.dio;
+
+    Response response =
+        await client.get('$telemetryPaperDistributionUrl/$paperId/$step');
+    logger.d("fetchPaperDistribution: cronet, response: ${response.data}");
+
+    Map<String, dynamic> result = jsonDecode(response.data);
+    if (result["code"] == 0) {
+      DistributionData paperDistribution = DistributionData();
+      for (var element in result["data"]["distribute"]) {
+        paperDistribution.distribute.add(DistributionScoreItem(score: element["score"], sum: element["sum"]));
+      }
+      for (var element in result["data"]["prefix"]) {
+        paperDistribution.prefix.add(DistributionScoreItem(score: element["score"], sum: element["sum"]));
+      }
+      for (var element in result["data"]["suffix"]) {
+        paperDistribution.suffix.add(DistributionScoreItem(score: element["score"], sum: element["sum"]));
+      }
+      return Result(state: true, message: "", result: paperDistribution);
+    } else {
+      return Result(state: false, message: result["code"].toString());
+    }
+  }
+
   Future<Result<ScoreInfo>> fetchExamScoreInfo(String examId) async {
     Dio client = BaseSingleton.singleton.dio;
 
