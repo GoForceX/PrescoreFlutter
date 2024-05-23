@@ -9,6 +9,7 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:http/io_client.dart';
 import 'package:logger/logger.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -213,6 +214,7 @@ class MyApp extends StatelessWidget {
             colorScheme: lightColorScheme,
             useMaterial3: true,
             platform: TargetPlatform.android,
+            textTheme: GoogleFonts.poppinsTextTheme()
           ),
           darkTheme: ThemeData(
             colorScheme: darkColorScheme,
