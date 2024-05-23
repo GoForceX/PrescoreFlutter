@@ -214,12 +214,13 @@ class MyApp extends StatelessWidget {
             colorScheme: lightColorScheme,
             useMaterial3: true,
             platform: TargetPlatform.android,
-            textTheme: GoogleFonts.poppinsTextTheme()
+            fontFamily: GoogleFonts.poppins().fontFamily
           ),
           darkTheme: ThemeData(
             colorScheme: darkColorScheme,
             useMaterial3: true,
             platform: TargetPlatform.android,
+            fontFamily: GoogleFonts.poppins().fontFamily
           ),
           themeMode: ThemeMode.system);
     });
