@@ -18,7 +18,7 @@ jobs:
       # Install your project's dependencies
       - run: flutter pub get
 
-      - run: pod repo update
+      - run: pod update
         working-directory: ios
       
       - name: Flutter build
