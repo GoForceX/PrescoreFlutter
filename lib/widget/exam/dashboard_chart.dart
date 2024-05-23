@@ -59,9 +59,9 @@ class _DashboardChartState extends State<DashboardChart> {
                   RadarChartData(
                     dataSets: [
                       RadarDataSet(
-                        fillColor: Colors.blueAccent.withOpacity(0.45),
+                        fillColor: Theme.of(context).colorScheme.primary.withOpacity(0.2),
                         // Set the color inside the data
-                        borderColor: Colors.blue,
+                        borderColor: Theme.of(context).colorScheme.primary,
                         entryRadius: 0,
                         borderWidth: 2,
                         dataEntries: parsedDiagnoses

@@ -95,6 +95,11 @@ class TrendChart extends StatefulWidget {
 }
 
 class _TrendChartState extends State<TrendChart> {
+  double findMedian() {
+    widget.prefixSpots.sort((a, b) => a.x.compareTo(b.x));
+    return widget.prefixSpots[widget.prefixSpots.length ~/ 2].x;
+  }
+
   bool showPrefix = true;
 
   Widget getHorizontalTitles(value, TitleMeta meta) {
@@ -162,7 +167,7 @@ class _TrendChartState extends State<TrendChart> {
                     label: VerticalLineLabel(
                         labelResolver: (p0) => widget.userScore.toString(),
                         show: true,
-                        alignment: Alignment.topLeft,
+                        alignment: (widget.userScore ?? 0) > findMedian() ? Alignment.topLeft : Alignment.topRight,
                         style: const TextStyle(
                             fontSize: 8, fontWeight: FontWeight.bold)),
                     x: widget.userScore ?? 0,
@@ -254,7 +259,13 @@ class HistogramState extends State<Histogram> {
   }
 
   Widget bottomTitles(double value, TitleMeta meta) {
-    const style = TextStyle(fontSize: 8);
+    TextStyle style;
+    if (widget.distribute.withStep(step.toInt()).length > 24) {
+      style = const TextStyle(fontSize: 6);
+    } else {
+      style = const TextStyle(fontSize: 8);
+    }
+    
     //String text = "[${value.toInt()}, ${value.toInt() + widget.step})";
 
     return SideTitleWidget(
@@ -265,6 +276,9 @@ class HistogramState extends State<Histogram> {
   }
 
   Widget leftTitles(double value, TitleMeta meta) {
+    if (value == meta.max) {
+      return Container();
+    }
     const style = TextStyle(
       fontSize: 8,
     );
