@@ -10,8 +10,9 @@ import 'package:provider/provider.dart';
 class PaperDistribution extends StatefulWidget {
   final String examId;
   final String paperId;
+  final double? userScore;
   const PaperDistribution(
-      {Key? key, required this.paperId, required this.examId})
+      {Key? key, required this.paperId, required this.examId, required this.userScore})
       : super(key: key);
 
   @override
@@ -39,23 +40,36 @@ class _PaperDistributionState extends State<PaperDistribution>
           List<FlSpot> suffixSpots = [];
           DistributionData distributionData = snapshot.data.result;
           for (var element in distributionData.prefix.removeFrontZero()) {
-            prefixSpots.add(FlSpot(element.score, element.sum / distributionData.prefix.getMaxSum()));
+            prefixSpots.add(FlSpot(element.score,
+                element.sum / distributionData.prefix.getMaxSum()));
           }
           for (var element in distributionData.suffix.removeEndMax()) {
-            suffixSpots.add(FlSpot(element.score, element.sum / distributionData.prefix.getMaxSum()));
+            suffixSpots.add(FlSpot(element.score,
+                element.sum / distributionData.prefix.getMaxSum()));
           }
           return ListView(children: [
-            Center(child: Text("(双击反转趋势，竖滑变更分段，长按查看标签)", style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.grey))),
+            Center(
+                child: Text("(双击反转趋势，竖滑变更分段，长按查看标签)",
+                    style: Theme.of(context)
+                        .textTheme
+                        .labelSmall
+                        ?.copyWith(color: Colors.grey))),
             Card.filled(
-                margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                margin:
+                    const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
                 child: Container(
                     padding: const EdgeInsets.all(12.0),
-                    child: TrendChart(prefixSpots: prefixSpots, suffixSpots: suffixSpots))),
+                    child: TrendChart(
+                        prefixSpots: prefixSpots, suffixSpots: suffixSpots, userScore: widget.userScore))),
             Card.filled(
-                margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                margin:
+                    const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
                 child: Container(
                     padding: const EdgeInsets.all(12.0),
-                    child: Histogram(distribute: distributionData.distribute.removeFrontZero(), step: 5))),
+                    child: Histogram(
+                        distribute:
+                            distributionData.distribute.removeFrontZero(),
+                        step: 5))),
           ]);
         } else {
           return Center(
@@ -71,8 +85,10 @@ class _PaperDistributionState extends State<PaperDistribution>
 class TrendChart extends StatefulWidget {
   final List<FlSpot> prefixSpots;
   final List<FlSpot> suffixSpots;
+  final double? userScore;
 
-  const TrendChart({super.key, required this.prefixSpots, required this.suffixSpots});
+  const TrendChart(
+      {super.key, required this.prefixSpots, required this.suffixSpots, this.userScore});
 
   @override
   State<TrendChart> createState() => _TrendChartState();
@@ -89,11 +105,11 @@ class _TrendChartState extends State<TrendChart> {
     return Padding(
       padding: const EdgeInsets.all(4.0),
       child: Transform.rotate(
-      angle: -pi / 4,
-      child: Text(meta.formattedValue,
-            style: const TextStyle(
-              fontSize: 8,
-            ))),
+          angle: -pi / 4,
+          child: Text(meta.formattedValue,
+              style: const TextStyle(
+                fontSize: 8,
+              ))),
     );
   }
 
@@ -115,7 +131,7 @@ class _TrendChartState extends State<TrendChart> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onDoubleTap: () => setState(() {
-        showPrefix =!showPrefix;
+        showPrefix = !showPrefix;
         HapticFeedback.mediumImpact();
       }),
       child: AspectRatio(
@@ -124,73 +140,93 @@ class _TrendChartState extends State<TrendChart> {
           margin: const EdgeInsets.only(right: 5),
           child: LineChart(
             LineChartData(
-              lineBarsData: [
-                LineChartBarData(
-                  spots: showPrefix ? widget.prefixSpots : widget.suffixSpots,
-                  isCurved: false,
-                  dotData: const FlDotData(
-                    show: false,
-                  ),
-                  color: Theme.of(context).colorScheme.primary,
-                  belowBarData: BarAreaData(show: true,color: Theme.of(context).colorScheme.primary.withOpacity(0.1))
-                ),
-              ],
-              titlesData: FlTitlesData(
-                bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                      showTitles: true,
-                      getTitlesWidget: getHorizontalTitles,
-                      reservedSize: 22,
-                      interval: 10
+                lineBarsData: [
+                  LineChartBarData(
+                      spots:
+                          showPrefix ? widget.prefixSpots : widget.suffixSpots,
+                      isCurved: false,
+                      dotData: const FlDotData(
+                        show: false,
                       ),
-                ),
-                leftTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    getTitlesWidget: getVerticalTitles,
-                    reservedSize: 26,
-                  ),
-                ),
-                topTitles: AxisTitles(
-                  axisNameWidget: Text("   预测分布趋势图", style: Theme.of(context).textTheme.labelSmall),
-                  sideTitles: const SideTitles(showTitles: false),
-                ),
-                rightTitles: const AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: false,
-                  ),
-                ),
-              ),
-              lineTouchData: LineTouchData(
-                touchTooltipData: LineTouchTooltipData(
-                  tooltipMargin: 0,
-                  tooltipBgColor: Colors.transparent,
-                  getTooltipItems: (touchedSpots) => touchedSpots.map((spot) {
-                    return LineTooltipItem("${spot.x.toInt()} 分\n${(spot.y * 100).toStringAsFixed(2)}%", const TextStyle(fontWeight: FontWeight.bold));
-                  }).toList()
-                ),
-                getTouchedSpotIndicator: (LineChartBarData barData, List<int> spotIndexes) {
-                  return spotIndexes.map((spotIndex) {
-                    return TouchedSpotIndicatorData(
-                      FlLine(
-                        color: Theme.of(context).colorScheme.primary,
-                        strokeWidth: 2,
-                      ),
-                      FlDotData(
+                      color: Theme.of(context).colorScheme.primary,
+                      belowBarData: BarAreaData(
+                          show: true,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withOpacity(0.1))),
+                ],
+                
+                extraLinesData: widget.userScore != null ? ExtraLinesData(verticalLines: [
+                  VerticalLine(
+                    label: VerticalLineLabel(
+                        labelResolver: (p0) => widget.userScore.toString(),
                         show: true,
-                        getDotPainter: (spot, percent, barData, index) {
-                          return FlDotCirclePainter(
+                        alignment: Alignment.topLeft,
+                        style: const TextStyle(
+                            fontSize: 8, fontWeight: FontWeight.bold)),
+                    x: widget.userScore ?? 0,
+                    color: Theme.of(context).colorScheme.secondary,
+                    strokeWidth: 1,
+                  )
+                ]) : null,
+                titlesData: FlTitlesData(
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                        showTitles: true,
+                        getTitlesWidget: getHorizontalTitles,
+                        reservedSize: 22,
+                        interval: 10),
+                  ),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      getTitlesWidget: getVerticalTitles,
+                      reservedSize: 26,
+                    ),
+                  ),
+                  topTitles: AxisTitles(
+                    axisNameWidget: Text("   预测分布趋势图",
+                        style: Theme.of(context).textTheme.labelSmall),
+                    sideTitles: const SideTitles(showTitles: false),
+                  ),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: false,
+                    ),
+                  ),
+                ),
+                lineTouchData: LineTouchData(
+                    touchTooltipData: LineTouchTooltipData(
+                        tooltipMargin: 0,
+                        tooltipBgColor: Colors.transparent,
+                        getTooltipItems: (touchedSpots) =>
+                            touchedSpots.map((spot) {
+                              return LineTooltipItem(
+                                  "${spot.x.toInt()} 分\n${(spot.y * 100).toStringAsFixed(2)}%",
+                                  const TextStyle(fontWeight: FontWeight.bold));
+                            }).toList()),
+                    getTouchedSpotIndicator:
+                        (LineChartBarData barData, List<int> spotIndexes) {
+                      return spotIndexes.map((spotIndex) {
+                        return TouchedSpotIndicatorData(
+                          FlLine(
                             color: Theme.of(context).colorScheme.primary,
-                            strokeWidth: 0,
-                            radius: 5,
-                          );
-                        },
-                      ),
-                    );
-                  }).toList();
-                }
-              )
-            ),
+                            strokeWidth: 2,
+                          ),
+                          FlDotData(
+                            show: true,
+                            getDotPainter: (spot, percent, barData, index) {
+                              return FlDotCirclePainter(
+                                color: Theme.of(context).colorScheme.primary,
+                                strokeWidth: 0,
+                                radius: 5,
+                              );
+                            },
+                          ),
+                        );
+                      }).toList();
+                    })),
             duration: const Duration(milliseconds: 200),
           ),
         ),
@@ -220,7 +256,7 @@ class HistogramState extends State<Histogram> {
   Widget bottomTitles(double value, TitleMeta meta) {
     const style = TextStyle(fontSize: 8);
     //String text = "[${value.toInt()}, ${value.toInt() + widget.step})";
-    
+
     return SideTitleWidget(
       angle: -pi / 4,
       axisSide: meta.axisSide,
@@ -257,85 +293,91 @@ class HistogramState extends State<Histogram> {
         });
       },
       child: AspectRatio(
-          aspectRatio: 1.5,
-          child: Container(
-            margin: const EdgeInsets.only(right: 5),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                const double barsSpace = 1;
-                final barsWidth =  constraints.maxWidth / widget.distribute.withStep(step.toInt()).length * 0.8;
-                return BarChart(
-                  swapAnimationDuration: const Duration(milliseconds: 150),
-                  swapAnimationCurve: Curves.easeOutCirc,
-                  BarChartData(
-                    alignment: BarChartAlignment.center,
-                    barTouchData: BarTouchData(
+        aspectRatio: 1.5,
+        child: Container(
+          margin: const EdgeInsets.only(right: 5),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              const double barsSpace = 1;
+              final barsWidth = constraints.maxWidth /
+                  widget.distribute.withStep(step.toInt()).length *
+                  0.8;
+              return BarChart(
+                swapAnimationDuration: const Duration(milliseconds: 150),
+                swapAnimationCurve: Curves.easeOutCirc,
+                BarChartData(
+                  alignment: BarChartAlignment.center,
+                  barTouchData: BarTouchData(
                       enabled: true,
                       touchTooltipData: BarTouchTooltipData(
-                    tooltipMargin: 0,
-                    tooltipBgColor: Colors.transparent,
-                    getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                      return BarTooltipItem(
-                        "[${group.x}, ${group.x + step.toInt()})\n${(rod.toY * 100).toStringAsFixed(2)}%",
-                        const TextStyle(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      );
-                    },
-                  )
-                    ),
-                    titlesData: FlTitlesData(
-                      show: true,
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          reservedSize: 24,
-                          getTitlesWidget: bottomTitles,
-                        ),
-                      ),
-                      leftTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          reservedSize: 26,
-                          getTitlesWidget: leftTitles,
-                        ),
-                      ),
-                      topTitles: AxisTitles(
-                        axisNameWidget: Text("   预测分布直方图 (${step.toInt()}分一段)", style: Theme.of(context).textTheme.labelSmall),
-                        sideTitles: const SideTitles(showTitles: false),
-                      ),
-                      rightTitles: const AxisTitles(
-                        sideTitles: SideTitles(showTitles: false),
+                        tooltipMargin: 0,
+                        tooltipBgColor: Colors.transparent,
+                        getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                          return BarTooltipItem(
+                            "[${group.x}, ${group.x + step.toInt()})\n${(rod.toY * 100).toStringAsFixed(2)}%",
+                            const TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          );
+                        },
+                      )),
+                  titlesData: FlTitlesData(
+                    show: true,
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 24,
+                        getTitlesWidget: bottomTitles,
                       ),
                     ),
-                    gridData: const FlGridData(
-                      show: true,
-                      //checkToShowHorizontalLine: (value) => value % 10 == 0,
-                      drawVerticalLine: false,
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 26,
+                        getTitlesWidget: leftTitles,
+                      ),
                     ),
-                    groupsSpace: barsSpace,
-                    barGroups: getData(barsWidth, barsSpace),
+                    topTitles: AxisTitles(
+                      axisNameWidget: Text("   预测分布直方图 (${step.toInt()}分一段)",
+                          style: Theme.of(context).textTheme.labelSmall),
+                      sideTitles: const SideTitles(showTitles: false),
+                    ),
+                    rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
                   ),
-                );
-              },
-            ),
+                  gridData: const FlGridData(
+                    show: true,
+                    //checkToShowHorizontalLine: (value) => value % 10 == 0,
+                    drawVerticalLine: false,
+                  ),
+                  groupsSpace: barsSpace,
+                  barGroups: getData(barsWidth, barsSpace),
+                ),
+              );
+            },
           ),
         ),
+      ),
     );
   }
 
   List<BarChartGroupData> getData(double barsWidth, double barsSpace) {
-    return widget.distribute.withStep(step.toInt()).map((e) => BarChartGroupData(
-        x: e.score.toInt(),
-        barsSpace: barsSpace,
-        barRods: [
-          BarChartRodData(
-            color: Theme.of(context).colorScheme.primary,
-            toY: e.sum.toDouble() / widget.distribute.withStep(step.toInt()).getTotalSum(),
-            borderRadius: BorderRadius.zero,
-            width: barsWidth,
-          ),
-        ],
-      )).toList();
+    return widget.distribute
+        .withStep(step.toInt())
+        .map((e) => BarChartGroupData(
+              x: e.score.toInt(),
+              barsSpace: barsSpace,
+              barRods: [
+                BarChartRodData(
+                  color: Theme.of(context).colorScheme.primary,
+                  toY: e.sum.toDouble() /
+                      widget.distribute.withStep(step.toInt()).getTotalSum(),
+                  borderRadius: BorderRadius.zero,
+                  width: barsWidth,
+                ),
+              ],
+            ))
+        .toList();
   }
 }
