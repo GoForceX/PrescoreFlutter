@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:prescore_flutter/model/paper_model.dart';
 import 'package:prescore_flutter/util/struct.dart';
 import 'package:provider/provider.dart';
@@ -44,6 +45,7 @@ class _PaperDistributionState extends State<PaperDistribution>
             suffixSpots.add(FlSpot(element.score, element.sum / distributionData.prefix.getMaxSum()));
           }
           return ListView(children: [
+            Center(child: Text("(双击反转趋势，竖滑变更分段，长按查看标签)", style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.grey))),
             Card.filled(
                 margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
                 child: Container(
@@ -114,6 +116,7 @@ class _TrendChartState extends State<TrendChart> {
     return GestureDetector(
       onDoubleTap: () => setState(() {
         showPrefix =!showPrefix;
+        HapticFeedback.mediumImpact();
       }),
       child: AspectRatio(
         aspectRatio: 1.5,
@@ -149,7 +152,7 @@ class _TrendChartState extends State<TrendChart> {
                   ),
                 ),
                 topTitles: AxisTitles(
-                  axisNameWidget: Text("   分数预测分布趋势图", style: Theme.of(context).textTheme.labelSmall),
+                  axisNameWidget: Text("   预测分布趋势图", style: Theme.of(context).textTheme.labelSmall),
                   sideTitles: const SideTitles(showTitles: false),
                 ),
                 rightTitles: const AxisTitles(
@@ -244,9 +247,13 @@ class HistogramState extends State<Histogram> {
     return GestureDetector(
       onVerticalDragUpdate: (DragUpdateDetails details) {
         setState(() {
+          double oldStep = step;
           step += details.delta.dy / 20;
           step = min(20, step);
           step = max(3, step);
+          if (oldStep.toInt() != step.toInt()) {
+            HapticFeedback.mediumImpact();
+          }
         });
       },
       child: AspectRatio(
@@ -294,7 +301,7 @@ class HistogramState extends State<Histogram> {
                         ),
                       ),
                       topTitles: AxisTitles(
-                        axisNameWidget: Text("   分数预测分布直方图 (${step.toInt()}分一段)", style: Theme.of(context).textTheme.labelSmall),
+                        axisNameWidget: Text("   预测分布直方图 (${step.toInt()}分一段)", style: Theme.of(context).textTheme.labelSmall),
                         sideTitles: const SideTitles(showTitles: false),
                       ),
                       rightTitles: const AxisTitles(
