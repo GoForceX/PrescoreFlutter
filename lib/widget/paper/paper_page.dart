@@ -16,12 +16,14 @@ class PaperPage extends StatefulWidget {
   final String paperId;
   final User user;
   final bool preview;
+  final double? userScore;
   const PaperPage(
       {Key? key,
       required this.user,
       required this.examId,
       required this.paperId,
-      required this.preview})
+      required this.preview,
+      required this.userScore})
       : super(key: key);
 
   @override
@@ -66,7 +68,7 @@ class _PaperPageState extends State<PaperPage> {
                 ),
                 Center(
                   child: PaperDistribution(
-                      examId: widget.examId, paperId: widget.paperId),
+                      examId: widget.examId, paperId: widget.paperId, userScore: widget.userScore),
                 ),
               ],
               onPageChanged: (value) {

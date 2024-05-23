@@ -276,6 +276,7 @@ class _DetailCardState extends State<DetailCard> with TickerProviderStateMixin {
           paperId: widget.paper.paperId,
           preview: widget.paper.source == Source.preview,
           user: Provider.of<ExamModel>(context, listen: false).user,
+          userScore: widget.paper.userScore
         );
       },
       closedBuilder: (BuildContext buildContext, openContainer) {
