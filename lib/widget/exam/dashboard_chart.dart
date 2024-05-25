@@ -57,6 +57,7 @@ class _DashboardChartState extends State<DashboardChart> {
               Expanded(
                 child: RadarChart(
                   RadarChartData(
+                    ticksTextStyle: const TextStyle(fontSize: 10, color: Colors.grey),
                     dataSets: [
                       RadarDataSet(
                         fillColor: Theme.of(context).colorScheme.primary.withOpacity(0.2),

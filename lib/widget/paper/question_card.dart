@@ -258,7 +258,7 @@ class QuestionCardState extends State<QuestionCard>
             Builder(builder: (BuildContext context) {
               if (widget.question.classScoreRate != null) {
                 return Container(
-                  padding: const EdgeInsets.symmetric(vertical: 12.0),
+                  padding: const EdgeInsets.only(top: 12.0),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
@@ -301,6 +301,65 @@ class QuestionCardState extends State<QuestionCard>
                             TagCard(
                               text:
                                   "${((widget.question.classScoreRate ?? 0) * 100).toStringAsFixed(2)}%",
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              } else {
+                return const SizedBox.shrink();
+              }
+            }),
+            Builder(builder: (BuildContext context) {
+              if (widget.question.userAnswer != null && widget.question.isSelected) {
+                String answer = "?";
+                if (widget.question.answerHtml != null) {
+                  if (widget.question.answerHtml!.length <= 8) {
+                    answer = widget.question.answerHtml!;
+                  }
+                }
+                if (widget.question.standardAnswer != null) {
+                  if (widget.question.standardAnswer!.length <= 8) {
+                    answer = widget.question.standardAnswer!;
+                  }
+                }
+                return Container(
+                  padding: const EdgeInsets.only(top: 12.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      FittedBox(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const SizedBox(
+                              width: 8,
+                            ),
+                            const Text(
+                              "你的/正确答案：",
+                              style: TextStyle(fontSize: 12),
+                            ),
+                            Text(
+                              "${widget.question.userAnswer}",
+                              style: const TextStyle(fontSize: 32),
+                            ),
+                            const SizedBox(
+                              width: 8,
+                            ),
+                            const Text(
+                              "/",
+                              style: TextStyle(fontSize: 16),
+                            ),
+                            const SizedBox(
+                              width: 8,
+                            ),
+                            Text(
+                              answer,
+                              style: const TextStyle(fontSize: 32),
                             ),
                           ],
                         ),
