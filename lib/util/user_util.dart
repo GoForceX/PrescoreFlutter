@@ -1058,6 +1058,9 @@ class User {
             Question question = questions.firstWhere(
                 (element2) => element2.topicNumber == data["topicNumber"]);
             question.classScoreRate = data["classScoreRate"];
+            question.standardAnswer = data["standardAnswer"];
+            question.answerHtml = data["answerHtml"];
+            question.userAnswer = data["userAnswer"];
             logger.d("fetchTranscriptData, data: $question");
           } catch (e) {
             logger.e("fetchTranscriptData: $e");

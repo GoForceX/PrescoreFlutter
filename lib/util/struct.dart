@@ -345,6 +345,9 @@ class Question {
   String? selectedAnswer;
   List<QuestionSubTopic> subTopic;
   double? classScoreRate;
+  String? userAnswer;
+  String? standardAnswer;
+  String? answerHtml;
   List<MapEntry<String, double>> stepRecords;
 
   Question({
@@ -357,6 +360,9 @@ class Question {
     required this.subTopic,
     required this.markingContentsExist,
     this.selectedAnswer,
+    this.userAnswer,
+    this.standardAnswer,
+    this.answerHtml,
     this.classScoreRate,
     required this.stepRecords,
   });
