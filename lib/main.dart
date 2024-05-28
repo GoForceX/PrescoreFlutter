@@ -256,6 +256,10 @@ class BaseSingleton {
           }
           return handler.next(response);
         },
+        onRequest: (options, handler) { //TODO
+          options.headers["user-agent"] = commonHeaders["user-agent"];
+          return handler.next(options);
+        },
       ),
     );
 

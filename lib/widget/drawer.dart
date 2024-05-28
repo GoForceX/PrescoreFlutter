@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:provider/provider.dart';
 import 'package:prescore_flutter/model/login_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -93,6 +94,7 @@ class _MainDrawerState extends State<MainDrawer> {
               model.setLoading(false);
               model.setUser(User());
               router.replaceAll([const HomeRoute()]);
+              CookieManager.instance().deleteAllCookies();
               refreshService();
             },
             child: const Text('果断退出'),

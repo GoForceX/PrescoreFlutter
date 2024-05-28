@@ -2,10 +2,10 @@ import 'dart:math';
 import 'dart:ui';
 
 class Session {
-  String st;
+  String? st;
   String sessionId;
   String xToken;
-  String userId;
+  String? userId;
   String? serverToken;
 
   Session(this.st, this.sessionId, this.xToken, this.userId,

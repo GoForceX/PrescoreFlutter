@@ -46,6 +46,7 @@ class User {
   bool isBasicInfoLoaded = false;
   bool isStudentInfoLoaded = false;
   bool keepLocalSession = false;
+  bool autoLogout = true;
   Dio dio = Dio();
   Function reLoginFailedCallback = () {};
 
@@ -67,10 +68,10 @@ class User {
       if (list.length == 1) {
         sharedPrefs.setBool("localSessionExist", true);
         Session localSession = Session(
-          list[0]['st'] as String,
+          list[0]['st'] as String?,
           list[0]['sessionId'] as String,
           list[0]['xToken'] as String,
-          list[0]['userId'] as String,
+          list[0]['userId'] as String?,
           serverToken: list[0]['serverToken'] as String?,
         );
         if (list[0]['basicInfo_id'] != null) {
@@ -85,8 +86,8 @@ class User {
         session = localSession;
         Dio client = BaseSingleton.singleton.dio;
         client.options.headers["XToken"] = localSession.xToken;
-        loginCredential.userName = list[0]['userName'] as String;
-        loginCredential.password = list[0]['password'] as String;
+        loginCredential.userName = list[0]['userName'] as String?;
+        loginCredential.password = list[0]['password'] as String?;
         await database.close();
         return;
       } else {
@@ -136,7 +137,7 @@ class User {
           keepLocalSession: keepLocalSession,
           force: true);
       //if(!result.state && (result.message.contains("用户不存在") || result.message.contains("凭证有误"))) {
-      if (!result.state) {
+      if (!result.state && autoLogout) {
         await logoff();
         reLoginFailedCallback();
       }
@@ -171,18 +172,18 @@ class User {
   }
 
   /// Use RSA to encrypt [password].
-  String getEncryptedPassword(String password) {
+  String getEncryptedPassword(String password, String lt) {
     // Encrypt password in order to login.
     // Use no padding.
     final Encrypter encrypter = Encrypter(RSAExt(
       publicKey: RSAPublicKey(
-          BigInt.parse("0x008c147f73c2593cba0bd007e60a89ade5"),
+          BigInt.parse("0x00ccd806a03c7391ee8f884f5902102d95f6d534d597ac42219dd8a79b1465e186c0162a6771b55e7be7422c4af494ba0112ede4eb00fc751723f2c235ca419876e7103ea904c29522b72d754f66ff1958098396f17c6cd2c9446e8c2bb5f4000a9c1c6577236a57e270bef07e7fe7bbec1f0e8993734c8bd4750e01feb21b6dc9"),
           BigInt.parse("0x010001")),
       privateKey: null,
     ));
 
     String encrypted =
-        encrypter.encrypt(password.split("").reversed.join()).base16;
+        encrypter.encrypt("LT/$lt/$password").base16;
     return encrypted;
   }
 
@@ -211,7 +212,8 @@ class User {
       "lt": lt,
       "execution": execution,
       "username": username,
-      "password": getEncryptedPassword(password),
+      "password": getEncryptedPassword(password, lt),
+      //"encodeType" : "R2/P/LT"
     }.entries);
 
     // Parse params

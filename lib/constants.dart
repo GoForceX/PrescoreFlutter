@@ -3,13 +3,13 @@ import 'package:prescore_flutter/main.dart';
 
 const Map<String, String> commonHeaders = {
   "user-agent":
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.124 Safari/537.36 Edg/102.0.1245.41",
+      userAgent,
 };
 const String userAgent =
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.124 Safari/537.36 Edg/102.0.1245.41";
 
 const String changyanSSOUrl =
-    "https://open.changyan.com/sso/login?sso_from=zhixuesso&service=https%3A%2F%2Fwww.zhixue.com:443%2Fssoservice.jsp";
+    "https://sso.zhixue.com/sso_alpha/login?service=https://www.zhixue.com:443/ssoservice.jsp";
 
 const String zhixueBaseUrl = "https://www.zhixue.com";
 const String zhixueBaseUrl_2 = "https://pt-ali-bj.zhixue.com";
