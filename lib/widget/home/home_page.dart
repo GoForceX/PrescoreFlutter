@@ -10,7 +10,7 @@ import 'package:version/version.dart';
 import 'package:r_upgrade/r_upgrade.dart';
 import 'package:prescore_flutter/widget/drawer.dart';
 import 'exams.dart';
-import 'login.dart';
+import 'package:prescore_flutter/widget/home/login/login.dart';
 import 'update_log.dart';
 
 @RoutePage()
@@ -145,7 +145,8 @@ class HomePageState extends State<HomePage> {
                         child: Text(
                           "⋄ ${entry.key}",
                           textAlign: TextAlign.left,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 18),
                         ),
                       ),
                       Align(

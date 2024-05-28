@@ -195,12 +195,12 @@ class ExamsListState extends State<ExamsList> {
         padding: const EdgeInsets.all(8),
         child: SegmentedButton<PageType>(
           style: ButtonStyle(
-            side: MaterialStateProperty.all(BorderSide(
+            side: WidgetStateProperty.all(BorderSide(
               color: Theme.of(context).colorScheme.outlineVariant,
             )),
-            shape: MaterialStateProperty.all(RoundedRectangleBorder(
+            shape: WidgetStateProperty.all(RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12.0))),
-            elevation: MaterialStateProperty.all(2),
+            elevation: WidgetStateProperty.all(2),
           ),
           segments: const <ButtonSegment<PageType>>[
             ButtonSegment<PageType>(

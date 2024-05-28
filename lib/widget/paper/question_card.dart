@@ -371,6 +371,7 @@ class QuestionCardState extends State<QuestionCard>
                 return const SizedBox.shrink();
               }
             }),
+            const SizedBox(height: 12),
             SizeTransition(
               axisAlignment: 0.0,
               sizeFactor: animationCurve,
