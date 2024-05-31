@@ -177,7 +177,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                     flex: 2,
                     child: Column(
                       children: [
-                        WebviewLoginCard(model: model),
+                        const WebviewLoginCard(),
                         TextButton(
                           child: Text("< 返回",
                               style: Theme.of(context)

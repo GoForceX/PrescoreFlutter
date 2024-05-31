@@ -12,11 +12,8 @@ import 'package:prescore_flutter/util/struct.dart';
 
 class WebviewLoginCard extends StatefulWidget {
   const WebviewLoginCard({
-    required this.model,
     Key? key,
   }) : super(key: key);
-
-  final LoginModel model;
 
   @override
   State<WebviewLoginCard> createState() => _WebviewLoginCardState();
@@ -29,6 +26,28 @@ class _WebviewLoginCardState extends State<WebviewLoginCard>
 
   SharedPreferences sharedPrefs = BaseSingleton.singleton.sharedPreferences;
   Widget webviewCard = Container();
+  webview.InAppWebViewController? inAppWebViewController;
+
+  void changeStyle() {
+    inAppWebViewController?.evaluateJavascript(source: """
+          const div = document.querySelectorAll("div");
+          div.forEach(function (element) {
+              if (element.className == "w_head") {
+                  element.remove();
+              }
+              if (element.className == "w_login_warp") {
+                  element.style.padding = "15px 10px 10px 10px";
+                  //element.style.background = "#${(Theme.of(context).colorScheme.secondaryContainer.value).toRadixString(16).padLeft(8, '0')}";
+              }
+              if (element.className == "w_body") {
+                  element.style.margin = "0px 0px 0px 0px";
+              }
+          });
+          document.getElementById("helpBox").remove()
+    """);
+  }
+
+  }
 
   @override
   void initState() {
@@ -46,25 +65,13 @@ class _WebviewLoginCardState extends State<WebviewLoginCard>
                   webview.AndroidMixedContentMode.MIXED_CONTENT_ALWAYS_ALLOW,
               clearSessionCache: false,
             )),
+        onWebViewCreated: (controller) => inAppWebViewController = controller,
         onLoadStop: (controller, url) async {
-          controller.evaluateJavascript(source: """
-                const div = document.querySelectorAll("div");
-                div.forEach(function (element) {
-                    if (element.className == "w_head") {
-                        element.remove();
-                    }
-                });
-                const a = document.querySelectorAll("a");
-                a.forEach(function (element) {
-                    if (element.className == "fl" || element.className == "fr") {
-                        element.remove();
-                    }
-                });
-          """);
           List<webview.Cookie> cookies =
               await cookieManager.getCookies(url: url!);
           BaseSingleton.singleton.cookieJar.saveFromResponse(
               url, cookies.map((e) => Cookie(e.name, e.value)).toList());
+          changeStyle();
         },
         onUpdateVisitedHistory: (controller, url, androidIsReload) async {
           List<webview.Cookie> cookies =
@@ -110,9 +117,10 @@ class _WebviewLoginCardState extends State<WebviewLoginCard>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    changeStyle();
     return Container(
         constraints: const BoxConstraints(
-          maxHeight: 340,
+          maxHeight: 222,
           maxWidth: 400,
         ),
         margin: const EdgeInsets.symmetric(horizontal: 32),
