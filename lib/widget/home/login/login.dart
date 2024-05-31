@@ -194,11 +194,6 @@ class _LoginWidgetState extends State<LoginWidget> {
                       ],
                     ),
                   ),
-                  const Text("© GoForceX | 2021 - 2024",
-                      style: TextStyle(color: Colors.grey, fontSize: 10)),
-                  const Text("© 北京市八一学校 NPC 信息社 | 2023 - 2024",
-                      style: TextStyle(color: Colors.grey, fontSize: 10)),
-                  const SizedBox(height: 10),
                 ]),
               ],
             ));
