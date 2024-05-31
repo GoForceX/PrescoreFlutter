@@ -47,6 +47,23 @@ class _WebviewLoginCardState extends State<WebviewLoginCard>
     """);
   }
 
+  void setPasswordListener() {
+      inAppWebViewController?.addJavaScriptHandler(handlerName: 'username', callback: (username) {
+        sharedPrefs.setString("username", username[0]);
+        debugPrint(username.toString());
+      });
+      inAppWebViewController?.addJavaScriptHandler(handlerName: 'password', callback: (password) {
+        sharedPrefs.setString("password", password[0]);
+        debugPrint(password.toString());
+      });
+      inAppWebViewController?.evaluateJavascript(source: """
+            var user = document.getElementById("txtUserName");
+            var password = document.getElementById("txtPassword");
+            user.value = "${sharedPrefs.getString("username")}";
+            password.value = "${sharedPrefs.getString("password")}";
+            user.onchange = function () { window.flutter_inappwebview.callHandler("username", user.value) };
+            password.onchange = function () { window.flutter_inappwebview.callHandler("password", password.value) };
+      """);
   }
 
   @override
@@ -72,6 +89,7 @@ class _WebviewLoginCardState extends State<WebviewLoginCard>
           BaseSingleton.singleton.cookieJar.saveFromResponse(
               url, cookies.map((e) => Cookie(e.name, e.value)).toList());
           changeStyle();
+          setPasswordListener();
         },
         onUpdateVisitedHistory: (controller, url, androidIsReload) async {
           List<webview.Cookie> cookies =
