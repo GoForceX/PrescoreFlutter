@@ -49,7 +49,7 @@ class _PaperDistributionState extends State<PaperDistribution>
           }
           return ListView(children: [
             Center(
-                child: Text("(双击反转趋势，竖滑变更分段，长按查看标签)",
+                child: Text("(双击反转趋势，长按查看标签)",
                     style: Theme.of(context)
                         .textTheme
                         .labelSmall
@@ -61,6 +61,12 @@ class _PaperDistributionState extends State<PaperDistribution>
                     padding: const EdgeInsets.all(12.0),
                     child: TrendChart(
                         prefixSpots: prefixSpots, suffixSpots: suffixSpots, userScore: widget.userScore))),
+            Center(
+                child: Text("(竖滑变更分段，长按查看标签)",
+                    style: Theme.of(context)
+                        .textTheme
+                        .labelSmall
+                        ?.copyWith(color: Colors.grey))),
             Card.filled(
                 margin:
                     const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
@@ -69,7 +75,7 @@ class _PaperDistributionState extends State<PaperDistribution>
                     child: Histogram(
                         distribute:
                             distributionData.distribute.removeFrontZero(),
-                        step: 5))),
+                        initStep: 5))),
           ]);
         } else {
           return Center(
@@ -242,8 +248,8 @@ class _TrendChartState extends State<TrendChart> {
 
 class Histogram extends StatefulWidget {
   final List<DistributionScoreItem> distribute;
-  final int step;
-  const Histogram({super.key, required this.distribute, required this.step});
+  final int initStep;
+  const Histogram({super.key, required this.distribute, required this.initStep});
 
   @override
   State<StatefulWidget> createState() => HistogramState();
@@ -254,7 +260,7 @@ class HistogramState extends State<Histogram> {
 
   @override
   void initState() {
-    step = widget.step.toDouble();
+    step = widget.initStep.toDouble();
     super.initState();
   }
 
