@@ -242,6 +242,7 @@ Future<void> serviceMain() async {
   await BaseSingleton.singleton.init();
   await initDataBase();
   Timer? checkExamsTimer;
+  user.autoLogout = false;
   if (!user.isLoggedIn()) {
     try {
       await login(force: false);
