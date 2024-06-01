@@ -98,11 +98,11 @@ class _WebviewLoginCardState extends State<WebviewLoginCard>
             url: Uri.parse('https://www.zhixue.com/wap_login.html')),
         initialOptions: webview.InAppWebViewGroupOptions(
             crossPlatform: webview.InAppWebViewOptions(
-                userAgent: userAgent, clearCache: false),
+                userAgent: userAgent, clearCache: sharedPrefs.getBool("keepLogin") == false),
             android: webview.AndroidInAppWebViewOptions(
               mixedContentMode:
                   webview.AndroidMixedContentMode.MIXED_CONTENT_ALWAYS_ALLOW,
-              clearSessionCache: false,
+              clearSessionCache: sharedPrefs.getBool("keepLogin") == false,
             )),
         onWebViewCreated: (controller) => inAppWebViewController = controller,
         onLoadStop: (controller, url) async {

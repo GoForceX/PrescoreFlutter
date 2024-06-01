@@ -65,8 +65,10 @@ class _LoginWidgetState extends State<LoginWidget> {
           model.setLoggedIn(false);
           model.setLoading(false);
           model.setUser(User());
-          Navigator.of(context, rootNavigator: true)
-              .pushReplacementNamed(HomeRoute.name); //TODO
+          try {
+            Navigator.of(context, rootNavigator: true)
+              .pushReplacementNamed(HomeRoute.name);
+          } catch(_) {}
         };
       } else {
         SnackBar snackBar =
