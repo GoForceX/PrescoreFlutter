@@ -81,8 +81,8 @@ class _WebviewLoginCardState extends State<WebviewLoginCard>
     inAppWebViewController?.evaluateJavascript(source: """
             var user = document.getElementById("txtUserName");
             var password = document.getElementById("txtPassword");
-            user.value = "${sharedPrefs.getString("username")}";
-            password.value = "${sharedPrefs.getString("password")}";
+            user.value = "${sharedPrefs.getString("username") ?? ""}";
+            password.value = "${sharedPrefs.getString("password") ?? ""}";
             user.onchange = function () { window.flutter_inappwebview.callHandler("username", user.value) };
             password.onchange = function () { window.flutter_inappwebview.callHandler("password", password.value) };
       """);
