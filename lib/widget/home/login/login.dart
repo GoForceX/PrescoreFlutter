@@ -166,7 +166,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                 ]),
                 Column(children: [
                   Expanded(
-                      flex: 1,
+                      flex: 3,
                       child: Align(
                           alignment: Alignment.bottomLeft,
                           child: Container(
@@ -174,7 +174,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                               child: Text("  网页登入",
                                   style: textTheme.displayMedium)))),
                   Expanded(
-                    flex: 2,
+                    flex: 5,
                     child: Column(
                       children: [
                         const WebviewLoginCard(),
@@ -194,6 +194,11 @@ class _LoginWidgetState extends State<LoginWidget> {
                       ],
                     ),
                   ),
+                  const Text("© GoForceX | 2021 - 2024",
+                            style: TextStyle(color: Colors.grey, fontSize: 10)),
+                        const Text("© 北京市八一学校 NPC 信息社 | 2023 - 2024",
+                            style: TextStyle(color: Colors.grey, fontSize: 10)),
+                        const SizedBox(height: 10),
                 ]),
               ],
             ));
