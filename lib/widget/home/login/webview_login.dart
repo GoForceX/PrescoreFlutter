@@ -24,39 +24,61 @@ class _WebviewLoginCardState extends State<WebviewLoginCard>
   @override
   bool get wantKeepAlive => true;
 
+  bool isLoaded = false;
+
   SharedPreferences sharedPrefs = BaseSingleton.singleton.sharedPreferences;
   Widget webviewCard = Container();
   webview.InAppWebViewController? inAppWebViewController;
 
-  void changeStyle() {
-    inAppWebViewController?.evaluateJavascript(source: """
-          const div = document.querySelectorAll("div");
-          div.forEach(function (element) {
-              if (element.className == "w_head") {
-                  element.remove();
-              }
-              if (element.className == "w_login_warp") {
-                  element.style.padding = "15px 10px 10px 10px";
-                  //element.style.background = "#${(Theme.of(context).colorScheme.secondaryContainer.value).toRadixString(16).padLeft(8, '0')}";
-              }
-              if (element.className == "w_body") {
-                  element.style.margin = "0px 0px 0px 0px";
-              }
-          });
-          document.getElementById("helpBox").remove()
+  @override
+  void reassemble() {
+    super.reassemble();
+    changeStyle();
+  }
+
+  Future<void> changeStyle() async {
+    String backgroundColor =
+        "#${(Theme.of(context).colorScheme.surfaceContainerLow.value).toRadixString(16).substring(2)}";
+    String buttonColor =
+        "#${Theme.of(context).colorScheme.primaryContainer.value.toRadixString(16).substring(2)}";
+    String focusColor =
+        "#${Theme.of(context).colorScheme.primaryFixedDim.value.toRadixString(16).substring(2)}";
+    String inputColor =
+        "#${Theme.of(context).colorScheme.surfaceContainerHighest.value.toRadixString(16).substring(2)}";
+    String textColor =
+        "#${Theme.of(context).colorScheme.onSurface.value.toRadixString(16).substring(2)}";
+    await inAppWebViewController?.callAsyncJavaScript(functionBody: """
+      styleElement = document.createElement('style');
+      styleElement.innerHTML = 
+      '.w_body { margin: 0px 0px 0px 0px; }'+
+      '.w_login_warp { background: $backgroundColor; padding: 15px 15px 15px 15px; }'+
+      '.w_head { display: none; }'+
+      '.help_box { display: none; }'+
+      '.login_btn a { background: $buttonColor; color: $textColor; border-radius: 5px; }'+
+      '.user_box input { background-color: $inputColor; color: $textColor; border-radius: 5px; }'+
+      '.user_box input:focus { border-bottom: 2px solid $focusColor; }'+
+      '.user_box span.close { margin-right: 10px; }'
+      ;
+      document.body.append(styleElement);
+      return;
     """);
+    return;
   }
 
   void setPasswordListener() {
-      inAppWebViewController?.addJavaScriptHandler(handlerName: 'username', callback: (username) {
-        sharedPrefs.setString("username", username[0]);
-        debugPrint(username.toString());
-      });
-      inAppWebViewController?.addJavaScriptHandler(handlerName: 'password', callback: (password) {
-        sharedPrefs.setString("password", password[0]);
-        debugPrint(password.toString());
-      });
-      inAppWebViewController?.evaluateJavascript(source: """
+    inAppWebViewController?.addJavaScriptHandler(
+        handlerName: 'username',
+        callback: (username) {
+          sharedPrefs.setString("username", username[0]);
+          debugPrint(username.toString());
+        });
+    inAppWebViewController?.addJavaScriptHandler(
+        handlerName: 'password',
+        callback: (password) {
+          sharedPrefs.setString("password", password[0]);
+          debugPrint(password.toString());
+        });
+    inAppWebViewController?.evaluateJavascript(source: """
             var user = document.getElementById("txtUserName");
             var password = document.getElementById("txtPassword");
             user.value = "${sharedPrefs.getString("username")}";
@@ -84,12 +106,15 @@ class _WebviewLoginCardState extends State<WebviewLoginCard>
             )),
         onWebViewCreated: (controller) => inAppWebViewController = controller,
         onLoadStop: (controller, url) async {
+          setPasswordListener();
+          await changeStyle();
+          setState(() {
+            isLoaded = true;
+          });
           List<webview.Cookie> cookies =
               await cookieManager.getCookies(url: url!);
           BaseSingleton.singleton.cookieJar.saveFromResponse(
               url, cookies.map((e) => Cookie(e.name, e.value)).toList());
-          changeStyle();
-          setPasswordListener();
         },
         onUpdateVisitedHistory: (controller, url, androidIsReload) async {
           List<webview.Cookie> cookies =
@@ -138,7 +163,7 @@ class _WebviewLoginCardState extends State<WebviewLoginCard>
     changeStyle();
     return Container(
         constraints: const BoxConstraints(
-          maxHeight: 222,
+          maxHeight: 226,
           maxWidth: 400,
         ),
         margin: const EdgeInsets.symmetric(horizontal: 32),
@@ -150,7 +175,18 @@ class _WebviewLoginCardState extends State<WebviewLoginCard>
               ),
               borderRadius: const BorderRadius.all(Radius.circular(12)),
             ),
-            clipBehavior: Clip.antiAlias,
-            child: webviewCard));
+            clipBehavior: Clip.antiAliasWithSaveLayer,
+            child: Stack(
+              children: [
+                webviewCard,
+                if (!isLoaded)
+                  Container(
+                      color: Theme.of(context).colorScheme.surfaceContainerLow,
+                      child: Center(
+                          child: Container(
+                              margin: const EdgeInsets.all(10),
+                              child: const CircularProgressIndicator())))
+              ],
+            )));
   }
 }
