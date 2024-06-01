@@ -130,6 +130,30 @@ class MyApp extends StatelessWidget {
 
   final _appRouter = AppRouter();
 
+  List<Color> _extractAdditionalColours(ColorScheme scheme) => [
+        scheme.surface,
+        scheme.surfaceDim,
+        scheme.surfaceBright,
+        scheme.surfaceContainerLowest,
+        scheme.surfaceContainerLow,
+        scheme.surfaceContainer,
+        scheme.surfaceContainerHigh,
+        scheme.surfaceContainerHighest,
+      ];
+
+  ColorScheme _insertAdditionalColours(
+          ColorScheme scheme, List<Color> additionalColours) =>
+      scheme.copyWith(
+        surface: additionalColours[0],
+        surfaceDim: additionalColours[1],
+        surfaceBright: additionalColours[2],
+        surfaceContainerLowest: additionalColours[3],
+        surfaceContainerLow: additionalColours[4],
+        surfaceContainer: additionalColours[5],
+        surfaceContainerHigh: additionalColours[6],
+        surfaceContainerHighest: additionalColours[7],
+      );
+
   @override
   Widget build(BuildContext context) {
     Map<String, dynamic> defaultSetting = {
@@ -179,8 +203,19 @@ class MyApp extends StatelessWidget {
           BaseSingleton.singleton.sharedPreferences
                   .getBool("useDynamicColor") ==
               true) {
-        lightColorScheme = lightDynamic.harmonized();
-        darkColorScheme = darkDynamic.harmonized();
+        var lightBase = ColorScheme.fromSeed(seedColor: lightDynamic.primary);
+        var darkBase = ColorScheme.fromSeed(
+            seedColor: darkDynamic.primary, brightness: Brightness.dark);
+
+        var lightAdditionalColours = _extractAdditionalColours(lightBase);
+        var darkAdditionalColours = _extractAdditionalColours(darkBase);
+
+        lightColorScheme =
+            _insertAdditionalColours(lightBase, lightAdditionalColours)
+                .harmonized();
+        darkColorScheme =
+            _insertAdditionalColours(darkBase, darkAdditionalColours)
+                .harmonized();
       } else {
         lightColorScheme = ColorScheme.fromSeed(
           seedColor: brandColor,
@@ -211,17 +246,15 @@ class MyApp extends StatelessWidget {
           ),
           title: '出分啦',
           theme: ThemeData(
-            colorScheme: lightColorScheme,
-            useMaterial3: true,
-            platform: TargetPlatform.android,
-            fontFamily: GoogleFonts.poppins().fontFamily
-          ),
+              colorScheme: lightColorScheme,
+              useMaterial3: true,
+              platform: TargetPlatform.android,
+              fontFamily: GoogleFonts.poppins().fontFamily),
           darkTheme: ThemeData(
-            colorScheme: darkColorScheme,
-            useMaterial3: true,
-            platform: TargetPlatform.android,
-            fontFamily: GoogleFonts.poppins().fontFamily
-          ),
+              colorScheme: darkColorScheme,
+              useMaterial3: true,
+              platform: TargetPlatform.android,
+              fontFamily: GoogleFonts.poppins().fontFamily),
           themeMode: ThemeMode.system);
     });
   }
@@ -256,7 +289,8 @@ class BaseSingleton {
           }
           return handler.next(response);
         },
-        onRequest: (options, handler) { //TODO
+        onRequest: (options, handler) {
+          //TODO
           options.headers["user-agent"] = commonHeaders["user-agent"];
           return handler.next(options);
         },
