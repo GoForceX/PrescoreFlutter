@@ -333,6 +333,7 @@ class User {
     if (username == "") {
       return Result(state: false, message: "用户名为空");
     }
+    return Result(state: false, message: "该登录方式暂不可用");
     // Check if there is a previous session from cookies.
     Response preload = await client.get(changyanSSOUrl);
     String preloadBody = preload.data;
