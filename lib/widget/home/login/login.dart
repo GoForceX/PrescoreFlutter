@@ -128,6 +128,7 @@ class _LoginWidgetState extends State<LoginWidget> {
               physics: const NeverScrollableScrollPhysics(),
               controller: controller,
               children: [
+                if (kDebugMode)
                 Column(children: [
                   Expanded(
                       flex: 3,
@@ -180,6 +181,7 @@ class _LoginWidgetState extends State<LoginWidget> {
                     child: Column(
                       children: [
                         const WebviewLoginCard(),
+                        if (kDebugMode)
                         TextButton(
                           child: Text("< 返回",
                               style: Theme.of(context)
