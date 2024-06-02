@@ -50,6 +50,7 @@ class _WebviewLoginCardState extends State<WebviewLoginCard>
     await inAppWebViewController?.callAsyncJavaScript(functionBody: """
       styleElement = document.createElement('style');
       styleElement.innerHTML = 
+      'body { background: $backgroundColor; }'+
       '.w_body { margin: 0px 0px 0px 0px; }'+
       '.w_login_warp { background: $backgroundColor; padding: 15px 15px 15px 15px; }'+
       '.w_head { display: none; }'+
@@ -57,8 +58,9 @@ class _WebviewLoginCardState extends State<WebviewLoginCard>
       '.login_btn a { background: $buttonColor; color: $textColor; border-radius: 5px; }'+
       '.user_box input { background-color: $inputColor; color: $textColor; border-radius: 5px; }'+
       '.user_box input:focus { border-bottom: 2px solid $focusColor; }'+
-      '.user_box span.close { margin-right: 10px; }'
-      ;
+      '.user_box span.close { margin-right: 10px; }'+
+      '.geetest_wrap { background: $backgroundColor; }'+
+      '.geetest_box { background: $backgroundColor; }';
       document.body.append(styleElement);
       return;
     """);
@@ -98,12 +100,12 @@ class _WebviewLoginCardState extends State<WebviewLoginCard>
             url: Uri.parse('https://www.zhixue.com/wap_login.html')),
         initialOptions: webview.InAppWebViewGroupOptions(
             crossPlatform: webview.InAppWebViewOptions(
-                userAgent: userAgent, clearCache: sharedPrefs.getBool("keepLogin") == false),
+                userAgent: userAgent,
+                clearCache: sharedPrefs.getBool("keepLogin") == false),
             android: webview.AndroidInAppWebViewOptions(
-              mixedContentMode:
-                  webview.AndroidMixedContentMode.MIXED_CONTENT_ALWAYS_ALLOW,
-              clearSessionCache: sharedPrefs.getBool("keepLogin") == false,
-            )),
+                mixedContentMode:
+                    webview.AndroidMixedContentMode.MIXED_CONTENT_ALWAYS_ALLOW,
+                clearSessionCache: sharedPrefs.getBool("keepLogin") == false)),
         onWebViewCreated: (controller) => inAppWebViewController = controller,
         onLoadStop: (controller, url) async {
           setPasswordListener();
@@ -161,32 +163,73 @@ class _WebviewLoginCardState extends State<WebviewLoginCard>
   Widget build(BuildContext context) {
     super.build(context);
     changeStyle();
-    return Container(
-        constraints: const BoxConstraints(
-          maxHeight: 226,
-          maxWidth: 400,
-        ),
-        margin: const EdgeInsets.symmetric(horizontal: 32),
-        child: Card(
-            elevation: 2,
-            shape: RoundedRectangleBorder(
-              side: BorderSide(
-                color: Theme.of(context).colorScheme.outlineVariant,
-              ),
-              borderRadius: const BorderRadius.all(Radius.circular(12)),
+    return Column(
+      children: [
+        Container(
+            constraints: const BoxConstraints(
+              //maxHeight: 226,
+              maxWidth: 400,
             ),
-            clipBehavior: Clip.antiAliasWithSaveLayer,
-            child: Stack(
-              children: [
-                webviewCard,
-                if (!isLoaded)
-                  Container(
-                      color: Theme.of(context).colorScheme.surfaceContainerLow,
-                      child: Center(
-                          child: Container(
-                              margin: const EdgeInsets.all(10),
-                              child: const CircularProgressIndicator())))
-              ],
-            )));
+            margin: const EdgeInsets.symmetric(horizontal: 32),
+            child: Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                side: BorderSide(
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                ),
+                borderRadius: const BorderRadius.all(Radius.circular(12)),
+              ),
+              clipBehavior: Clip.antiAliasWithSaveLayer,
+              child: Stack(
+                children: [
+                  Column(
+                    children: [
+                      SizedBox(height: 217, child: webviewCard),
+                      const Divider(height: 2),
+                      Row(
+                        children: [
+                          Transform.scale(
+                            scale: 0.75,
+                            filterQuality: FilterQuality.high,
+                            child: Checkbox(
+                              value: sharedPrefs.getBool("keepLogin"),
+                              //activeColor: Colors.red, //选中时的颜色
+                              onChanged: (value) {
+                                setState(() {
+                                  sharedPrefs.setBool("keepLogin", value!);
+                                });
+                              },
+                            ),
+                          ),
+                          Text("保持登录",
+                              style: Theme.of(context).textTheme.labelMedium),
+                          const Expanded(child: SizedBox()),
+                          GestureDetector(
+                              child: Text("清除缓存",
+                                  style:
+                                      Theme.of(context).textTheme.labelMedium),
+                              onTap: () {
+                                inAppWebViewController?.clearCache();
+                                inAppWebViewController?.reload();
+                              }),
+                          const SizedBox(width: 20)
+                        ],
+                      ),
+                    ],
+                  ),
+                  if (!isLoaded)
+                    Container(
+                        height: 250,
+                        color:
+                            Theme.of(context).colorScheme.surfaceContainerLow,
+                        child: Center(
+                            child: Container(
+                                margin: const EdgeInsets.all(10),
+                                child: const CircularProgressIndicator())))
+                ],
+              ),
+            )),
+      ],
+    );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:prescore_flutter/main.dart';
@@ -169,15 +170,15 @@ class _LoginWidgetState extends State<LoginWidget> {
                 ]),
                 Column(children: [
                   Expanded(
-                      flex: 3,
+                      flex: 6,
                       child: Align(
                           alignment: Alignment.bottomLeft,
                           child: Container(
-                              margin: const EdgeInsets.all(32),
-                              child: Text("  网页登入",
+                              margin: const EdgeInsets.symmetric(horizontal: 32, vertical: 46),
+                              child: Text("  登入",
                                   style: textTheme.displayMedium)))),
                   Expanded(
-                    flex: 5,
+                    flex: 11,
                     child: Column(
                       children: [
                         const WebviewLoginCard(),
