@@ -14,6 +14,9 @@ const String changyanSSOUrl =
 const String zhixueBaseUrl = "https://www.zhixue.com";
 const String zhixueBaseUrl_2 = "https://pt-ali-bj.zhixue.com";
 
+const String wapLoginUrl = "$zhixueBaseUrl/wap_login.html";
+const String loginNoThirdCookieUrl = "$zhixueBaseUrl/login_no_third_cookie.html";
+
 const String zhixueLoginUrl = "$zhixueBaseUrl/ssoservice.jsp";
 const String zhixueXTokenUrl = "$zhixueBaseUrl/addon/error/book/index";
 const String zhixueInfoUrl = "$zhixueBaseUrl/container/getCurrentUser";

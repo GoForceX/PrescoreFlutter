@@ -27,6 +27,10 @@ class _WebviewLoginCardState extends State<WebviewLoginCard>
 
   bool isLoaded = false;
 
+  get useBackupLoginPage => Platform.isIOS;
+  get initUrl =>
+      Uri.parse(useBackupLoginPage ? loginNoThirdCookieUrl : wapLoginUrl);
+
   SharedPreferences sharedPrefs = BaseSingleton.singleton.sharedPreferences;
   Widget webviewCard = Container();
   webview.InAppWebViewController? inAppWebViewController;
@@ -48,7 +52,8 @@ class _WebviewLoginCardState extends State<WebviewLoginCard>
         "#${Theme.of(context).colorScheme.surfaceContainerHighest.value.toRadixString(16).substring(2)}";
     String textColor =
         "#${Theme.of(context).colorScheme.onSurface.value.toRadixString(16).substring(2)}";
-    await inAppWebViewController?.callAsyncJavaScript(functionBody: """
+    if (!useBackupLoginPage) {
+      await inAppWebViewController?.callAsyncJavaScript(functionBody: """
       styleElement = document.createElement('style');
       styleElement.innerHTML = 
       'body { background: $backgroundColor; }'+
@@ -67,6 +72,33 @@ class _WebviewLoginCardState extends State<WebviewLoginCard>
       document.body.append(styleElement);
       return;
     """);
+    } else {
+      await inAppWebViewController?.callAsyncJavaScript(functionBody: """
+      var targetElement = document.querySelector('.cl_login_box');
+      function hideElementsExcept(element) {
+          var parent = element.parentElement;
+          while (parent && !parent.classList.contains(targetElement.className)) {
+              var siblings = parent.children;
+              for (var i = 0; i < siblings.length; i++) {
+                  if (siblings[i] !== element) {
+                      siblings[i].style.display = 'none';
+                  }
+              }
+              element = parent;
+              parent = parent.parentElement;
+          }
+      }
+      hideElementsExcept(targetElement);
+
+      styleElement = document.createElement('style');
+      styleElement.innerHTML = 
+      '.cl_login_box { top: 0%; transform: translate(-50% ,0%) ; margin-left: 0px; margin-top: 0px; }'+
+      '.pwd_remember { display: none; }'+
+      '.note_msg { display: none; }'+
+      '.cl_login_head { display: none; }';
+      document.body.append(styleElement);
+    """);
+    }
     return;
   }
 
@@ -100,10 +132,9 @@ class _WebviewLoginCardState extends State<WebviewLoginCard>
     webview.InAppWebViewController.setWebContentsDebuggingEnabled(
         !kReleaseMode);
     LoginModel model = Provider.of<LoginModel>(context, listen: false);
+
     webviewCard = webview.InAppWebView(
-        initialUrlRequest: webview.URLRequest(
-            url: webview.WebUri.uri(
-                Uri.parse('https://www.zhixue.com/wap_login.html'))),
+        initialUrlRequest: webview.URLRequest(url: webview.WebUri.uri(initUrl)),
         initialSettings: webview.InAppWebViewSettings(
           userAgent: userAgent,
           clearCache: sharedPrefs.getBool("keepLogin") == false,
