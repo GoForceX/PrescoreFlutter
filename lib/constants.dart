@@ -29,6 +29,7 @@ const String zhixueExamListUrl =
     "$zhixueServiceUrl/report/exam/getUserExamList";
 const String zhixueNewExamAnswerSheetUrl = "$zhixueBaseUrl/exam/examcenter/getNewExamAnswerSheetList";
 const String zhixueMarkingProgressUrl = "$zhixueBaseUrl/marking/marking/markingTopicProgress";
+const String zhixueMarkingProgressUrl_2 = "$zhixueBaseUrl_2/marking/marking/markingTopicProgress";
 const String zhixueReportUrl = "$zhixueServiceUrl/report/exam/getReportMain";
 const String zhixueDiagnosisUrl =
     "$zhixueServiceUrl/report/exam/getSubjectDiagnosis";

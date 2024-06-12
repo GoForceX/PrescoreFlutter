@@ -183,6 +183,7 @@ class _WebviewLoginCardState extends State<WebviewLoginCard>
               model.user.keepLocalSession =
                   sharedPrefs.getBool("keepLogin") ?? true;
               BaseSingleton.singleton.dio.options.headers["XToken"] = xToken;
+              //BaseSingleton.singleton.dio.options.headers["Token"] = xToken;
               if (sharedPrefs.getBool("keepLogin") ?? true) {
                 model.user.saveLocalSession();
               }
