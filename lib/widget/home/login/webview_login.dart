@@ -129,8 +129,10 @@ class _WebviewLoginCardState extends State<WebviewLoginCard>
   void initState() {
     super.initState();
     webview.CookieManager cookieManager = webview.CookieManager.instance();
-    webview.InAppWebViewController.setWebContentsDebuggingEnabled(
-        !kReleaseMode);
+    if (Platform.isAndroid) {
+      webview.InAppWebViewController.setWebContentsDebuggingEnabled(
+          !kReleaseMode);
+    }
     LoginModel model = Provider.of<LoginModel>(context, listen: false);
 
     webviewCard = webview.InAppWebView(
