@@ -844,12 +844,26 @@ class User {
       return Result(state: false, message: "未登录");
     }
     Response response =
-        await client.get("$zhixueMarkingProgressUrl?markingPaperId=$paperId");
+        await client.get("$zhixueMarkingProgressUrl_2?markingPaperId=$paperId");
     logger.d("fetchMarkingProgress, data: ${response.data}");
-    List<dynamic> dynamicJson = jsonDecode(response.data);
-    List<Map<String, dynamic>> json = dynamicJson.map((item) {
+    List<Map<String, dynamic>> json = (jsonDecode(response.data) as List<dynamic>).map((item) {
       return item as Map<String, dynamic>;
     }).toList();
+    bool allZero = true;
+    for (var element in json) {
+      if (element["realCompleteCount"] != 0) {
+        allZero = false;
+        break;
+      }
+    }
+    if (allZero) {
+      Response response =
+        await client.get("$zhixueMarkingProgressUrl?markingPaperId=$paperId");
+      logger.d("fetchMarkingProgress, data: ${response.data}");
+      json = (jsonDecode(response.data) as List<dynamic>).map((item) {
+        return item as Map<String, dynamic>;
+      }).toList();
+    }
 
     List<QuestionProgress> result = [];
     for (var element in json) {
@@ -1157,7 +1171,15 @@ class User {
     Response response = await client
         .get("$zhixueChecksheetUrl?examId=$examId&paperId=$paperId");
     logger.d("paperData: ${response.data}");
-    Map<String, dynamic> json = jsonDecode(response.data);
+    Map<String, dynamic> json;
+    if (response.data == "") {
+      return Result(state: false, message: "无数据");
+    }
+    try {
+      json = jsonDecode(response.data);
+    } catch (_) {
+      return Result(state: false, message: "数据解析失败");
+    }
     logger.d("paperData: $json");
     if (json["errorCode"] != 0) {
       logger.d("paperData: failed");

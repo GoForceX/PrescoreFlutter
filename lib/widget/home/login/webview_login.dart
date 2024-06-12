@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart' as webview;
 import 'package:flutter/material.dart';
 import 'package:prescore_flutter/constants.dart';
@@ -26,6 +27,10 @@ class _WebviewLoginCardState extends State<WebviewLoginCard>
 
   bool isLoaded = false;
 
+  get useBackupLoginPage => Platform.isIOS;
+  get initUrl =>
+      Uri.parse(useBackupLoginPage ? loginNoThirdCookieUrl : wapLoginUrl);
+
   SharedPreferences sharedPrefs = BaseSingleton.singleton.sharedPreferences;
   Widget webviewCard = Container();
   webview.InAppWebViewController? inAppWebViewController;
@@ -47,7 +52,8 @@ class _WebviewLoginCardState extends State<WebviewLoginCard>
         "#${Theme.of(context).colorScheme.surfaceContainerHighest.value.toRadixString(16).substring(2)}";
     String textColor =
         "#${Theme.of(context).colorScheme.onSurface.value.toRadixString(16).substring(2)}";
-    await inAppWebViewController?.callAsyncJavaScript(functionBody: """
+    if (!useBackupLoginPage) {
+      await inAppWebViewController?.callAsyncJavaScript(functionBody: """
       styleElement = document.createElement('style');
       styleElement.innerHTML = 
       'body { background: $backgroundColor; }'+
@@ -60,10 +66,39 @@ class _WebviewLoginCardState extends State<WebviewLoginCard>
       '.user_box input:focus { border-bottom: 2px solid $focusColor; }'+
       '.user_box span.close { margin-right: 10px; }'+
       '.geetest_wrap { background: $backgroundColor; }'+
+      '.geetest_header { background: $backgroundColor; }'+
+      '.geetest_footer { background: $backgroundColor; }'+
       '.geetest_box { background: $backgroundColor; }';
       document.body.append(styleElement);
       return;
     """);
+    } else {
+      await inAppWebViewController?.callAsyncJavaScript(functionBody: """
+      var targetElement = document.querySelector('.cl_login_box');
+      function hideElementsExcept(element) {
+          var parent = element.parentElement;
+          while (parent && !parent.classList.contains(targetElement.className)) {
+              var siblings = parent.children;
+              for (var i = 0; i < siblings.length; i++) {
+                  if (siblings[i] !== element) {
+                      siblings[i].style.display = 'none';
+                  }
+              }
+              element = parent;
+              parent = parent.parentElement;
+          }
+      }
+      hideElementsExcept(targetElement);
+
+      styleElement = document.createElement('style');
+      styleElement.innerHTML = 
+      '.cl_login_box { top: 0%; transform: translate(-50% ,0%) ; margin-left: 0px; margin-top: 0px; }'+
+      '.pwd_remember { display: none; }'+
+      '.note_msg { display: none; }'+
+      '.cl_login_head { display: none; }';
+      document.body.append(styleElement);
+    """);
+    }
     return;
   }
 
@@ -94,18 +129,20 @@ class _WebviewLoginCardState extends State<WebviewLoginCard>
   void initState() {
     super.initState();
     webview.CookieManager cookieManager = webview.CookieManager.instance();
+    if (Platform.isAndroid) {
+      webview.InAppWebViewController.setWebContentsDebuggingEnabled(
+          !kReleaseMode);
+    }
     LoginModel model = Provider.of<LoginModel>(context, listen: false);
+
     webviewCard = webview.InAppWebView(
-        initialUrlRequest: webview.URLRequest(
-            url: Uri.parse('https://www.zhixue.com/wap_login.html')),
-        initialOptions: webview.InAppWebViewGroupOptions(
-            crossPlatform: webview.InAppWebViewOptions(
-                userAgent: userAgent,
-                clearCache: sharedPrefs.getBool("keepLogin") == false),
-            android: webview.AndroidInAppWebViewOptions(
-                mixedContentMode:
-                    webview.AndroidMixedContentMode.MIXED_CONTENT_ALWAYS_ALLOW,
-                clearSessionCache: sharedPrefs.getBool("keepLogin") == false)),
+        initialUrlRequest: webview.URLRequest(url: webview.WebUri.uri(initUrl)),
+        initialSettings: webview.InAppWebViewSettings(
+          userAgent: userAgent,
+          clearCache: sharedPrefs.getBool("keepLogin") == false,
+          mixedContentMode: webview.MixedContentMode.MIXED_CONTENT_ALWAYS_ALLOW,
+          isInspectable: !kReleaseMode,
+        ),
         onWebViewCreated: (controller) => inAppWebViewController = controller,
         onLoadStop: (controller, url) async {
           setPasswordListener();
@@ -172,63 +209,67 @@ class _WebviewLoginCardState extends State<WebviewLoginCard>
             ),
             margin: const EdgeInsets.symmetric(horizontal: 32),
             child: Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                side: BorderSide(
-                  color: Theme.of(context).colorScheme.outlineVariant,
-                ),
-                borderRadius: const BorderRadius.all(Radius.circular(12)),
-              ),
-              clipBehavior: Clip.antiAliasWithSaveLayer,
-              child: Stack(
-                children: [
-                  Column(
-                    children: [
-                      SizedBox(height: 217, child: webviewCard),
-                      const Divider(height: 2),
-                      Row(
-                        children: [
-                          Transform.scale(
-                            scale: 0.75,
-                            filterQuality: FilterQuality.high,
-                            child: Checkbox(
-                              value: sharedPrefs.getBool("keepLogin"),
-                              //activeColor: Colors.red, //选中时的颜色
-                              onChanged: (value) {
-                                setState(() {
-                                  sharedPrefs.setBool("keepLogin", value!);
-                                });
-                              },
-                            ),
-                          ),
-                          Text("保持登录",
-                              style: Theme.of(context).textTheme.labelMedium),
-                          const Expanded(child: SizedBox()),
-                          GestureDetector(
-                              child: Text("清除缓存",
-                                  style:
-                                      Theme.of(context).textTheme.labelMedium),
-                              onTap: () {
-                                inAppWebViewController?.clearCache();
-                                inAppWebViewController?.reload();
-                              }),
-                          const SizedBox(width: 20)
-                        ],
-                      ),
-                    ],
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  side: BorderSide(
+                    color: Theme.of(context).colorScheme.outlineVariant,
                   ),
-                  if (!isLoaded)
-                    Container(
-                        height: 250,
-                        color:
-                            Theme.of(context).colorScheme.surfaceContainerLow,
-                        child: Center(
-                            child: Container(
-                                margin: const EdgeInsets.all(10),
-                                child: const CircularProgressIndicator())))
-                ],
-              ),
-            )),
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
+                ),
+                child: Column(
+                  children: [
+                    ClipRRect(
+                        borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(12)),
+                        child: SizedBox(
+                            height: 218,
+                            child: Stack(
+                              children: [
+                                webviewCard,
+                                if (!isLoaded)
+                                  Container(
+                                      height: 218,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .surfaceContainerLow,
+                                      child: Center(
+                                          child: Container(
+                                              margin: const EdgeInsets.all(10),
+                                              child:
+                                                  const CircularProgressIndicator())))
+                              ],
+                            ))),
+                    const Divider(height: 2),
+                    Row(
+                      children: [
+                        Transform.scale(
+                          scale: 0.75,
+                          filterQuality: FilterQuality.high,
+                          child: Checkbox(
+                            value: sharedPrefs.getBool("keepLogin"),
+                            //activeColor: Colors.red, //选中时的颜色
+                            onChanged: (value) {
+                              setState(() {
+                                sharedPrefs.setBool("keepLogin", value!);
+                              });
+                            },
+                          ),
+                        ),
+                        Text("保持登录",
+                            style: Theme.of(context).textTheme.labelMedium),
+                        const Expanded(child: SizedBox()),
+                        GestureDetector(
+                            child: Text("清除缓存",
+                                style: Theme.of(context).textTheme.labelMedium),
+                            onTap: () {
+                              webview.InAppWebViewController.clearAllCache();
+                              inAppWebViewController?.reload();
+                            }),
+                        const SizedBox(width: 20)
+                      ],
+                    ),
+                  ],
+                ))),
       ],
     );
   }

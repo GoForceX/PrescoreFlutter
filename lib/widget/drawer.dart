@@ -95,6 +95,7 @@ class _MainDrawerState extends State<MainDrawer> {
               model.setUser(User());
               router.replaceAll([const HomeRoute()]);
               CookieManager.instance().deleteAllCookies();
+              InAppWebViewController.clearAllCache();
               refreshService();
             },
             child: const Text('果断退出'),

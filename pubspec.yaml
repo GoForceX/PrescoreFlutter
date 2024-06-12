@@ -67,7 +67,7 @@ dependencies:
   image: ^4.0.17
   # cronet: ^0.0.7
   cronet_http: ^1.2.0
-  easy_refresh: ^3.0.4+2
+  easy_refresh: ^3.4.0
   http: ^1.1.0
   firebase_core: ^2.16.0
   firebase_analytics: ^10.5.0
@@ -90,7 +90,7 @@ dependencies:
   dio_cache_interceptor: ^3.5.0
   async: ^2.11.0
   google_fonts: ^6.2.1
-  flutter_inappwebview: ^5.8.0
+  flutter_inappwebview: ^6.0.0
 
 dev_dependencies:
   flutter_test:
