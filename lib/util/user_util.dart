@@ -1172,7 +1172,15 @@ class User {
     Response response = await client
         .get("$zhixueChecksheetUrl?examId=$examId&paperId=$paperId");
     logger.d("paperData: ${response.data}");
-    Map<String, dynamic> json = jsonDecode(response.data);
+    Map<String, dynamic> json;
+    if (response.data == "") {
+      return Result(state: false, message: "无数据");
+    }
+    try {
+      json = jsonDecode(response.data);
+    } catch (_) {
+      return Result(state: false, message: "数据解析失败");
+    }
     logger.d("paperData: $json");
     if (json["errorCode"] != 0) {
       logger.d("paperData: failed");
