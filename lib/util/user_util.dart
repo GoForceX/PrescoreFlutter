@@ -86,7 +86,6 @@ class User {
         session = localSession;
         Dio client = BaseSingleton.singleton.dio;
         client.options.headers["XToken"] = localSession.xToken;
-        //client.options.headers["Token"] = localSession.xToken;
         loginCredential.userName = list[0]['userName'] as String?;
         loginCredential.password = list[0]['password'] as String?;
         await database.close();
