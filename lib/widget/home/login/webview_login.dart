@@ -92,7 +92,9 @@ class _WebviewLoginCardState extends State<WebviewLoginCard>
 
       styleElement = document.createElement('style');
       styleElement.innerHTML = 
-      '.cl_login_box { top: 0%; transform: translate(-50% ,0%) ; margin-left: 0px; margin-top: 0px; }'+
+      '.cl_login_box { all: unset; }'+
+      '.cl_login_fill > input, .verified_name > input { width: 100%; }'+
+      '.cl_banner { min-height: 30px; }'+
       '.pwd_remember { display: none; }'+
       '.note_msg { display: none; }'+
       '.cl_login_head { display: none; }';

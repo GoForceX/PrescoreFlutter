@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -37,7 +38,7 @@ class _ExamDetailState extends State<ExamDetail>
           List<Paper> papers = examModel.papers;
           List<Paper> absentPapers = examModel.absentPapers;
           List<String> absentPaperIds =
-              absentPapers.map((paper) => paper.paperId).toList();
+              absentPapers.map((paper) => paper.paperId!).toList();
           List<Paper> presentPapers = papers
               .where((paper) => !absentPaperIds.contains(paper.paperId))
               .toList();
@@ -46,6 +47,9 @@ class _ExamDetailState extends State<ExamDetail>
             shrinkWrap: false,
             itemCount: presentPapers.length,
             itemBuilder: (BuildContext context, int index) {
+              if (kReleaseMode && presentPapers[index].paperId == null) { //TODO
+                return const SizedBox();
+              }
               return DetailCard(
                   paper: presentPapers[index], examId: widget.examId);
             },

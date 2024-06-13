@@ -17,6 +17,9 @@ void setUploadListener(context) {
       Provider.of<ExamModel>(context, listen: false)
           .setUploadStatus(UploadStatus.uploading);
       for (var paper in Provider.of<ExamModel>(context, listen: false).papers) {
+        if (paper.paperId == null) {
+          continue;
+        }
         try {
           logger.d("DashboardInfo: $paper");
           bool noDiag = false;
@@ -50,12 +53,12 @@ void setUploadListener(context) {
               .uploadPaperData(processedPaper);
           Provider.of<ExamModel>(context, listen: false)
               .user
-              .fetchPaperClassList(paper.paperId)
+              .fetchPaperClassList(paper.paperId!)
               .then((value) {
             if (value.state && value.result != null) {
               Provider.of<ExamModel>(context, listen: false)
                   .user
-                  .uploadPaperClassData(value.result!, paper.paperId);
+                  .uploadPaperClassData(value.result!, paper.paperId!);
             }
           });
         } catch (e) {

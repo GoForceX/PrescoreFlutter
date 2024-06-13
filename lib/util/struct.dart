@@ -136,11 +136,13 @@ enum Source {
   preview,
 }
 
-enum MarkingStatus { unknown, m4CompleteMarking, m3marking }
+enum MarkingStatus { unknown, m4CompleteMarking, m3marking, noMarkingStatus }
 
 class Paper {
   String examId;
-  String paperId;
+  String? id;
+  String? answerSheet;
+  String? paperId;
   String name;
   String subjectId;
   double? userScore;
@@ -159,12 +161,14 @@ class Paper {
       required this.fullScore,
       required this.source,
       this.assignScore,
+      this.id,
+      this.answerSheet,
       this.diagnosticScore,
       this.markingStatus = MarkingStatus.unknown});
 
   @override
   String toString() {
-    return 'Paper{examId: $examId, paperId: $paperId, name: $name, subjectId: $subjectId, userScore: $userScore, fullScore: $fullScore, assignScore: $assignScore, diagnosticScore: $diagnosticScore, source: $source}';
+    return 'Paper{examId: $examId, id: $id, answerSheet: $answerSheet, paperId: $paperId, name: $name, subjectId: $subjectId, userScore: $userScore, fullScore: $fullScore, assignScore: $assignScore, diagnosticScore: $diagnosticScore, source: $source}';
   }
 
   Map<String, dynamic> toMap() {

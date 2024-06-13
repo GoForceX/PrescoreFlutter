@@ -805,19 +805,25 @@ class User {
           }
         } catch (_) {}
         try {
+          MarkingStatus status = MarkingStatus.noMarkingStatus;
+          try {
+            status = subject["markingStatus"] == "m4CompleteMarking"
+                  ? MarkingStatus.m4CompleteMarking
+                  : subject["markingStatus"] == "m3marking"
+                      ? MarkingStatus.m3marking
+                      : MarkingStatus.unknown;
+          } catch(_) {}
           return Paper(
               examId: subject["examId"],
               paperId: subject["markingPaperId"],
+              id: subject["id"],
+              answerSheet: subject["dispName"],
               name: subject["subjectName"],
               subjectId: subject["subjectCode"],
               userScore: userScore,
               fullScore: standardScore,
               source: Source.preview,
-              markingStatus: subject["markingStatus"] == "m4CompleteMarking"
-                  ? MarkingStatus.m4CompleteMarking
-                  : subject["markingStatus"] == "m3marking"
-                      ? MarkingStatus.m3marking
-                      : MarkingStatus.unknown);
+              markingStatus: status);
         } catch (_) {}
         return null;
       }
