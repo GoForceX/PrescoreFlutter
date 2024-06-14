@@ -1,15 +1,14 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 //import 'package:crypto/crypto.dart';
 import 'package:html/parser.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:dio/dio.dart';
 import 'package:cookie_jar/cookie_jar.dart';
-import 'package:encrypt/encrypt.dart';
 import 'package:flutter/material.dart';
-import 'package:pointycastle/asymmetric/api.dart';
+import 'package:pointycastle/export.dart';
 import 'package:prescore_flutter/main.dart';
-import 'package:prescore_flutter/util/rsa.dart';
 import 'package:prescore_flutter/util/struct.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
@@ -172,19 +171,18 @@ class User {
   }
 
   /// Use RSA to encrypt [password].
-  String getEncryptedPassword(String password, String lt) {
-    // Encrypt password in order to login.
-    // Use no padding.
-    final Encrypter encrypter = Encrypter(RSAExt(
-      publicKey: RSAPublicKey(
-          BigInt.parse("0x00ccd806a03c7391ee8f884f5902102d95f6d534d597ac42219dd8a79b1465e186c0162a6771b55e7be7422c4af494ba0112ede4eb00fc751723f2c235ca419876e7103ea904c29522b72d754f66ff1958098396f17c6cd2c9446e8c2bb5f4000a9c1c6577236a57e270bef07e7fe7bbec1f0e8993734c8bd4750e01feb21b6dc9"),
-          BigInt.parse("0x010001")),
-      privateKey: null,
-    ));
-
-    String encrypted =
-        encrypter.encrypt("LT/$lt/$password").base16;
-    return encrypted;
+  String getEncryptedPassword(String password) {
+    final modulus = BigInt.parse(zhixueRsaKeyModules, radix: 16);
+    final publicExponent = BigInt.parse(zhixueRsaKeyPublicExponent, radix: 16);
+    final rsaPublicKey = RSAPublicKey(modulus, publicExponent);
+    final cipher = PKCS1Encoding(RSAEngine())
+      ..init(true, PublicKeyParameter<RSAPublicKey>(rsaPublicKey));
+    final encryptedBytes = cipher.process(
+        Uint8List.fromList(utf8.encode(password.split('').reversed.join())));
+    final encryptedHex = encryptedBytes
+        .map((byte) => byte.toRadixString(16).padLeft(2, '0'))
+        .join('');
+    return encryptedHex;
   }
 
   /// Generate login params.
@@ -212,7 +210,7 @@ class User {
       "lt": lt,
       "execution": execution,
       "username": username,
-      "password": getEncryptedPassword(password, lt),
+      "password": getEncryptedPassword(password),
       //"encodeType" : "R2/P/LT"
     }.entries);
 
@@ -278,6 +276,89 @@ class User {
     return xToken;
   }
 
+  Future<Result> ssoLogin(String username, String password, String captcha,
+      {bool keepLocalSession = false}) async {
+    if (isLoading) {
+      return Result(state: false, message: "正在登录中，请稍后再试");
+    }
+    Dio client = BaseSingleton.singleton.dio;
+    isLoading = true;
+    Response ssoResponse = await client.post(changyanSSOLoginUrl,
+        data: {
+          "username": username,
+          "password": getEncryptedPassword(password),
+          "thirdCaptchaParam": captcha,
+          "appId": "zhixue_parent",
+          "captchaType": "third",
+          "client": "android",
+          "encode": "true",
+          "encodeType": "R2/P",
+          "extInfo": "{\"deviceId\":\"0\"}",
+          "key": "auto",
+          "method": "sso.login.account.v3"
+        },
+        options: Options(
+          contentType: Headers.formUrlEncodedContentType,
+        ));
+
+    Map<String, dynamic> ssoResult = jsonDecode(ssoResponse.data);
+    if (ssoResult["code"] == "success") {
+      SsoInfo info = SsoInfo(
+        tgt: ssoResult["data"]["tgt"],
+        at: ssoResult["data"]["at"],
+        userId: ssoResult["data"]["userId"],
+      );
+
+      Response casResponse = await client.post(zhixueCasLogin,
+          data: {
+            "at": info.at,
+            "userId": info.userId,
+          },
+          options: Options(
+            contentType: Headers.formUrlEncodedContentType,
+          ));
+      Map<String, dynamic> casResult = jsonDecode(casResponse.data);
+      if (casResult["errorCode"] != 0) {
+        isLoading = false;
+        return Result(
+            state: false,
+            message: casResult["errorCode"].toString(),
+            result: casResult["errorInfo"]);
+      }
+      String xToken = casResult["result"]["token"];
+      basicInfo = BasicInfo(
+          casResult["result"]["id"],
+          casResult["result"]["userInfo"]["loginName"],
+          casResult["result"]["name"],
+          casResult["result"]["role"],
+          casResult["result"]["userInfo"]["avatar"]);
+      isBasicInfoLoaded = true;
+      List<Cookie> cookies = await BaseSingleton.singleton.cookieJar
+          .loadForRequest(Uri.parse(zhixueBaseUrl));
+      for (var element in cookies) {
+        if (element.name == "tlsysSessionId") {
+          Session currSession =
+              Session(null, element.value, xToken, info.userId);
+          session = currSession;
+          client.options.headers["XToken"] = currSession.xToken;
+          isLoading = false;
+          if (keepLocalSession) {
+            saveLocalSession();
+          }
+          return Result(
+              state: true, message: casResult["errorCode"].toString());
+        }
+      }
+      return Result(state: false, message: casResult["errorCode"].toString());
+    } else {
+      isLoading = false;
+      return Result(
+          state: false,
+          message: ssoResult["code"].toString(),
+          result: ssoResult["message"]);
+    }
+  }
+
   /// Login to zhixue.com.
   ///
   /// [username] and [password] are from user input and is required.
@@ -334,97 +415,6 @@ class User {
       return Result(state: false, message: "用户名为空");
     }
     return Result(state: false, message: "该登录方式暂不可用");
-    // Check if there is a previous session from cookies.
-    Response preload = await client.get(changyanSSOUrl);
-    String preloadBody = preload.data;
-    preloadBody = preloadBody.trim();
-    logger.d("loginPreloadBody: $preloadBody");
-    preloadBody = preloadBody.replaceAll('\\', '').replaceAll('\'', '');
-    preloadBody = preloadBody.replaceAll('(', '').replaceAll(')', '');
-
-    Map<String, dynamic> preloadParsed = jsonDecode(preloadBody);
-
-    // Return code 1000 means not logged in.
-    // Return code 1001 means already logged in.
-    // Other return code means failed to login.
-    if (preloadParsed['code'] != 1000) {
-      if (preloadParsed['code'] == 1001) {
-        session = await getSessionFromSt(preloadParsed['data']['st']);
-        // If session is null, this request is invalid. So return false.
-        if (session == null) {
-          isLoading = false;
-          return Result(state: false, message: "已登录, 但Session缺失");
-        }
-        if (callback != null) {
-          callback();
-        }
-        loginCredential.userName = username;
-        loginCredential.password = password;
-        if (keepLocalSession) {
-          await saveLocalSession();
-        }
-        isLoading = false;
-        this.keepLocalSession = keepLocalSession;
-        return Result(state: true, message: "已登录");
-      } else {
-        isLoading = false;
-        return Result(state: false, message: preloadParsed['data']);
-      }
-    }
-    // Use lt and execution from previous request to do actual login.
-    String lt = preloadParsed['data']['lt'];
-    String execution = preloadParsed['data']['execution'];
-
-    logger.d(
-        "loginUri: $changyanSSOUrl&${getParsedParams(lt, execution, username, password)}");
-    Response response = await client.get(
-        "$changyanSSOUrl&${getParsedParams(lt, execution, username, password)}");
-    String body = response.data;
-    body = body.trim();
-    logger.d("loginBody: $body");
-    body = body.replaceAll('\\', '').replaceAll('\'', '');
-    body = body.replaceAll('(', '').replaceAll(')', '');
-
-    // Fetch user basic info.
-    try {
-      await fetchBasicInfo();
-    } catch (e) {
-      logger.e("login: fetchBasicInfo error: $e");
-    }
-    // Parse response.
-    // Return code 1000 means not logged in.
-    // Return code 1001 means already logged in.
-    // Other return code means failed to login.
-    // In this case, any code other than 1001 is considered as failed.
-    Map<String, dynamic> parsed = jsonDecode(body);
-    if (parsed['code'] != 1001) {
-      isLoading = false;
-      return Result(state: false, message: parsed['data']);
-    }
-    session = await getSessionFromSt(parsed['data']['st']);
-    if (session == null) {
-      isLoading = false;
-      return Result(state: false, message: "登录失败, Session缺失");
-    }
-    loginCredential.userName = username;
-    loginCredential.password = password;
-    this.keepLocalSession = keepLocalSession;
-    if (keepLocalSession) {
-      await saveLocalSession();
-    }
-    // Login to private server.
-    try {
-      await telemetryLogin();
-    } catch (e) {
-      logger.e("login: telemetryLogin error: $e");
-    }
-
-    if (callback != null) {
-      callback();
-    }
-    isLoading = false;
-    //LocalLogger.write("登录成功", isError: false);
-    return Result(state: true, message: "登录成功");
   }
 
   /// Login to private server to record exam data.
@@ -808,11 +798,11 @@ class User {
           MarkingStatus status = MarkingStatus.noMarkingStatus;
           try {
             status = subject["markingStatus"] == "m4CompleteMarking"
-                  ? MarkingStatus.m4CompleteMarking
-                  : subject["markingStatus"] == "m3marking"
-                      ? MarkingStatus.m3marking
-                      : MarkingStatus.unknown;
-          } catch(_) {}
+                ? MarkingStatus.m4CompleteMarking
+                : subject["markingStatus"] == "m3marking"
+                    ? MarkingStatus.m3marking
+                    : MarkingStatus.unknown;
+          } catch (_) {}
           return Paper(
               examId: subject["examId"],
               paperId: subject["markingPaperId"],
@@ -852,7 +842,8 @@ class User {
     Response response =
         await client.get("$zhixueMarkingProgressUrl_2?markingPaperId=$paperId");
     logger.d("fetchMarkingProgress, data: ${response.data}");
-    List<Map<String, dynamic>> json = (jsonDecode(response.data) as List<dynamic>).map((item) {
+    List<Map<String, dynamic>> json =
+        (jsonDecode(response.data) as List<dynamic>).map((item) {
       return item as Map<String, dynamic>;
     }).toList();
     bool allZero = true;
@@ -864,7 +855,7 @@ class User {
     }
     if (allZero) {
       Response response =
-        await client.get("$zhixueMarkingProgressUrl?markingPaperId=$paperId");
+          await client.get("$zhixueMarkingProgressUrl?markingPaperId=$paperId");
       logger.d("fetchMarkingProgress, data: ${response.data}");
       json = (jsonDecode(response.data) as List<dynamic>).map((item) {
         return item as Map<String, dynamic>;
@@ -1932,7 +1923,7 @@ class User {
     }
   }
 
-    Future<Result<DistributionData>> fetchPaperDistribution(
+  Future<Result<DistributionData>> fetchPaperDistribution(
       {required String paperId, double step = 1}) async {
     Dio client = BaseSingleton.singleton.dio;
 
@@ -1944,13 +1935,16 @@ class User {
     if (result["code"] == 0) {
       DistributionData paperDistribution = DistributionData();
       for (var element in result["data"]["distribute"]) {
-        paperDistribution.distribute.add(DistributionScoreItem(score: element["score"], sum: element["sum"]));
+        paperDistribution.distribute.add(DistributionScoreItem(
+            score: element["score"], sum: element["sum"]));
       }
       for (var element in result["data"]["prefix"]) {
-        paperDistribution.prefix.add(DistributionScoreItem(score: element["score"], sum: element["sum"]));
+        paperDistribution.prefix.add(DistributionScoreItem(
+            score: element["score"], sum: element["sum"]));
       }
       for (var element in result["data"]["suffix"]) {
-        paperDistribution.suffix.add(DistributionScoreItem(score: element["score"], sum: element["sum"]));
+        paperDistribution.suffix.add(DistributionScoreItem(
+            score: element["score"], sum: element["sum"]));
       }
       return Result(state: true, message: "", result: paperDistribution);
     } else {

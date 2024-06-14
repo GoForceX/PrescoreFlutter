@@ -1,6 +1,19 @@
 import 'dart:math';
 import 'dart:ui';
 
+class SsoInfo {
+  String tgt;
+  String at;
+  String userId;
+
+  SsoInfo({required this.tgt, required this.at, required this.userId});
+
+  @override
+  String toString() {
+    return 'SsoInfo{tgt: $tgt, at: $at, userId: $userId}';
+  }
+}
+
 class Session {
   String? st;
   String sessionId;

@@ -1,6 +1,10 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:gt4_flutter_plugin/gt4_flutter_plugin.dart';
+import 'package:prescore_flutter/constants.dart';
 import 'package:prescore_flutter/main.dart';
 import 'package:prescore_flutter/main.gr.dart';
 import 'package:prescore_flutter/model/login_model.dart';
@@ -40,56 +44,63 @@ class NormalLoginCard extends StatefulWidget {
 }
 
 class _NormalLoginCardState extends State<NormalLoginCard> {
-  void login({useLocalSession = false, keepLocalSession = false}) async {
+  void login({keepLocalSession = false}) async {
+    Gt4FlutterPlugin captcha = Gt4FlutterPlugin(geetestCaptchaId);
     LoginModel model = Provider.of<LoginModel>(context, listen: false);
-    if (useLocalSession) {
-      model.setAutoLogging(true);
-    }
     model.setLoading(true);
-    final username = widget.usernameController.text;
-    final password = widget.passwordController.text;
+    captcha.addEventHandler(onResult: (Map<String, dynamic> message) async {
+      String status = message["status"];
+      if (status == "1") {
+        String captchaResult = jsonEncode(message["result"] as Map);
+        final username = widget.usernameController.text;
+        final password = widget.passwordController.text;
 
-    sharedPrefs.setString("username", username);
-    sharedPrefs.setString("password", password);
+        sharedPrefs.setString("username", username);
+        sharedPrefs.setString("password", password);
 
-    Result result;
-    try {
-      result = await model.user.login(username, password,
-          useLocalSession: useLocalSession, keepLocalSession: keepLocalSession);
-    } catch (e) {
-      SnackBar snackBar = SnackBar(
-          content: Text('呜呜呜，登录失败了……\n失败原因：${(e as DioException).error}'));
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(snackBar);
-        model.setLoading(false);
-        model.setAutoLogging(false);
-      }
-      return;
-    }
-    if (mounted) {
-      if (result.state) {
-        model.user.telemetryLogin();
-        model.setLoggedIn(true);
-        model.setAutoLogging(false);
-        model.setLoading(false);
-        logger.d("session ${model.user.session}");
-        refreshService();
-
-        model.user.reLoginFailedCallback = () {
-          model.setLoggedIn(false);
+        Result result;
+        try {
+          result = await model.user.ssoLogin(username, password, captchaResult,
+              keepLocalSession: keepLocalSession);
+        } catch (e) {
+          SnackBar snackBar = SnackBar(
+              content: Text('呜呜呜，登录失败了……\n失败原因：${(e as DioException).error}'));
           model.setLoading(false);
-          model.setUser(User());
-          Navigator.of(context, rootNavigator: true)
-              .pushReplacementNamed(HomeRoute.name);
-        };
-      } else {
-        SnackBar snackBar =
-            SnackBar(content: Text('呜呜呜，登录失败了……\n失败原因：${result.message}'));
-        ScaffoldMessenger.of(context).showSnackBar(snackBar);
-        model.setLoading(false);
-        model.setAutoLogging(false);
+          model.setAutoLogging(false);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(snackBar);
+          }
+          return;
+        }
+        if (mounted) {
+          if (result.state) {
+            model.user.telemetryLogin();
+            model.user.autoLogout = false;
+            model.setLoggedIn(true);
+            model.setAutoLogging(false);
+            model.setLoading(false);
+            logger.d("session ${model.user.session}");
+            refreshService();
+
+            model.user.reLoginFailedCallback = () {
+              model.setLoggedIn(false);
+              model.setLoading(false);
+              model.setUser(User());
+              Navigator.of(context, rootNavigator: true)
+                  .pushReplacementNamed(HomeRoute.name);
+            };
+          } else {
+            SnackBar snackBar =
+                SnackBar(content: Text('呜呜呜，登录失败了……\n失败原因：${result.message}'));
+            ScaffoldMessenger.of(context).showSnackBar(snackBar);
+            model.setLoading(false);
+            model.setAutoLogging(false);
+          }
+        }
       }
-    }
+    });
+    captcha.verify();
+    return;
   }
 
   bool _isObscured = true;
@@ -210,7 +221,6 @@ class _NormalLoginCardState extends State<NormalLoginCard> {
                     ? null
                     : () {
                         login(
-                            useLocalSession: false,
                             keepLocalSession:
                                 sharedPrefs.getBool("keepLogin") ?? true);
                         TextInput.finishAutofillContext();
