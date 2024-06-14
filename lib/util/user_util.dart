@@ -130,13 +130,8 @@ class User {
     Map<String, dynamic> json = jsonDecode(response.data);
     logger.d("updateLoginStatus $response");
     if (json["result"] != "success" || force) {
-      Result result = await login(
-          loginCredential.userName ?? "", loginCredential.password ?? "",
-          useLocalSession: false,
-          keepLocalSession: keepLocalSession,
-          force: true);
       //if(!result.state && (result.message.contains("用户不存在") || result.message.contains("凭证有误"))) {
-      if (!result.state && autoLogout) {
+      if (autoLogout) {
         await logoff();
         reLoginFailedCallback();
       }
@@ -158,6 +153,7 @@ class User {
 
     // Remove all cookies from related sites.
     CookieJar cookieJar = BaseSingleton.singleton.cookieJar;
+    cookieJar.deleteAll();
     cookieJar.delete(Uri.parse("https://www.zhixue.com/"));
     cookieJar.delete(Uri.parse("https://open.changyan.com/"));
 
@@ -185,83 +181,6 @@ class User {
     return encryptedHex;
   }
 
-  /// Generate login params.
-  ///
-  /// [lt] and [execution] are received from [zhixueLoginUrl].
-  ///
-  /// [username] and [password] are from user input and is required.
-  ///
-  /// [password] must be encrypted using [getEncryptedPassword].
-  String getParsedParams(
-      String lt, String execution, String username, String password) {
-    // Static params
-    Map<String, String> params = {
-      "encode": "true",
-      "sourceappname": "tkyh,tkyh",
-      "_eventId": "submit",
-      "appid": "zx-container-client",
-      "client": "web",
-      "type": "loginByNormal",
-      "key": "auto",
-      "customLogoutUrl": "https://www.zhixue.com/login.html",
-    };
-    // Dynamic params
-    params.addEntries({
-      "lt": lt,
-      "execution": execution,
-      "username": username,
-      "password": getEncryptedPassword(password),
-      //"encodeType" : "R2/P/LT"
-    }.entries);
-
-    // Parse params
-    String parsedParams = "";
-    params.forEach((key, value) {
-      parsedParams += "$key=$value&";
-    });
-
-    // Remove the last '&' character.
-    return parsedParams.substring(0, parsedParams.length - 1);
-  }
-
-  /// Fetch session id from [st].
-  ///
-  /// [st] is received from [zhixueLoginUrl].
-  Future<Session?> getSessionFromSt(String st) async {
-    CookieJar cookieJar = BaseSingleton.singleton.cookieJar;
-    Dio client = BaseSingleton.singleton.dio;
-
-    // Get session from st.
-    logger.d("st: $st");
-
-    Response loginResponse = await client.post(
-      zhixueLoginUrl,
-      data: {
-        "action": "login",
-        "ticket": st,
-      },
-      options: Options(contentType: Headers.formUrlEncodedContentType),
-    );
-    logger.d("loginResponse: ${loginResponse.data}");
-    logger.d("loginResponse: ${loginResponse.headers}");
-
-    // Get session id from cookies.
-    List<Cookie> cookies =
-        await cookieJar.loadForRequest(Uri.parse(zhixueBaseUrl));
-    String xToken = await getXToken();
-    logger.d("cookies: $cookies");
-    for (var element in cookies) {
-      if (element.name == "tlsysSessionId") {
-        Session currSession = Session(st, element.value, xToken, "");
-        session = currSession;
-        logger.d(currSession.toString());
-        client.options.headers["XToken"] = currSession.xToken;
-        return currSession;
-      }
-    }
-    return null;
-  }
-
   /// Get xToken from cookies.
   ///
   /// xToken is required to access some APIs.
@@ -274,6 +193,49 @@ class User {
     Map<String, dynamic> json = jsonDecode(tokenResponse.data);
     String xToken = json["result"];
     return xToken;
+  }
+
+  Future<Result> casLoginWithAt({required String at, required String userId, required bool keepLocalSession}) async {
+    Dio client = BaseSingleton.singleton.dio;
+    Response casResponse = await client.post(zhixueCasLogin,
+          data: {
+            "at": at,
+            "userId": userId,
+          },
+          options: Options(
+            contentType: Headers.formUrlEncodedContentType,
+          ));
+      Map<String, dynamic> casResult = jsonDecode(casResponse.data);
+      if (casResult["errorCode"] != 0) {
+        return Result(
+            state: false,
+            message: casResult["errorCode"].toString(),
+            result: casResult["errorInfo"]);
+      }
+      List<Cookie> cookies = await BaseSingleton.singleton.cookieJar
+          .loadForRequest(Uri.parse(zhixueBaseUrl));
+      for (var element in cookies) {
+        if (element.name == "tlsysSessionId") {
+          String xToken = casResult["result"]["token"];
+          basicInfo = BasicInfo(
+          casResult["result"]["id"],
+          casResult["result"]["userInfo"]["loginName"],
+          casResult["result"]["name"],
+          casResult["result"]["role"],
+          casResult["result"]["userInfo"]["avatar"]);
+          isBasicInfoLoaded = true;
+          Session currSession =
+              Session(null, element.value, xToken, userId);
+          session = currSession;
+          client.options.headers["XToken"] = currSession.xToken;
+          client.options.headers["token"] = currSession.xToken;
+          if (keepLocalSession) {
+            saveLocalSession();
+          }
+          return Result(state: true, message: casResult["errorCode"].toString());
+        }
+      }
+      return Result(state: false, message: casResult["errorCode"].toString());
   }
 
   Future<Result> ssoLogin(String username, String password, String captcha,
@@ -308,48 +270,9 @@ class User {
         at: ssoResult["data"]["at"],
         userId: ssoResult["data"]["userId"],
       );
-
-      Response casResponse = await client.post(zhixueCasLogin,
-          data: {
-            "at": info.at,
-            "userId": info.userId,
-          },
-          options: Options(
-            contentType: Headers.formUrlEncodedContentType,
-          ));
-      Map<String, dynamic> casResult = jsonDecode(casResponse.data);
-      if (casResult["errorCode"] != 0) {
-        isLoading = false;
-        return Result(
-            state: false,
-            message: casResult["errorCode"].toString(),
-            result: casResult["errorInfo"]);
-      }
-      String xToken = casResult["result"]["token"];
-      basicInfo = BasicInfo(
-          casResult["result"]["id"],
-          casResult["result"]["userInfo"]["loginName"],
-          casResult["result"]["name"],
-          casResult["result"]["role"],
-          casResult["result"]["userInfo"]["avatar"]);
-      isBasicInfoLoaded = true;
-      List<Cookie> cookies = await BaseSingleton.singleton.cookieJar
-          .loadForRequest(Uri.parse(zhixueBaseUrl));
-      for (var element in cookies) {
-        if (element.name == "tlsysSessionId") {
-          Session currSession =
-              Session(null, element.value, xToken, info.userId);
-          session = currSession;
-          client.options.headers["XToken"] = currSession.xToken;
-          isLoading = false;
-          if (keepLocalSession) {
-            saveLocalSession();
-          }
-          return Result(
-              state: true, message: casResult["errorCode"].toString());
-        }
-      }
-      return Result(state: false, message: casResult["errorCode"].toString());
+      Result result = await casLoginWithAt(at: info.at, userId: info.userId, keepLocalSession: keepLocalSession);
+      isLoading = false;
+      return result;
     } else {
       isLoading = false;
       return Result(
@@ -362,59 +285,30 @@ class User {
   /// Login to zhixue.com.
   ///
   /// [username] and [password] are from user input and is required.
-  Future<Result> login(String username, String password,
-      {bool ignoreLoading = true,
-      bool force = true,
-      Function? callback,
-      Future? asyncCallback,
-      BuildContext? context,
-      bool useLocalSession = false,
+  Future<Result> loginFromLocal({bool force = true,
       bool keepLocalSession = false}) async {
-    // Check if is logging in now.
-    // If there is a login request pending, ignore current request.
-    if (isLoading & !ignoreLoading) {
+    if (isLoading) {
       return Result(state: false, message: "正在登录中，请稍后再试");
     }
-
-    // Check if is forced to login.
-    // Forcing to login means to ignore previous session and login again.
     if (!force) {
-      // Check if there is a previous session.
       if (isLoggedIn()) {
-        if (callback != null) {
-          callback();
-        }
-        if (asyncCallback != null) {
-          await asyncCallback;
-        }
         return Result(state: true, message: "已登录");
       }
     }
-    Dio client = BaseSingleton.singleton.dio;
-    // Start login and set this flag to true to avoid multiple login requests.
     isLoading = true;
-    if (useLocalSession) {
+    try {
+      this.keepLocalSession = keepLocalSession;
+      await readLocalSession();
       try {
-        this.keepLocalSession = keepLocalSession;
-        await readLocalSession();
-        /*String xToken = await getXToken();
-        client.options.headers["XToken"] = xToken;
-        session?.xToken = xToken;
-        await saveLocalSession();*/
-        try {
-          await fetchBasicInfo();
-        } catch (e) {
-          logger.e("login: fetchBasicInfo error: $e");
-        }
-        isLoading = false;
-        //LocalLogger.write("本地Session登录成功", isError: false);
-        return Result(state: true, message: "本地Session登录成功");
-      } catch (_) {}
+        await fetchBasicInfo();
+      } catch (e) {
+        logger.e("login: fetchBasicInfo error: $e");
+      }
+      isLoading = false;
+      return Result(state: true, message: "本地Session登录成功");
+    } catch (e) {
+      return Result(state: false, message: e.toString());
     }
-    if (username == "") {
-      return Result(state: false, message: "用户名为空");
-    }
-    return Result(state: false, message: "该登录方式暂不可用");
   }
 
   /// Login to private server to record exam data.
