@@ -14,31 +14,28 @@ class SsoInfo {
   }
 }
 
+enum LoginType {
+  webview,
+  app;
+
+  static LoginType getTypeByName(String name) =>
+    LoginType.values.firstWhere((type) => type.name == name);
+}
+
 class Session {
+  String? tgt;
   String? st;
   String sessionId;
   String xToken;
+  LoginType loginType;
   String? userId;
   String? serverToken;
 
-  Session(this.st, this.sessionId, this.xToken, this.userId,
-      {this.serverToken});
+  Session({this.tgt, this.st, required this.sessionId, required this.xToken, required this.loginType, this.userId, this.serverToken});
 
   @override
   String toString() {
-    return 'Session{st: $st, sessionId: $sessionId, xToken: $xToken, userId: $userId, serverToken: $serverToken}';
-  }
-}
-
-class LoginCredential {
-  String? userName;
-  String? password;
-
-  LoginCredential(this.userName, this.password);
-
-  @override
-  String toString() {
-    return 'LoginCredential{userName: $userName, password: $password';
+    return 'Session{at: $tgt, st: $st, sessionId: $sessionId, xToken: $xToken, userId: $userId, serverToken: $serverToken, loginType: $loginType}';
   }
 }
 

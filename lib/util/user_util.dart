@@ -21,14 +21,14 @@ final Lock databaseLock = Lock();
 
 Future<Database> initLocalSessionDataBase() async {
   return await openDatabase(
-    path.join(await getDatabasesPath(), 'UserSession.db'),
+    path.join(await getDatabasesPath(), 'UserSessionV3.db'),
     onCreate: (db, version) async {
       var tableExists = await db.rawQuery(
           "SELECT name FROM sqlite_master WHERE type='table' AND name='$userSession'");
       if (tableExists.isEmpty) {
         logger.d("tableNotExists, CREATE TABLE $userSession");
         db.execute(
-          'CREATE TABLE $userSession (userName TEXT PRIMARY KEY, password TEXT, userId TEXT, st TEXT, sessionId TEXT, xToken TEXT, serverToken TEXT, basicInfo_id TEXT, basicInfo_loginName TEXT, basicInfo_name TEXT, basicInfo_role TEXT, basicInfo_avatar TEXT)',
+          'CREATE TABLE $userSession (userId TEXT, st TEXT, tgt TEXT, sessionId TEXT, xToken TEXT, loginType TEXT, serverToken TEXT, basicInfo_id TEXT, basicInfo_loginName TEXT, basicInfo_name TEXT, basicInfo_role TEXT, basicInfo_avatar TEXT)',
         );
       }
     },
@@ -38,10 +38,8 @@ Future<Database> initLocalSessionDataBase() async {
 
 class User {
   Session? session;
-  LoginCredential loginCredential = LoginCredential("", "");
   BasicInfo? basicInfo;
   StudentInfo? studentInfo;
-  bool isLoading = false;
   bool isBasicInfoLoaded = false;
   bool isStudentInfoLoaded = false;
   bool keepLocalSession = false;
@@ -58,7 +56,7 @@ class User {
     return true;
   }
 
-  Future<void> readLocalSession() async {
+  Future<Session> readLocalSession() async {
     SharedPreferences sharedPrefs = BaseSingleton.singleton.sharedPreferences;
     return await databaseLock.synchronized(() async {
       Database database = await initLocalSessionDataBase();
@@ -67,31 +65,43 @@ class User {
       if (list.length == 1) {
         sharedPrefs.setBool("localSessionExist", true);
         Session localSession = Session(
-          list[0]['st'] as String?,
-          list[0]['sessionId'] as String,
-          list[0]['xToken'] as String,
-          list[0]['userId'] as String?,
+          tgt: list[0]['tgt'] as String?,
+          loginType: LoginType.getTypeByName(list[0]['loginType'] as String),
+          st: list[0]['st'] as String?,
+          sessionId: list[0]['sessionId'] as String,
+          xToken: list[0]['xToken'] as String,
+          userId: list[0]['userId'] as String?,
           serverToken: list[0]['serverToken'] as String?,
         );
+        await database.close();
+        return localSession;
+      } else {
+        await database.close();
+        throw Exception("Incorrect number of local session entries");
+      }
+    });
+  }
+
+  Future<BasicInfo?> readLocalBasicInfo() async {
+    return await databaseLock.synchronized(() async {
+      Database database = await initLocalSessionDataBase();
+      List<Map<String, Object?>> list =
+          await database.rawQuery('SELECT * FROM $userSession');
+      if (list.length == 1) {
+        BasicInfo? localBasicInfo;
         if (list[0]['basicInfo_id'] != null) {
-          basicInfo = BasicInfo(
+          localBasicInfo = BasicInfo(
               list[0]['basicInfo_id'] as String,
               list[0]['basicInfo_loginName'] as String,
               list[0]['basicInfo_name'] as String,
               list[0]['basicInfo_role'] as String,
               list[0]['basicInfo_avatar'] as String);
-          isBasicInfoLoaded = true;
         }
-        session = localSession;
-        Dio client = BaseSingleton.singleton.dio;
-        client.options.headers["XToken"] = localSession.xToken;
-        loginCredential.userName = list[0]['userName'] as String?;
-        loginCredential.password = list[0]['password'] as String?;
         await database.close();
-        return;
+        return localBasicInfo;
       } else {
         await database.close();
-        throw Exception("Too many Local Session");
+        throw Exception("Incorrect number of local session entries");
       }
     });
   }
@@ -104,11 +114,11 @@ class User {
       await database.insert(
         userSession,
         {
-          "userName": loginCredential.userName,
-          "password": loginCredential.password,
           "serverToken": session?.serverToken,
           "sessionId": session?.sessionId,
           "st": session?.st,
+          "tgt": session?.tgt,
+          "loginType": session?.loginType.name,
           "userId": session?.userId,
           "xToken": session?.xToken,
           "basicInfo_id": basicInfo?.id,
@@ -124,12 +134,12 @@ class User {
     });
   }
 
-  Future<void> updateLoginStatus({bool force = false}) async {
+  Future<void> updateLoginStatus() async {
     Dio client = BaseSingleton.singleton.dio;
     Response response = await client.get(zhixueLoginStatusUrl);
     Map<String, dynamic> json = jsonDecode(response.data);
     logger.d("updateLoginStatus $response");
-    if (json["result"] != "success" || force) {
+    if (json["result"] != "success") {
       //if(!result.state && (result.message.contains("用户不存在") || result.message.contains("凭证有误"))) {
       if (autoLogout) {
         await logoff();
@@ -142,20 +152,20 @@ class User {
   Future<bool> logoff() async {
     SharedPreferences sharedPrefs = BaseSingleton.singleton.sharedPreferences;
     session = null;
-    loginCredential.password = "";
-    loginCredential.userName = "";
     basicInfo = null;
     studentInfo = null;
-    isLoading = false;
     isBasicInfoLoaded = false;
     keepLocalSession = false;
     BaseSingleton.singleton.dio.options.headers["XToken"] = null;
 
     // Remove all cookies from related sites.
     CookieJar cookieJar = BaseSingleton.singleton.cookieJar;
-    cookieJar.deleteAll();
-    cookieJar.delete(Uri.parse("https://www.zhixue.com/"));
-    cookieJar.delete(Uri.parse("https://open.changyan.com/"));
+    try {
+      cookieJar.deleteAll();
+    } catch (_) {}
+    cookieJar.delete(Uri.parse(zhixueBaseUrl));
+    cookieJar.delete(Uri.parse(zhixueBaseUrl_2));
+    cookieJar.delete(Uri.parse(changyanBaseUrl));
 
     return await databaseLock.synchronized(() async {
       Database database = await initLocalSessionDataBase();
@@ -195,56 +205,60 @@ class User {
     return xToken;
   }
 
-  Future<Result> casLoginWithAt({required String at, required String userId, required bool keepLocalSession}) async {
+  Future<Result> casLoginWithTGT(
+      {required String tgt,
+      required String at,
+      required String userId,
+      required bool keepLocalSession}) async {
     Dio client = BaseSingleton.singleton.dio;
     Response casResponse = await client.post(zhixueCasLogin,
-          data: {
-            "at": at,
-            "userId": userId,
-          },
-          options: Options(
-            contentType: Headers.formUrlEncodedContentType,
-          ));
-      Map<String, dynamic> casResult = jsonDecode(casResponse.data);
-      if (casResult["errorCode"] != 0) {
-        return Result(
-            state: false,
-            message: casResult["errorCode"].toString(),
-            result: casResult["errorInfo"]);
-      }
-      List<Cookie> cookies = await BaseSingleton.singleton.cookieJar
-          .loadForRequest(Uri.parse(zhixueBaseUrl));
-      for (var element in cookies) {
-        if (element.name == "tlsysSessionId") {
-          String xToken = casResult["result"]["token"];
-          basicInfo = BasicInfo(
-          casResult["result"]["id"],
-          casResult["result"]["userInfo"]["loginName"],
-          casResult["result"]["name"],
-          casResult["result"]["role"],
-          casResult["result"]["userInfo"]["avatar"]);
-          isBasicInfoLoaded = true;
-          Session currSession =
-              Session(null, element.value, xToken, userId);
-          session = currSession;
-          client.options.headers["XToken"] = currSession.xToken;
-          client.options.headers["token"] = currSession.xToken;
-          if (keepLocalSession) {
-            saveLocalSession();
-          }
-          return Result(state: true, message: casResult["errorCode"].toString());
+        data: {
+          "at": at,
+          "userId": userId,
+        },
+        options: Options(
+          contentType: Headers.formUrlEncodedContentType,
+        ));
+    Map<String, dynamic> casResult = jsonDecode(casResponse.data);
+    if (casResult["errorCode"] != 0) {
+      return Result(
+          state: false,
+          message: casResult["errorCode"].toString(),
+          result: casResult["errorInfo"]);
+    }
+    List<Cookie> cookies = await BaseSingleton.singleton.cookieJar
+        .loadForRequest(Uri.parse(zhixueBaseUrl));
+    for (var element in cookies) {
+      if (element.name == "tlsysSessionId") {
+        String xToken = casResult["result"]["token"];
+        basicInfo = BasicInfo(
+            casResult["result"]["id"],
+            casResult["result"]["userInfo"]["loginName"],
+            casResult["result"]["name"],
+            casResult["result"]["role"],
+            casResult["result"]["userInfo"]["avatar"]);
+        isBasicInfoLoaded = true;
+        Session currSession = Session(
+            tgt: tgt,
+            sessionId: element.value,
+            xToken: xToken,
+            userId: userId,
+            loginType: LoginType.app);
+        session = currSession;
+        client.options.headers["XToken"] = currSession.xToken;
+        client.options.headers["token"] = currSession.xToken;
+        if (keepLocalSession) {
+          saveLocalSession();
         }
+        return Result(state: true, message: casResult["errorCode"].toString());
       }
-      return Result(state: false, message: casResult["errorCode"].toString());
+    }
+    return Result(state: false, message: casResult["errorCode"].toString());
   }
 
   Future<Result> ssoLogin(String username, String password, String captcha,
       {bool keepLocalSession = false}) async {
-    if (isLoading) {
-      return Result(state: false, message: "正在登录中，请稍后再试");
-    }
     Dio client = BaseSingleton.singleton.dio;
-    isLoading = true;
     Response ssoResponse = await client.post(changyanSSOLoginUrl,
         data: {
           "username": username,
@@ -270,11 +284,42 @@ class User {
         at: ssoResult["data"]["at"],
         userId: ssoResult["data"]["userId"],
       );
-      Result result = await casLoginWithAt(at: info.at, userId: info.userId, keepLocalSession: keepLocalSession);
-      isLoading = false;
+      Result result = await casLoginWithTGT(
+          tgt: info.tgt, at: info.at, userId: info.userId, keepLocalSession: keepLocalSession);
       return result;
     } else {
-      isLoading = false;
+      return Result(
+          state: false,
+          message: ssoResult["code"].toString(),
+          result: ssoResult["message"]);
+    }
+  }
+
+  Future<Result> ssoLoginWithTGT(String tgt, {bool keepLocalSession = false}) async {
+    Dio client = BaseSingleton.singleton.dio;
+    Response ssoResponse = await client.post(changyanSSOLoginUrl,
+        data: {
+          "tgt": tgt,
+          "appId": "zhixue_parent",
+          "client": "android",
+          "extInfo": "{\"deviceId\":\"0\"}",
+          "method": "sso.extend.tgt"
+        },
+        options: Options(
+          contentType: Headers.formUrlEncodedContentType,
+        ));
+
+    Map<String, dynamic> ssoResult = jsonDecode(ssoResponse.data);
+    if (ssoResult["code"] == "success") {
+      SsoInfo info = SsoInfo(
+        tgt: ssoResult["data"]["tgt"],
+        at: ssoResult["data"]["at"],
+        userId: ssoResult["data"]["userId"],
+      );
+      Result result = await casLoginWithTGT(
+          tgt: info.tgt, at: info.at, userId: info.userId, keepLocalSession: keepLocalSession);
+      return result;
+    } else {
       return Result(
           state: false,
           message: ssoResult["code"].toString(),
@@ -285,27 +330,38 @@ class User {
   /// Login to zhixue.com.
   ///
   /// [username] and [password] are from user input and is required.
-  Future<Result> loginFromLocal({bool force = true,
-      bool keepLocalSession = false}) async {
-    if (isLoading) {
-      return Result(state: false, message: "正在登录中，请稍后再试");
-    }
+  Future<Result> loginFromLocal(
+      {bool force = true, bool keepLocalSession = false}) async {
     if (!force) {
       if (isLoggedIn()) {
         return Result(state: true, message: "已登录");
       }
     }
-    isLoading = true;
+    Dio client = BaseSingleton.singleton.dio;
     try {
-      this.keepLocalSession = keepLocalSession;
-      await readLocalSession();
-      try {
-        await fetchBasicInfo();
-      } catch (e) {
-        logger.e("login: fetchBasicInfo error: $e");
+      Session localSession = await readLocalSession();
+      if (localSession.loginType == LoginType.webview) {
+        this.keepLocalSession = keepLocalSession;
+        BasicInfo? localBasicInfo = await readLocalBasicInfo();
+        if (localBasicInfo != null) {
+          isBasicInfoLoaded = true;
+          basicInfo = localBasicInfo;
+        }
+        session = localSession;
+        client.options.headers["XToken"] = session?.xToken;
+        client.options.headers["Token"] = session?.xToken;
+        try {
+          await fetchBasicInfo();
+        } catch (e) {
+          logger.e("login: fetchBasicInfo error: $e");
+        }
+        return Result(state: true, message: "本地Session登录成功");
+      } else {
+        this.keepLocalSession = keepLocalSession;
+        return await ssoLoginWithTGT(
+            localSession.tgt!,
+            keepLocalSession: keepLocalSession);
       }
-      isLoading = false;
-      return Result(state: true, message: "本地Session登录成功");
     } catch (e) {
       return Result(state: false, message: e.toString());
     }
@@ -606,11 +662,11 @@ class User {
     Response response = await client.get(url);
     Map<String, dynamic> json = jsonDecode(response.data);
     logger.d("exams: $json");
-    if (json["errorCode"] != 0 && json["errorInfo"].contains("Token")) {
+    /*if (json["errorCode"] != 0 && json["errorInfo"].contains("Token")) {
       await updateLoginStatus(force: true);
       Response response = await client.get(url);
       json = jsonDecode(response.data);
-    }
+    }*/
     if (json["errorCode"] != 0) {
       logger.d("exams: failed");
       //LocalLogger.write("fetchExams failed: ${json["errorCode"]} ${json["errorInfo"]}", isError: true);

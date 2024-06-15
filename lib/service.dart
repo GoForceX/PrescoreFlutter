@@ -92,7 +92,7 @@ Future<void> login({bool force = true}) async {
           'setupForeground', '${user.basicInfo?.name} 已登录');
     } else {
       await channel.invokeMethod(
-          'setupForeground', '${user.loginCredential.userName} 已登录');
+          'setupForeground', '已登录');
     }
     return;
   } else {

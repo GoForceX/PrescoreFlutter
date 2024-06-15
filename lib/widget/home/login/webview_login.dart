@@ -183,7 +183,7 @@ class _WebviewLoginCardState extends State<WebviewLoginCard>
             Map<String, dynamic> json = jsonDecode(response);
             String xToken = json["result"];
             if (json["errorCode"] == 0) {
-              model.user.session = Session(null, tlsysSessionId!, xToken, "");
+              model.user.session = Session(sessionId: tlsysSessionId!, xToken: xToken, loginType: LoginType.webview);
               model.user.keepLocalSession =
                   sharedPrefs.getBool("keepLogin") ?? true;
               BaseSingleton.singleton.dio.options.headers["XToken"] = xToken;
