@@ -215,6 +215,8 @@ class User {
         data: {
           "at": at,
           "userId": userId,
+          "tokenTimeout": 0,
+          "autoLogin": true,
         },
         options: Options(
           contentType: Headers.formUrlEncodedContentType,
@@ -223,7 +225,7 @@ class User {
     if (casResult["errorCode"] != 0) {
       return Result(
           state: false,
-          message: casResult["errorCode"].toString(),
+          message: casResult["errorInfo"],
           result: casResult["errorInfo"]);
     }
     List<Cookie> cookies = await BaseSingleton.singleton.cookieJar
@@ -250,10 +252,10 @@ class User {
         if (keepLocalSession) {
           saveLocalSession();
         }
-        return Result(state: true, message: casResult["errorCode"].toString());
+        return Result(state: true, message: casResult["errorInfo"]);
       }
     }
-    return Result(state: false, message: casResult["errorCode"].toString());
+    return Result(state: false, message: casResult["errorInfo"]);
   }
 
   Future<Result> ssoLogin(String username, String password, String captcha,
@@ -290,7 +292,7 @@ class User {
     } else {
       return Result(
           state: false,
-          message: ssoResult["code"].toString(),
+          message: ssoResult["message"],
           result: ssoResult["message"]);
     }
   }
@@ -357,6 +359,7 @@ class User {
         }
         return Result(state: true, message: "本地Session登录成功");
       } else {
+        autoLogout = false;
         this.keepLocalSession = keepLocalSession;
         return await ssoLoginWithTGT(
             localSession.tgt!,
