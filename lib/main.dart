@@ -48,9 +48,20 @@ serviceEntry() async {
 bool firebaseAnalyseEnable = kReleaseMode;
 bool sentryAnalyseEnable = kReleaseMode;
 
+class HttpsTurstAll extends HttpOverrides{
+  @override
+  HttpClient createHttpClient(SecurityContext? context){
+    return super.createHttpClient(context)
+      ..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+  }
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await BaseSingleton.singleton.init();
+  if (!kReleaseMode) {
+    HttpOverrides.global = HttpsTurstAll();
+  }
   var clientFactory = Client.new; // Constructs the default
   if (!kIsWeb) {
     if (Platform.isAndroid) {

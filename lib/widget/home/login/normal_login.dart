@@ -48,7 +48,16 @@ class _NormalLoginCardState extends State<NormalLoginCard> {
     Gt4FlutterPlugin captcha = Gt4FlutterPlugin(geetestCaptchaId);
     LoginModel model = Provider.of<LoginModel>(context, listen: false);
     model.setLoading(true);
-    captcha.addEventHandler(onResult: (Map<String, dynamic> message) async {
+    captcha.addEventHandler(onError: (event) {
+      model.setLoading(false);
+      SnackBar snackBar = SnackBar(
+          content: Text('呜呜呜，验证失败了……\n失败原因：${event["msg"]}'));
+      model.setLoading(false);
+      model.setAutoLogging(false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      }
+    }, onResult: (Map<String, dynamic> message) async {
       String status = message["status"];
       if (status == "1") {
         String captchaResult = jsonEncode(message["result"] as Map);
@@ -97,6 +106,8 @@ class _NormalLoginCardState extends State<NormalLoginCard> {
             model.setAutoLogging(false);
           }
         }
+      } else {
+        model.setLoading(false);
       }
     });
     captcha.verify();
