@@ -134,7 +134,6 @@ class _LoginWidgetState extends State<LoginWidget> {
                     child: Column(
                       children: [
                         const WebviewLoginCard(),
-                        if (!kReleaseMode)
                         TextButton(
                           child: Text("备用登录方式 >",
                               style: Theme.of(context)
@@ -157,7 +156,6 @@ class _LoginWidgetState extends State<LoginWidget> {
                             style: TextStyle(color: Colors.grey, fontSize: 10)),
                         const SizedBox(height: 10),
                 ]),
-                if (!kReleaseMode)
                 Column(children: [
                   Expanded(
                       flex: 3,

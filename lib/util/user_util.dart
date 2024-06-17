@@ -11,6 +11,7 @@ import 'package:pointycastle/export.dart';
 import 'package:prescore_flutter/main.dart';
 import 'package:prescore_flutter/util/struct.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:simple_rc4/simple_rc4.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:path/path.dart' as path;
@@ -21,14 +22,14 @@ final Lock databaseLock = Lock();
 
 Future<Database> initLocalSessionDataBase() async {
   return await openDatabase(
-    path.join(await getDatabasesPath(), 'UserSessionV3.db'),
+    path.join(await getDatabasesPath(), 'UserSessionV4.db'),
     onCreate: (db, version) async {
       var tableExists = await db.rawQuery(
           "SELECT name FROM sqlite_master WHERE type='table' AND name='$userSession'");
       if (tableExists.isEmpty) {
         logger.d("tableNotExists, CREATE TABLE $userSession");
         db.execute(
-          'CREATE TABLE $userSession (userId TEXT, st TEXT, tgt TEXT, sessionId TEXT, xToken TEXT, loginType TEXT, serverToken TEXT, basicInfo_id TEXT, basicInfo_loginName TEXT, basicInfo_name TEXT, basicInfo_role TEXT, basicInfo_avatar TEXT)',
+          'CREATE TABLE $userSession (loginName TEXT, password TEXT, userId TEXT, st TEXT, tgt TEXT, sessionId TEXT, xToken TEXT, loginType TEXT, serverToken TEXT, basicInfo_id TEXT, basicInfo_loginName TEXT, basicInfo_name TEXT, basicInfo_role TEXT, basicInfo_avatar TEXT)',
         );
       }
     },
@@ -56,7 +57,7 @@ class User {
     return true;
   }
 
-  Future<Session> readLocalSession() async {
+    Future<Session> readLocalSession() async {
     SharedPreferences sharedPrefs = BaseSingleton.singleton.sharedPreferences;
     return await databaseLock.synchronized(() async {
       Database database = await initLocalSessionDataBase();
@@ -65,6 +66,8 @@ class User {
       if (list.length == 1) {
         sharedPrefs.setBool("localSessionExist", true);
         Session localSession = Session(
+          password: list[0]['password'] as String?,
+          loginName: list[0]['loginName'] as String?,
           tgt: list[0]['tgt'] as String?,
           loginType: LoginType.getTypeByName(list[0]['loginType'] as String),
           st: list[0]['st'] as String?,
@@ -114,6 +117,8 @@ class User {
       await database.insert(
         userSession,
         {
+          "loginName": session?.loginName,
+          "password": session?.password,
           "serverToken": session?.serverToken,
           "sessionId": session?.sessionId,
           "st": session?.st,
@@ -134,63 +139,29 @@ class User {
     });
   }
 
-  Future<void> updateLoginStatus() async {
-    Dio client = BaseSingleton.singleton.dio;
-    Response response = await client.get(zhixueLoginStatusUrl);
-    Map<String, dynamic> json = jsonDecode(response.data);
-    logger.d("updateLoginStatus $response");
-    if (json["result"] != "success") {
-      //if(!result.state && (result.message.contains("用户不存在") || result.message.contains("凭证有误"))) {
-      if (autoLogout) {
-        await logoff();
-        reLoginFailedCallback();
-      }
+  String getEncryptedPassword(String password, bool isRSA) {
+    if (isRSA) {
+      final modulus = BigInt.parse(zhixueRsaKeyModules, radix: 16);
+      final publicExponent =
+          BigInt.parse(zhixueRsaKeyPublicExponent, radix: 16);
+      final rsaPublicKey = RSAPublicKey(modulus, publicExponent);
+      final cipher = PKCS1Encoding(RSAEngine())
+        ..init(true, PublicKeyParameter<RSAPublicKey>(rsaPublicKey));
+      final encryptedBytes = cipher.process(
+          Uint8List.fromList(utf8.encode(password.split('').reversed.join())));
+      final encryptedHex = encryptedBytes
+          .map((byte) => byte.toRadixString(16).padLeft(2, '0'))
+          .join('');
+      return encryptedHex;
+    } else {
+      String encrypted =
+          (RC4("iflytek_pass_edp").encodeBytes(utf8.encode(password)))
+              .map((byte) => byte.toRadixString(16).padLeft(2, '0'))
+              .join('');
+      return encrypted;
     }
   }
-
-  /// Remove **all** cookies and session data to logoff
-  Future<bool> logoff() async {
-    SharedPreferences sharedPrefs = BaseSingleton.singleton.sharedPreferences;
-    session = null;
-    basicInfo = null;
-    studentInfo = null;
-    isBasicInfoLoaded = false;
-    keepLocalSession = false;
-    BaseSingleton.singleton.dio.options.headers["XToken"] = null;
-
-    // Remove all cookies from related sites.
-    CookieJar cookieJar = BaseSingleton.singleton.cookieJar;
-    try {
-      cookieJar.deleteAll();
-    } catch (_) {}
-    cookieJar.delete(Uri.parse(zhixueBaseUrl));
-    cookieJar.delete(Uri.parse(zhixueBaseUrl_2));
-    cookieJar.delete(Uri.parse(changyanBaseUrl));
-
-    return await databaseLock.synchronized(() async {
-      Database database = await initLocalSessionDataBase();
-      await database.rawDelete('DELETE FROM $userSession');
-      await database.close();
-      sharedPrefs.setBool("localSessionExist", false);
-      return true;
-    });
-  }
-
-  /// Use RSA to encrypt [password].
-  String getEncryptedPassword(String password) {
-    final modulus = BigInt.parse(zhixueRsaKeyModules, radix: 16);
-    final publicExponent = BigInt.parse(zhixueRsaKeyPublicExponent, radix: 16);
-    final rsaPublicKey = RSAPublicKey(modulus, publicExponent);
-    final cipher = PKCS1Encoding(RSAEngine())
-      ..init(true, PublicKeyParameter<RSAPublicKey>(rsaPublicKey));
-    final encryptedBytes = cipher.process(
-        Uint8List.fromList(utf8.encode(password.split('').reversed.join())));
-    final encryptedHex = encryptedBytes
-        .map((byte) => byte.toRadixString(16).padLeft(2, '0'))
-        .join('');
-    return encryptedHex;
-  }
-
+  
   /// Get xToken from cookies.
   ///
   /// xToken is required to access some APIs.
@@ -229,7 +200,7 @@ class User {
           result: casResult["errorInfo"]);
     }
     List<Cookie> cookies = await BaseSingleton.singleton.cookieJar
-        .loadForRequest(Uri.parse(zhixueBaseUrl));
+        .loadForRequest(Uri.parse(zhixueContainerUrl));
     for (var element in cookies) {
       if (element.name == "tlsysSessionId") {
         String xToken = casResult["result"]["token"];
@@ -241,6 +212,7 @@ class User {
             casResult["result"]["userInfo"]["avatar"]);
         isBasicInfoLoaded = true;
         Session currSession = Session(
+            loginName: userId,
             tgt: tgt,
             sessionId: element.value,
             xToken: xToken,
@@ -250,12 +222,62 @@ class User {
         client.options.headers["XToken"] = currSession.xToken;
         client.options.headers["token"] = currSession.xToken;
         if (keepLocalSession) {
-          saveLocalSession();
+          await saveLocalSession();
         }
         return Result(state: true, message: casResult["errorInfo"]);
       }
     }
     return Result(state: false, message: casResult["errorInfo"]);
+  }
+
+  Future<Result> parWeakCheckLogin(String username, String password,
+      {bool keepLocalSession = false}) async {
+    Dio client = BaseSingleton.singleton.dio;
+    Response ssoResponse = await client.post(zhixueParWeakCheckLogin,
+        data: {
+          "loginName": username,
+          "password": getEncryptedPassword(password, false),
+          "description": "{encrypt: [\"password\"]}"
+        },
+        options: Options(
+          contentType: Headers.formUrlEncodedContentType,
+        ));
+
+    Map<String, dynamic> ssoResult = jsonDecode(ssoResponse.data);
+    debugPrint(ssoResponse.data.toString());
+    if (ssoResult["errorCode"] == 0) {
+      List<Cookie> cookies = await BaseSingleton.singleton.cookieJar
+          .loadForRequest(Uri.parse(zhixueContainerUrl));
+      for (var element in cookies) {
+        if (element.name == "tlsysSessionId") {
+          String xToken = ssoResult["result"]["token"];
+          basicInfo = BasicInfo(
+              ssoResult["result"]["id"],
+              ssoResult["result"]["userInfo"]["loginName"],
+              ssoResult["result"]["name"],
+              ssoResult["result"]["role"],
+              ssoResult["result"]["userInfo"]["avatar"]);
+          isBasicInfoLoaded = true;
+          Session currSession = Session(
+              loginName: username,
+              password: password,
+              sessionId: element.value,
+              xToken: xToken,
+              userId: ssoResult["result"]["id"],
+              loginType: LoginType.parWeakCheckLogin);
+          session = currSession;
+          client.options.headers["XToken"] = currSession.xToken;
+          client.options.headers["token"] = currSession.xToken;
+          if (keepLocalSession) {
+            await saveLocalSession();
+          }
+          return Result(state: true, message: ssoResult["errorInfo"]);
+        }
+      }
+      return Result(state: false, message: ssoResult["errorInfo"]);
+    } else {
+      return Result(state: false, message: ssoResult["errorInfo"]);
+    }
   }
 
   Future<Result> ssoLogin(String username, String password, String captcha,
@@ -264,7 +286,7 @@ class User {
     Response ssoResponse = await client.post(changyanSSOLoginUrl,
         data: {
           "username": username,
-          "password": getEncryptedPassword(password),
+          "password": getEncryptedPassword(password, true),
           "thirdCaptchaParam": captcha,
           "appId": "zhixue_parent",
           "captchaType": "third",
@@ -287,7 +309,10 @@ class User {
         userId: ssoResult["data"]["userId"],
       );
       Result result = await casLoginWithTGT(
-          tgt: info.tgt, at: info.at, userId: info.userId, keepLocalSession: keepLocalSession);
+          tgt: info.tgt,
+          at: info.at,
+          userId: info.userId,
+          keepLocalSession: keepLocalSession);
       return result;
     } else {
       return Result(
@@ -297,7 +322,8 @@ class User {
     }
   }
 
-  Future<Result> ssoLoginWithTGT(String tgt, {bool keepLocalSession = false}) async {
+  Future<Result> ssoLoginWithTGT(String tgt,
+      {bool keepLocalSession = false}) async {
     Dio client = BaseSingleton.singleton.dio;
     Response ssoResponse = await client.post(changyanSSOLoginUrl,
         data: {
@@ -319,7 +345,10 @@ class User {
         userId: ssoResult["data"]["userId"],
       );
       Result result = await casLoginWithTGT(
-          tgt: info.tgt, at: info.at, userId: info.userId, keepLocalSession: keepLocalSession);
+          tgt: info.tgt,
+          at: info.at,
+          userId: info.userId,
+          keepLocalSession: keepLocalSession);
       return result;
     } else {
       return Result(
@@ -342,7 +371,7 @@ class User {
     Dio client = BaseSingleton.singleton.dio;
     try {
       Session localSession = await readLocalSession();
-      if (localSession.loginType == LoginType.webview) {
+      if (localSession.loginType == LoginType.webview || localSession.loginType == LoginType.parWeakCheckLogin) {
         this.keepLocalSession = keepLocalSession;
         BasicInfo? localBasicInfo = await readLocalBasicInfo();
         if (localBasicInfo != null) {
@@ -358,16 +387,73 @@ class User {
           logger.e("login: fetchBasicInfo error: $e");
         }
         return Result(state: true, message: "本地Session登录成功");
-      } else {
+      } else if (localSession.loginType == LoginType.app) {
         autoLogout = false;
         this.keepLocalSession = keepLocalSession;
-        return await ssoLoginWithTGT(
-            localSession.tgt!,
+        return await ssoLoginWithTGT(localSession.tgt!,
             keepLocalSession: keepLocalSession);
+      } else {
+        return Result(state: false, message: "Unknown login type");
       }
     } catch (e) {
       return Result(state: false, message: e.toString());
     }
+  }
+
+  Future<void> updateLoginStatus() async {
+    Dio client = BaseSingleton.singleton.dio;
+    Response response = await client.get(zhixueLoginStatusUrl);
+    Map<String, dynamic> json = jsonDecode(response.data);
+    logger.d("updateLoginStatus $response");
+    if (json["result"] != "success") {
+      Result res = Result(state: false, message: "Unknown LoginType");
+      try {
+        if (session?.loginType == LoginType.parWeakCheckLogin) {
+          res = await parWeakCheckLogin(session!.loginName!, session!.password!, keepLocalSession: keepLocalSession);
+        } else if (session?.loginType == LoginType.app) {
+          res = await ssoLoginWithTGT(session!.tgt!, keepLocalSession: keepLocalSession);
+        } else if (session?.loginType == LoginType.webview) {
+          res = Result(state: false, message: "Webview isn't support reLogin");
+        }
+      } catch (e) {
+        if (autoLogout) {
+          await logoff();
+          reLoginFailedCallback();
+        }
+      }
+      if (res.state != true && autoLogout) {
+          await logoff();
+          reLoginFailedCallback();
+      }
+    }
+  }
+
+  /// Remove **all** cookies and session data to logoff
+  Future<bool> logoff() async {
+    SharedPreferences sharedPrefs = BaseSingleton.singleton.sharedPreferences;
+    session = null;
+    basicInfo = null;
+    studentInfo = null;
+    isBasicInfoLoaded = false;
+    keepLocalSession = false;
+    BaseSingleton.singleton.dio.options.headers["XToken"] = null;
+
+    // Remove all cookies from related sites.
+    CookieJar cookieJar = BaseSingleton.singleton.cookieJar;
+    try {
+      cookieJar.deleteAll();
+    } catch (_) {}
+    cookieJar.delete(Uri.parse(zhixueBaseUrl));
+    cookieJar.delete(Uri.parse(zhixueBaseUrl_2));
+    cookieJar.delete(Uri.parse(changyanBaseUrl));
+
+    return await databaseLock.synchronized(() async {
+      Database database = await initLocalSessionDataBase();
+      await database.rawDelete('DELETE FROM $userSession');
+      await database.close();
+      sharedPrefs.setBool("localSessionExist", false);
+      return true;
+    });
   }
 
   /// Login to private server to record exam data.

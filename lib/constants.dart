@@ -19,7 +19,10 @@ const String changyanSSOLoginUrl = "$changyanBaseUrl/sso/v1/api";
 const String zhixueBaseUrl = "https://www.zhixue.com";
 const String zhixueBaseUrl_2 = "https://pt-ali-bj.zhixue.com";
 
+const String zhixueContainerUrl = "$zhixueBaseUrl/container";
+
 const String zhixueCasLogin = "$zhixueBaseUrl/container/app/login/casLogin";
+const String zhixueParWeakCheckLogin = "$zhixueBaseUrl/container/app/parWeakCheckLogin";
 const String wapLoginUrl = "$zhixueBaseUrl/wap_login.html";
 const String loginNoThirdCookieUrl = "$zhixueBaseUrl/login_no_third_cookie.html";
 

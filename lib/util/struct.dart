@@ -16,13 +16,17 @@ class SsoInfo {
 
 enum LoginType {
   webview,
-  app;
+  app,
+  parWeakCheckLogin;
+
 
   static LoginType getTypeByName(String name) =>
     LoginType.values.firstWhere((type) => type.name == name);
 }
 
 class Session {
+  String? loginName;
+  String? password;
   String? tgt;
   String? st;
   String sessionId;
@@ -31,11 +35,11 @@ class Session {
   String? userId;
   String? serverToken;
 
-  Session({this.tgt, this.st, required this.sessionId, required this.xToken, required this.loginType, this.userId, this.serverToken});
+  Session({this.loginName, this.password ,this.tgt, this.st, required this.sessionId, required this.xToken, required this.loginType, this.userId, this.serverToken});
 
   @override
   String toString() {
-    return 'Session{at: $tgt, st: $st, sessionId: $sessionId, xToken: $xToken, userId: $userId, serverToken: $serverToken, loginType: $loginType}';
+    return 'Session{loginName: $loginName, password:$password, tgt: $tgt, st: $st, sessionId: $sessionId, xToken: $xToken, userId: $userId, serverToken: $serverToken, loginType: $loginType}';
   }
 }
 
