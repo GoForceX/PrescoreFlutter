@@ -57,7 +57,7 @@ class User {
     return true;
   }
 
-    Future<Session> readLocalSession() async {
+  Future<Session> readLocalSession() async {
     SharedPreferences sharedPrefs = BaseSingleton.singleton.sharedPreferences;
     return await databaseLock.synchronized(() async {
       Database database = await initLocalSessionDataBase();
@@ -161,7 +161,7 @@ class User {
       return encrypted;
     }
   }
-  
+
   /// Get xToken from cookies.
   ///
   /// xToken is required to access some APIs.
@@ -371,7 +371,8 @@ class User {
     Dio client = BaseSingleton.singleton.dio;
     try {
       Session localSession = await readLocalSession();
-      if (localSession.loginType == LoginType.webview || localSession.loginType == LoginType.parWeakCheckLogin) {
+      if (localSession.loginType == LoginType.webview ||
+          localSession.loginType == LoginType.parWeakCheckLogin) {
         this.keepLocalSession = keepLocalSession;
         BasicInfo? localBasicInfo = await readLocalBasicInfo();
         if (localBasicInfo != null) {
@@ -409,9 +410,11 @@ class User {
       Result res = Result(state: false, message: "Unknown LoginType");
       try {
         if (session?.loginType == LoginType.parWeakCheckLogin) {
-          res = await parWeakCheckLogin(session!.loginName!, session!.password!, keepLocalSession: keepLocalSession);
+          res = await parWeakCheckLogin(session!.loginName!, session!.password!,
+              keepLocalSession: keepLocalSession);
         } else if (session?.loginType == LoginType.app) {
-          res = await ssoLoginWithTGT(session!.tgt!, keepLocalSession: keepLocalSession);
+          res = await ssoLoginWithTGT(session!.tgt!,
+              keepLocalSession: keepLocalSession);
         } else if (session?.loginType == LoginType.webview) {
           res = Result(state: false, message: "Webview isn't support reLogin");
         }
@@ -422,8 +425,8 @@ class User {
         }
       }
       if (res.state != true && autoLogout) {
-          await logoff();
-          reLoginFailedCallback();
+        await logoff();
+        reLoginFailedCallback();
       }
     }
   }
@@ -804,7 +807,7 @@ class User {
         double? userScore;
         double? standardScore;
         try {
-          if (requestScore) {
+          /*if (requestScore) {
             logger.d(
                 "fetchPreviewPaper $zhixueTranscriptUrl?subjectCode=${subject["subjectCode"]}&examId=${subject["examId"]}&paperId=${subject["markingPaperId"]}&token=${session?.xToken}");
             Response response = await client.get(
@@ -831,7 +834,7 @@ class User {
                 }
               }
             }
-          }
+          }*/
         } catch (_) {}
         try {
           MarkingStatus status = MarkingStatus.noMarkingStatus;
@@ -1831,6 +1834,23 @@ class User {
     }
   }
 
+  Future<Result<PaperPercentile>> fetchPapersPercentile(
+      List<String> paperIds, double score) async {
+    Result<List<dynamic>> pred = await fetchPapersPredict(paperIds, score);
+    if (pred.state) {
+      return Result(
+          state: true,
+          message: "",
+          result: PaperPercentile(
+              percentile: pred.result![1],
+              count: 1,
+              version: pred.result![0],
+              official: false));
+    } else {
+      return Result(state: false, message: pred.message);
+    }
+  }
+
   Future<Result<String>> uploadPaperData(Paper paper) async {
     await fetchBasicInfo();
     if (paper.source == Source.preview) {
@@ -1950,6 +1970,25 @@ class User {
     Response response =
         await client.get('$telemetryPaperPredictUrl/$paperId/$score');
     logger.d("fetchPaperPredict: cronet, response: ${response.data}");
+
+    Map<String, dynamic> result = jsonDecode(response.data);
+    if (result["code"] == 0) {
+      return Result(
+          state: true,
+          message: "成功哒！",
+          result: [result["version"], result["percent"]]);
+    } else {
+      return Result(state: false, message: result["code"].toString());
+    }
+  }
+
+  Future<Result<List<dynamic>>> fetchPapersPredict(
+      List<String> paperIds, double score) async {
+    Dio client = BaseSingleton.singleton.dio;
+
+    Response response = await client
+        .post('$telemetryPaperPredictUrl/$score', data: {"paper_id": paperIds});
+    logger.d("fetchPapersPredict: cronet, response: ${response.data}");
 
     Map<String, dynamic> result = jsonDecode(response.data);
     if (result["code"] == 0) {
