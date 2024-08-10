@@ -4,8 +4,8 @@ import 'dart:math';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
-import '../../main.dart';
-import '../../util/struct.dart';
+import '../../../main.dart';
+import '../../../util/struct.dart';
 
 class DashboardRanking extends StatelessWidget {
   final List<PaperDiagnosis> diagnoses;

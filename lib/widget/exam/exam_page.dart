@@ -5,8 +5,8 @@ import 'package:provider/provider.dart';
 import '../../main.dart';
 import '../../model/exam_model.dart';
 import '../../util/user_util.dart';
-import 'exam_dashboard.dart';
-import 'exam_detail.dart';
+import 'dashboard/exam_dashboard.dart';
+import 'detail/exam_detail.dart';
 
 @RoutePage()
 class ExamPage extends StatefulWidget {

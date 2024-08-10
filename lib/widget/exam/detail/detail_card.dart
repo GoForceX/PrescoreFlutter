@@ -33,14 +33,14 @@ class _DetailCardState extends State<DetailCard> with TickerProviderStateMixin {
       false;
 
   copyToClipboard() {
-    if(kReleaseMode) { //TODO
+    if (kReleaseMode) {
+      //TODO
       return;
     }
     Clipboard.setData(ClipboardData(text: widget.paper.toString()));
     Future.microtask(() {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-      content: Text("已复制到剪贴板"),
-      duration: Duration(seconds: 1)));
+          content: Text("已复制到剪贴板"), duration: Duration(seconds: 1)));
     });
   }
 
@@ -70,10 +70,13 @@ class _DetailCardState extends State<DetailCard> with TickerProviderStateMixin {
               if (widget.paper.markingStatus ==
                       MarkingStatus.m4CompleteMarking &&
                   widget.paper.source == Source.preview)
-                const Row(children: [SizedBox(width: 8), TagCard(text: "判卷完成")]),
-              if (widget.paper.paperId == null && widget.paper.answerSheet == null)
+                const Row(
+                    children: [SizedBox(width: 8), TagCard(text: "判卷完成")]),
+              if (widget.paper.paperId == null &&
+                  widget.paper.answerSheet == null)
                 const Row(children: [SizedBox(width: 8), TagCard(text: "未开始")]),
-              if (widget.paper.source == Source.preview && widget.paper.answerSheet != null)
+              if (widget.paper.source == Source.preview &&
+                  widget.paper.answerSheet != null)
                 const Row(children: [SizedBox(width: 8), TagCard(text: "题卡")]),
             ]),
             !(widget.paper.fullScore == null || widget.paper.userScore == null)
@@ -243,17 +246,17 @@ class _DetailCardState extends State<DetailCard> with TickerProviderStateMixin {
                         child: Row(
                           children: [
                             if (widget.paper.paperId != null)
-                            RotationTransition(
-                                turns: Tween<double>(begin: 0.5, end: 0)
-                                    .animate(_animationController),
-                                child: const Icon(Icons.keyboard_arrow_up,
-                                    size: 20)),
+                              RotationTransition(
+                                  turns: Tween<double>(begin: 0.5, end: 0)
+                                      .animate(_animationController),
+                                  child: const Icon(Icons.keyboard_arrow_up,
+                                      size: 20)),
                             if (widget.paper.paperId != null)
-                            Text(
-                              detailExpanded ? "折叠 " : "展开 ",
-                              style: const TextStyle(
-                                  fontSize: 10, fontWeight: FontWeight.bold),
-                            ),
+                              Text(
+                                detailExpanded ? "折叠 " : "展开 ",
+                                style: const TextStyle(
+                                    fontSize: 10, fontWeight: FontWeight.bold),
+                              ),
                           ],
                         )))
               ],
@@ -293,12 +296,11 @@ class _DetailCardState extends State<DetailCard> with TickerProviderStateMixin {
         transitionType: ContainerTransitionType.fade,
         openBuilder: (BuildContext buildContext, _) {
           return PaperPage(
-            examId: widget.examId,
-            paperId: widget.paper.paperId!,
-            preview: widget.paper.source == Source.preview,
-            user: Provider.of<ExamModel>(context, listen: false).user,
-            userScore: widget.paper.userScore
-          );
+              examId: widget.examId,
+              paperId: widget.paper.paperId!,
+              preview: widget.paper.source == Source.preview,
+              user: Provider.of<ExamModel>(context, listen: false).user,
+              userScore: widget.paper.userScore);
         },
         closedBuilder: (BuildContext buildContext, openContainer) {
           return Card.filled(
@@ -343,9 +345,9 @@ class _PredictFutureBuilderState extends State<PredictFutureBuilder> {
       return Container();
     }
     future ??= Provider.of<ExamModel>(context, listen: false)
-          .user
-          .fetchPaperPercentile(
-              widget.paper.examId, widget.paper.paperId!, widget.paper.userScore!);
+        .user
+        .fetchPaperPercentile(widget.paper.examId, widget.paper.paperId!,
+            widget.paper.userScore!);
     return FutureBuilder(
       future: future,
       builder: (BuildContext context,

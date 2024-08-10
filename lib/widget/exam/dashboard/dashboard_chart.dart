@@ -1,7 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
-import '../../util/struct.dart';
+import '../../../util/struct.dart';
 
 class DashboardChart extends StatefulWidget {
   final List<PaperDiagnosis> diagnoses;

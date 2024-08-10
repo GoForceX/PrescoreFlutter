@@ -2,8 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../model/exam_model.dart';
-import '../../util/struct.dart';
+import '../../../model/exam_model.dart';
+import '../../../util/struct.dart';
 import 'detail_card.dart';
 import 'detail_util.dart';
 
@@ -30,7 +30,7 @@ class _ExamDetailState extends State<ExamDetail>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return Consumer<ExamModel>(
+    Widget examList = Consumer<ExamModel>(
       builder:
           (BuildContext consumerContext, ExamModel examModel, Widget? child) {
         if ((examModel.isPaperLoaded || examModel.isPreviewPaperLoaded) &&
@@ -47,7 +47,8 @@ class _ExamDetailState extends State<ExamDetail>
             shrinkWrap: false,
             itemCount: presentPapers.length,
             itemBuilder: (BuildContext context, int index) {
-              if (kReleaseMode && presentPapers[index].paperId == null) { //TODO
+              if (kReleaseMode && presentPapers[index].paperId == null) {
+                //TODO
                 return const SizedBox();
               }
               return DetailCard(
@@ -62,5 +63,6 @@ class _ExamDetailState extends State<ExamDetail>
         }
       },
     );
+    return examList;
   }
 }
