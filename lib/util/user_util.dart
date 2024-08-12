@@ -2072,6 +2072,27 @@ class User {
     }
   }
 
+  Future<Result<ScoreInfo>> fetchPapersScoreInfo(List<String> paperIds) async {
+    Dio client = BaseSingleton.singleton.dio;
+
+    logger.d("fetchPapersScoreInfo: start, $paperIds");
+    Response response = await client
+        .post(telemetryPaperScoreInfoUrl, data: {"paper_id": paperIds});
+    logger.d("fetchPapersScoreInfo: e, ${response.data}");
+    Map<String, dynamic> result = jsonDecode(response.data);
+    logger.d("fetchPapersScoreInfo: end, $result");
+    if (result["code"] == 0) {
+      ScoreInfo scoreInfo = ScoreInfo(
+          max: result["data"]["max"],
+          min: result["data"]["min"],
+          avg: result["data"]["avg"],
+          med: result["data"]["med"]);
+      return Result(state: true, message: "成功哒！", result: scoreInfo);
+    } else {
+      return Result(state: false, message: result["code"]);
+    }
+  }
+
   Future<Result<List<ClassInfo>>> fetchExamClassInfo(String examId) async {
     Dio client = BaseSingleton.singleton.dio;
 

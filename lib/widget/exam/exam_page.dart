@@ -7,6 +7,7 @@ import '../../model/exam_model.dart';
 import '../../util/user_util.dart';
 import 'dashboard/exam_dashboard.dart';
 import 'detail/exam_detail.dart';
+import 'group/exam_group.dart';
 
 @RoutePage()
 class ExamPage extends StatefulWidget {
@@ -55,6 +56,9 @@ class _ExamPageState extends State<ExamPage> {
                 child: ExamDetail(examId: widget.uuid),
               ),
               Center(
+                child: ExamGroup(examId: widget.uuid),
+              ),
+              Center(
                 child: ExamDashboard(
                   examId: widget.uuid,
                 ),
@@ -74,6 +78,11 @@ class _ExamPageState extends State<ExamPage> {
             icon: Icon(Icons.library_books_outlined),
             selectedIcon: Icon(Icons.library_books_rounded),
             label: '单科查看',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.folder_outlined),
+            selectedIcon: Icon(Icons.folder_rounded),
+            label: '组合科目',
           ),
           NavigationDestination(
             icon: Icon(Icons.dashboard_outlined),
