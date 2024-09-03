@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:prescore_flutter/widget/exam/group/detail_card_group.dart';
 import 'package:provider/provider.dart';
 
@@ -37,15 +38,34 @@ class _ExamGroupState extends State<ExamGroup>
               .toList();
         }
         return Stack(children: [
-          ListView.builder(
-            padding: const EdgeInsets.all(8),
-            shrinkWrap: false,
-            itemCount: papersGroupList.length,
-            itemBuilder: (BuildContext context, int index) {
-              return DetailCardGroup(
-                  paperGroups: papersGroupList[index], examId: widget.examId);
-            },
-          ),
+          if (papersGroupList.isNotEmpty)
+            ListView.builder(
+              padding: const EdgeInsets.all(8),
+              shrinkWrap: false,
+              itemCount: papersGroupList.length,
+              itemBuilder: (BuildContext context, int index) {
+                return DetailCardGroup(
+                    paperGroups: papersGroupList[index], examId: widget.examId);
+              },
+            )
+          else
+            Center(
+              child: Wrap(
+                alignment: WrapAlignment.center,
+                children: [
+                  SizedBox(
+                    height: 180,
+                    child: SvgPicture.asset("assets/add_files.svg",
+                        colorFilter: ColorFilter.mode(
+                            Theme.of(context).colorScheme.primaryContainer,
+                            BlendMode.modulate), //modulate overlay
+                        semanticsLabel: 'A red up arrow'),
+                  ),
+                  Text("\n暂无科目组",
+                      style: Theme.of(context).textTheme.labelMedium)
+                ],
+              ),
+            ),
           Positioned(
               bottom: 20,
               right: 20,
@@ -67,7 +87,7 @@ class _ExamGroupState extends State<ExamGroup>
                       }
                     : null,
                 icon: const Icon(Icons.add),
-                label: const Text("合并科目"),
+                label: const Text("科目组"),
               ))
         ]);
       },
