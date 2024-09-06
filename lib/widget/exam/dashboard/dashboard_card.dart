@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:prescore_flutter/widget/exam/dashboard_list.dart';
-import 'package:prescore_flutter/widget/exam/dashboard_score_info.dart';
+import 'package:prescore_flutter/widget/exam/dashboard/dashboard_list.dart';
+import 'package:prescore_flutter/widget/exam/dashboard/dashboard_score_info.dart';
 import 'package:provider/provider.dart';
 
-import '../../main.dart';
-import '../../model/exam_model.dart';
-import '../../util/struct.dart';
+import '../../../main.dart';
+import '../../../model/exam_model.dart';
+import '../../../util/struct.dart';
 import 'dashboard_chart.dart';
 import 'dashboard_info.dart';
 import 'dashboard_predict.dart';
 import 'dashboard_ranking.dart';
-import 'detail_util.dart';
+import '../detail/detail_util.dart';
 
 class DashboardCard extends StatefulWidget {
   final String examId;

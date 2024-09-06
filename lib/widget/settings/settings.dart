@@ -60,7 +60,7 @@ class _SettingsPageState extends State<SettingsPage> {
     return convertToMapList(result);
   }
 
-    Widget chooseDeviceDialog(BuildContext context) {
+  Widget chooseDeviceDialog(BuildContext context) {
     return AlertDialog(
       title: const Text('选择设备'),
       content: FutureBuilder<List<Map<String, String>>?>(
@@ -221,7 +221,9 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> showChangeBaseUrlDialog(BuildContext context) async {
     final baseUrlController = TextEditingController();
-    baseUrlController.text = BaseSingleton.singleton.sharedPreferences.getString('telemetryBaseUrl') ?? "https://matrix.npcstation.com/api";
+    baseUrlController.text = BaseSingleton.singleton.sharedPreferences
+            .getString('telemetryBaseUrl') ??
+        "https://matrix.npcstation.com/api";
     final passwordController = TextEditingController();
     showDialog<String>(
       context: context,
@@ -383,7 +385,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 title: const Text('更多科目'),
                 description: const Text('在单科查看页包含判卷中的科目(可能含未参加科目)'),
               ),
-              if (BaseSingleton.singleton.sharedPreferences
+              /*if (BaseSingleton.singleton.sharedPreferences
                       .getBool("developMode") ==
                   true)
                 SettingsTile.switchTile(
@@ -401,7 +403,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           .getBool('showMoreSubject') ==
                       true,
                 ),
-              /*SettingsTile.switchTile(
+              SettingsTile.switchTile(
                 onToggle: (value) {
                   BaseSingleton.singleton.sharedPreferences
                       .setBool('checkUpdate', value);
@@ -590,21 +592,19 @@ class _SettingsPageState extends State<SettingsPage> {
               ],
             ),
           if (BaseSingleton.singleton.sharedPreferences
-                          .getBool("developMode") ==
-                      true) 
-          SettingsSection(
-            title: const Text('高级'),
-            tiles: [
+                  .getBool("developMode") ==
+              true)
+            SettingsSection(title: const Text('高级'), tiles: [
               SettingsTile.navigation(
                   leading: const Icon(Icons.web),
                   title: const Text("预测服务后端 Url"),
-                  description: Text(
-                      BaseSingleton.singleton.sharedPreferences.getString("telemetryBaseUrl") ?? ""),
+                  description: Text(BaseSingleton.singleton.sharedPreferences
+                          .getString("telemetryBaseUrl") ??
+                      ""),
                   onPressed: (BuildContext context) {
                     showChangeBaseUrlDialog(context);
                   }),
-            ]
-          ),
+            ]),
           SettingsSection(
             title: const Text('关于'),
             tiles: [

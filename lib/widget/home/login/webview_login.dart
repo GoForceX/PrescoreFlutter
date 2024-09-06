@@ -92,7 +92,9 @@ class _WebviewLoginCardState extends State<WebviewLoginCard>
 
       styleElement = document.createElement('style');
       styleElement.innerHTML = 
-      '.cl_login_box { top: 0%; transform: translate(-50% ,0%) ; margin-left: 0px; margin-top: 0px; }'+
+      '.cl_login_box { all: unset; }'+
+      '.cl_login_fill > input, .verified_name > input { width: 100%; }'+
+      '.cl_banner { min-height: 30px; }'+
       '.pwd_remember { display: none; }'+
       '.note_msg { display: none; }'+
       '.cl_login_head { display: none; }';
@@ -181,7 +183,7 @@ class _WebviewLoginCardState extends State<WebviewLoginCard>
             Map<String, dynamic> json = jsonDecode(response);
             String xToken = json["result"];
             if (json["errorCode"] == 0) {
-              model.user.session = Session(null, tlsysSessionId!, xToken, "");
+              model.user.session = Session(sessionId: tlsysSessionId!, xToken: xToken, loginType: LoginType.webview);
               model.user.keepLocalSession =
                   sharedPrefs.getBool("keepLogin") ?? true;
               BaseSingleton.singleton.dio.options.headers["XToken"] = xToken;

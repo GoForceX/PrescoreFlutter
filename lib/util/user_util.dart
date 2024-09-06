@@ -1,17 +1,17 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 //import 'package:crypto/crypto.dart';
 import 'package:html/parser.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:dio/dio.dart';
 import 'package:cookie_jar/cookie_jar.dart';
-import 'package:encrypt/encrypt.dart';
 import 'package:flutter/material.dart';
-import 'package:pointycastle/asymmetric/api.dart';
+import 'package:pointycastle/export.dart';
 import 'package:prescore_flutter/main.dart';
-import 'package:prescore_flutter/util/rsa.dart';
 import 'package:prescore_flutter/util/struct.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:simple_rc4/simple_rc4.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:path/path.dart' as path;
@@ -22,14 +22,14 @@ final Lock databaseLock = Lock();
 
 Future<Database> initLocalSessionDataBase() async {
   return await openDatabase(
-    path.join(await getDatabasesPath(), 'UserSession.db'),
+    path.join(await getDatabasesPath(), 'UserSessionV4.db'),
     onCreate: (db, version) async {
       var tableExists = await db.rawQuery(
           "SELECT name FROM sqlite_master WHERE type='table' AND name='$userSession'");
       if (tableExists.isEmpty) {
         logger.d("tableNotExists, CREATE TABLE $userSession");
         db.execute(
-          'CREATE TABLE $userSession (userName TEXT PRIMARY KEY, password TEXT, userId TEXT, st TEXT, sessionId TEXT, xToken TEXT, serverToken TEXT, basicInfo_id TEXT, basicInfo_loginName TEXT, basicInfo_name TEXT, basicInfo_role TEXT, basicInfo_avatar TEXT)',
+          'CREATE TABLE $userSession (loginName TEXT, password TEXT, userId TEXT, st TEXT, tgt TEXT, sessionId TEXT, xToken TEXT, loginType TEXT, serverToken TEXT, basicInfo_id TEXT, basicInfo_loginName TEXT, basicInfo_name TEXT, basicInfo_role TEXT, basicInfo_avatar TEXT)',
         );
       }
     },
@@ -39,10 +39,8 @@ Future<Database> initLocalSessionDataBase() async {
 
 class User {
   Session? session;
-  LoginCredential loginCredential = LoginCredential("", "");
   BasicInfo? basicInfo;
   StudentInfo? studentInfo;
-  bool isLoading = false;
   bool isBasicInfoLoaded = false;
   bool isStudentInfoLoaded = false;
   bool keepLocalSession = false;
@@ -59,7 +57,7 @@ class User {
     return true;
   }
 
-  Future<void> readLocalSession() async {
+  Future<Session> readLocalSession() async {
     SharedPreferences sharedPrefs = BaseSingleton.singleton.sharedPreferences;
     return await databaseLock.synchronized(() async {
       Database database = await initLocalSessionDataBase();
@@ -68,31 +66,45 @@ class User {
       if (list.length == 1) {
         sharedPrefs.setBool("localSessionExist", true);
         Session localSession = Session(
-          list[0]['st'] as String?,
-          list[0]['sessionId'] as String,
-          list[0]['xToken'] as String,
-          list[0]['userId'] as String?,
+          password: list[0]['password'] as String?,
+          loginName: list[0]['loginName'] as String?,
+          tgt: list[0]['tgt'] as String?,
+          loginType: LoginType.getTypeByName(list[0]['loginType'] as String),
+          st: list[0]['st'] as String?,
+          sessionId: list[0]['sessionId'] as String,
+          xToken: list[0]['xToken'] as String,
+          userId: list[0]['userId'] as String?,
           serverToken: list[0]['serverToken'] as String?,
         );
+        await database.close();
+        return localSession;
+      } else {
+        await database.close();
+        throw Exception("Incorrect number of local session entries");
+      }
+    });
+  }
+
+  Future<BasicInfo?> readLocalBasicInfo() async {
+    return await databaseLock.synchronized(() async {
+      Database database = await initLocalSessionDataBase();
+      List<Map<String, Object?>> list =
+          await database.rawQuery('SELECT * FROM $userSession');
+      if (list.length == 1) {
+        BasicInfo? localBasicInfo;
         if (list[0]['basicInfo_id'] != null) {
-          basicInfo = BasicInfo(
+          localBasicInfo = BasicInfo(
               list[0]['basicInfo_id'] as String,
               list[0]['basicInfo_loginName'] as String,
               list[0]['basicInfo_name'] as String,
               list[0]['basicInfo_role'] as String,
               list[0]['basicInfo_avatar'] as String);
-          isBasicInfoLoaded = true;
         }
-        session = localSession;
-        Dio client = BaseSingleton.singleton.dio;
-        client.options.headers["XToken"] = localSession.xToken;
-        loginCredential.userName = list[0]['userName'] as String?;
-        loginCredential.password = list[0]['password'] as String?;
         await database.close();
-        return;
+        return localBasicInfo;
       } else {
         await database.close();
-        throw Exception("Too many Local Session");
+        throw Exception("Incorrect number of local session entries");
       }
     });
   }
@@ -105,11 +117,13 @@ class User {
       await database.insert(
         userSession,
         {
-          "userName": loginCredential.userName,
-          "password": loginCredential.password,
+          "loginName": session?.loginName,
+          "password": session?.password,
           "serverToken": session?.serverToken,
           "sessionId": session?.sessionId,
           "st": session?.st,
+          "tgt": session?.tgt,
+          "loginType": session?.loginType.name,
           "userId": session?.userId,
           "xToken": session?.xToken,
           "basicInfo_id": basicInfo?.id,
@@ -125,143 +139,27 @@ class User {
     });
   }
 
-  Future<void> updateLoginStatus({bool force = false}) async {
-    Dio client = BaseSingleton.singleton.dio;
-    Response response = await client.get(zhixueLoginStatusUrl);
-    Map<String, dynamic> json = jsonDecode(response.data);
-    logger.d("updateLoginStatus $response");
-    if (json["result"] != "success" || force) {
-      Result result = await login(
-          loginCredential.userName ?? "", loginCredential.password ?? "",
-          useLocalSession: false,
-          keepLocalSession: keepLocalSession,
-          force: true);
-      //if(!result.state && (result.message.contains("用户不存在") || result.message.contains("凭证有误"))) {
-      if (!result.state && autoLogout) {
-        await logoff();
-        reLoginFailedCallback();
-      }
+  String getEncryptedPassword(String password, bool isRSA) {
+    if (isRSA) {
+      final modulus = BigInt.parse(zhixueRsaKeyModules, radix: 16);
+      final publicExponent =
+          BigInt.parse(zhixueRsaKeyPublicExponent, radix: 16);
+      final rsaPublicKey = RSAPublicKey(modulus, publicExponent);
+      final cipher = PKCS1Encoding(RSAEngine())
+        ..init(true, PublicKeyParameter<RSAPublicKey>(rsaPublicKey));
+      final encryptedBytes = cipher.process(
+          Uint8List.fromList(utf8.encode(password.split('').reversed.join())));
+      final encryptedHex = encryptedBytes
+          .map((byte) => byte.toRadixString(16).padLeft(2, '0'))
+          .join('');
+      return encryptedHex;
+    } else {
+      String encrypted =
+          (RC4("iflytek_pass_edp").encodeBytes(utf8.encode(password)))
+              .map((byte) => byte.toRadixString(16).padLeft(2, '0'))
+              .join('');
+      return encrypted;
     }
-  }
-
-  /// Remove **all** cookies and session data to logoff
-  Future<bool> logoff() async {
-    SharedPreferences sharedPrefs = BaseSingleton.singleton.sharedPreferences;
-    session = null;
-    loginCredential.password = "";
-    loginCredential.userName = "";
-    basicInfo = null;
-    studentInfo = null;
-    isLoading = false;
-    isBasicInfoLoaded = false;
-    keepLocalSession = false;
-    BaseSingleton.singleton.dio.options.headers["XToken"] = null;
-
-    // Remove all cookies from related sites.
-    CookieJar cookieJar = BaseSingleton.singleton.cookieJar;
-    cookieJar.delete(Uri.parse("https://www.zhixue.com/"));
-    cookieJar.delete(Uri.parse("https://open.changyan.com/"));
-
-    return await databaseLock.synchronized(() async {
-      Database database = await initLocalSessionDataBase();
-      await database.rawDelete('DELETE FROM $userSession');
-      await database.close();
-      sharedPrefs.setBool("localSessionExist", false);
-      return true;
-    });
-  }
-
-  /// Use RSA to encrypt [password].
-  String getEncryptedPassword(String password, String lt) {
-    // Encrypt password in order to login.
-    // Use no padding.
-    final Encrypter encrypter = Encrypter(RSAExt(
-      publicKey: RSAPublicKey(
-          BigInt.parse("0x00ccd806a03c7391ee8f884f5902102d95f6d534d597ac42219dd8a79b1465e186c0162a6771b55e7be7422c4af494ba0112ede4eb00fc751723f2c235ca419876e7103ea904c29522b72d754f66ff1958098396f17c6cd2c9446e8c2bb5f4000a9c1c6577236a57e270bef07e7fe7bbec1f0e8993734c8bd4750e01feb21b6dc9"),
-          BigInt.parse("0x010001")),
-      privateKey: null,
-    ));
-
-    String encrypted =
-        encrypter.encrypt("LT/$lt/$password").base16;
-    return encrypted;
-  }
-
-  /// Generate login params.
-  ///
-  /// [lt] and [execution] are received from [zhixueLoginUrl].
-  ///
-  /// [username] and [password] are from user input and is required.
-  ///
-  /// [password] must be encrypted using [getEncryptedPassword].
-  String getParsedParams(
-      String lt, String execution, String username, String password) {
-    // Static params
-    Map<String, String> params = {
-      "encode": "true",
-      "sourceappname": "tkyh,tkyh",
-      "_eventId": "submit",
-      "appid": "zx-container-client",
-      "client": "web",
-      "type": "loginByNormal",
-      "key": "auto",
-      "customLogoutUrl": "https://www.zhixue.com/login.html",
-    };
-    // Dynamic params
-    params.addEntries({
-      "lt": lt,
-      "execution": execution,
-      "username": username,
-      "password": getEncryptedPassword(password, lt),
-      //"encodeType" : "R2/P/LT"
-    }.entries);
-
-    // Parse params
-    String parsedParams = "";
-    params.forEach((key, value) {
-      parsedParams += "$key=$value&";
-    });
-
-    // Remove the last '&' character.
-    return parsedParams.substring(0, parsedParams.length - 1);
-  }
-
-  /// Fetch session id from [st].
-  ///
-  /// [st] is received from [zhixueLoginUrl].
-  Future<Session?> getSessionFromSt(String st) async {
-    CookieJar cookieJar = BaseSingleton.singleton.cookieJar;
-    Dio client = BaseSingleton.singleton.dio;
-
-    // Get session from st.
-    logger.d("st: $st");
-
-    Response loginResponse = await client.post(
-      zhixueLoginUrl,
-      data: {
-        "action": "login",
-        "ticket": st,
-      },
-      options: Options(contentType: Headers.formUrlEncodedContentType),
-    );
-    logger.d("loginResponse: ${loginResponse.data}");
-    logger.d("loginResponse: ${loginResponse.headers}");
-
-    // Get session id from cookies.
-    List<Cookie> cookies =
-        await cookieJar.loadForRequest(Uri.parse(zhixueBaseUrl));
-    String xToken = await getXToken();
-    logger.d("cookies: $cookies");
-    for (var element in cookies) {
-      if (element.name == "tlsysSessionId") {
-        Session currSession = Session(st, element.value, xToken, "");
-        session = currSession;
-        logger.d(currSession.toString());
-        client.options.headers["XToken"] = currSession.xToken;
-        return currSession;
-      }
-    }
-    return null;
   }
 
   /// Get xToken from cookies.
@@ -278,153 +176,287 @@ class User {
     return xToken;
   }
 
+  Future<Result> casLoginWithTGT(
+      {required String tgt,
+      required String at,
+      required String userId,
+      required bool keepLocalSession}) async {
+    Dio client = BaseSingleton.singleton.dio;
+    Response casResponse = await client.post(zhixueCasLogin,
+        data: {
+          "at": at,
+          "userId": userId,
+          "tokenTimeout": 0,
+          "autoLogin": true,
+        },
+        options: Options(
+          contentType: Headers.formUrlEncodedContentType,
+        ));
+    Map<String, dynamic> casResult = jsonDecode(casResponse.data);
+    if (casResult["errorCode"] != 0) {
+      return Result(
+          state: false,
+          message: casResult["errorInfo"],
+          result: casResult["errorInfo"]);
+    }
+    List<Cookie> cookies = await BaseSingleton.singleton.cookieJar
+        .loadForRequest(Uri.parse(zhixueContainerUrl));
+    for (var element in cookies) {
+      if (element.name == "tlsysSessionId") {
+        String xToken = casResult["result"]["token"];
+        basicInfo = BasicInfo(
+            casResult["result"]["id"],
+            casResult["result"]["userInfo"]["loginName"],
+            casResult["result"]["name"],
+            casResult["result"]["role"],
+            casResult["result"]["userInfo"]["avatar"]);
+        isBasicInfoLoaded = true;
+        Session currSession = Session(
+            loginName: userId,
+            tgt: tgt,
+            sessionId: element.value,
+            xToken: xToken,
+            userId: userId,
+            loginType: LoginType.app);
+        session = currSession;
+        client.options.headers["XToken"] = currSession.xToken;
+        client.options.headers["token"] = currSession.xToken;
+        if (keepLocalSession) {
+          await saveLocalSession();
+        }
+        return Result(state: true, message: casResult["errorInfo"]);
+      }
+    }
+    return Result(state: false, message: casResult["errorInfo"]);
+  }
+
+  Future<Result> parWeakCheckLogin(String username, String password,
+      {bool keepLocalSession = false}) async {
+    Dio client = BaseSingleton.singleton.dio;
+    Response ssoResponse = await client.post(zhixueParWeakCheckLogin,
+        data: {
+          "loginName": username,
+          "password": getEncryptedPassword(password, false),
+          "description": "{encrypt: [\"password\"]}"
+        },
+        options: Options(
+          contentType: Headers.formUrlEncodedContentType,
+        ));
+
+    Map<String, dynamic> ssoResult = jsonDecode(ssoResponse.data);
+    debugPrint(ssoResponse.data.toString());
+    if (ssoResult["errorCode"] == 0) {
+      List<Cookie> cookies = await BaseSingleton.singleton.cookieJar
+          .loadForRequest(Uri.parse(zhixueContainerUrl));
+      for (var element in cookies) {
+        if (element.name == "tlsysSessionId") {
+          String xToken = ssoResult["result"]["token"];
+          basicInfo = BasicInfo(
+              ssoResult["result"]["id"],
+              ssoResult["result"]["userInfo"]["loginName"],
+              ssoResult["result"]["name"],
+              ssoResult["result"]["role"],
+              ssoResult["result"]["userInfo"]["avatar"]);
+          isBasicInfoLoaded = true;
+          Session currSession = Session(
+              loginName: username,
+              password: password,
+              sessionId: element.value,
+              xToken: xToken,
+              userId: ssoResult["result"]["id"],
+              loginType: LoginType.parWeakCheckLogin);
+          session = currSession;
+          client.options.headers["XToken"] = currSession.xToken;
+          client.options.headers["token"] = currSession.xToken;
+          if (keepLocalSession) {
+            await saveLocalSession();
+          }
+          return Result(state: true, message: ssoResult["errorInfo"]);
+        }
+      }
+      return Result(state: false, message: ssoResult["errorInfo"]);
+    } else {
+      return Result(state: false, message: ssoResult["errorInfo"]);
+    }
+  }
+
+  Future<Result> ssoLogin(String username, String password, String captcha,
+      {bool keepLocalSession = false}) async {
+    Dio client = BaseSingleton.singleton.dio;
+    Response ssoResponse = await client.post(changyanSSOLoginUrl,
+        data: {
+          "username": username,
+          "password": getEncryptedPassword(password, true),
+          "thirdCaptchaParam": captcha,
+          "appId": "zhixue_parent",
+          "captchaType": "third",
+          "client": "android",
+          "encode": "true",
+          "encodeType": "R2/P",
+          "extInfo": "{\"deviceId\":\"0\"}",
+          "key": "auto",
+          "method": "sso.login.account.v3"
+        },
+        options: Options(
+          contentType: Headers.formUrlEncodedContentType,
+        ));
+
+    Map<String, dynamic> ssoResult = jsonDecode(ssoResponse.data);
+    if (ssoResult["code"] == "success") {
+      SsoInfo info = SsoInfo(
+        tgt: ssoResult["data"]["tgt"],
+        at: ssoResult["data"]["at"],
+        userId: ssoResult["data"]["userId"],
+      );
+      Result result = await casLoginWithTGT(
+          tgt: info.tgt,
+          at: info.at,
+          userId: info.userId,
+          keepLocalSession: keepLocalSession);
+      return result;
+    } else {
+      return Result(
+          state: false,
+          message: ssoResult["message"],
+          result: ssoResult["message"]);
+    }
+  }
+
+  Future<Result> ssoLoginWithTGT(String tgt,
+      {bool keepLocalSession = false}) async {
+    Dio client = BaseSingleton.singleton.dio;
+    Response ssoResponse = await client.post(changyanSSOLoginUrl,
+        data: {
+          "tgt": tgt,
+          "appId": "zhixue_parent",
+          "client": "android",
+          "extInfo": "{\"deviceId\":\"0\"}",
+          "method": "sso.extend.tgt"
+        },
+        options: Options(
+          contentType: Headers.formUrlEncodedContentType,
+        ));
+
+    Map<String, dynamic> ssoResult = jsonDecode(ssoResponse.data);
+    if (ssoResult["code"] == "success") {
+      SsoInfo info = SsoInfo(
+        tgt: ssoResult["data"]["tgt"],
+        at: ssoResult["data"]["at"],
+        userId: ssoResult["data"]["userId"],
+      );
+      Result result = await casLoginWithTGT(
+          tgt: info.tgt,
+          at: info.at,
+          userId: info.userId,
+          keepLocalSession: keepLocalSession);
+      return result;
+    } else {
+      return Result(
+          state: false,
+          message: ssoResult["code"].toString(),
+          result: ssoResult["message"]);
+    }
+  }
+
   /// Login to zhixue.com.
   ///
   /// [username] and [password] are from user input and is required.
-  Future<Result> login(String username, String password,
-      {bool ignoreLoading = true,
-      bool force = true,
-      Function? callback,
-      Future? asyncCallback,
-      BuildContext? context,
-      bool useLocalSession = false,
-      bool keepLocalSession = false}) async {
-    // Check if is logging in now.
-    // If there is a login request pending, ignore current request.
-    if (isLoading & !ignoreLoading) {
-      return Result(state: false, message: "正在登录中，请稍后再试");
-    }
-
-    // Check if is forced to login.
-    // Forcing to login means to ignore previous session and login again.
+  Future<Result> loginFromLocal(
+      {bool force = true, bool keepLocalSession = false}) async {
     if (!force) {
-      // Check if there is a previous session.
       if (isLoggedIn()) {
-        if (callback != null) {
-          callback();
-        }
-        if (asyncCallback != null) {
-          await asyncCallback;
-        }
         return Result(state: true, message: "已登录");
       }
     }
     Dio client = BaseSingleton.singleton.dio;
-    // Start login and set this flag to true to avoid multiple login requests.
-    isLoading = true;
-    if (useLocalSession) {
-      try {
+    try {
+      Session localSession = await readLocalSession();
+      if (localSession.loginType == LoginType.webview ||
+          localSession.loginType == LoginType.parWeakCheckLogin) {
         this.keepLocalSession = keepLocalSession;
-        await readLocalSession();
-        /*String xToken = await getXToken();
-        client.options.headers["XToken"] = xToken;
-        session?.xToken = xToken;
-        await saveLocalSession();*/
+        BasicInfo? localBasicInfo = await readLocalBasicInfo();
+        if (localBasicInfo != null) {
+          isBasicInfoLoaded = true;
+          basicInfo = localBasicInfo;
+        }
+        session = localSession;
+        client.options.headers["XToken"] = session?.xToken;
+        client.options.headers["Token"] = session?.xToken;
         try {
           await fetchBasicInfo();
         } catch (e) {
           logger.e("login: fetchBasicInfo error: $e");
         }
-        isLoading = false;
-        //LocalLogger.write("本地Session登录成功", isError: false);
         return Result(state: true, message: "本地Session登录成功");
-      } catch (_) {}
-    }
-    if (username == "") {
-      return Result(state: false, message: "用户名为空");
-    }
-    return Result(state: false, message: "该登录方式暂不可用");
-    // Check if there is a previous session from cookies.
-    Response preload = await client.get(changyanSSOUrl);
-    String preloadBody = preload.data;
-    preloadBody = preloadBody.trim();
-    logger.d("loginPreloadBody: $preloadBody");
-    preloadBody = preloadBody.replaceAll('\\', '').replaceAll('\'', '');
-    preloadBody = preloadBody.replaceAll('(', '').replaceAll(')', '');
-
-    Map<String, dynamic> preloadParsed = jsonDecode(preloadBody);
-
-    // Return code 1000 means not logged in.
-    // Return code 1001 means already logged in.
-    // Other return code means failed to login.
-    if (preloadParsed['code'] != 1000) {
-      if (preloadParsed['code'] == 1001) {
-        session = await getSessionFromSt(preloadParsed['data']['st']);
-        // If session is null, this request is invalid. So return false.
-        if (session == null) {
-          isLoading = false;
-          return Result(state: false, message: "已登录, 但Session缺失");
-        }
-        if (callback != null) {
-          callback();
-        }
-        loginCredential.userName = username;
-        loginCredential.password = password;
-        if (keepLocalSession) {
-          await saveLocalSession();
-        }
-        isLoading = false;
+      } else if (localSession.loginType == LoginType.app) {
+        autoLogout = false;
         this.keepLocalSession = keepLocalSession;
-        return Result(state: true, message: "已登录");
+        return await ssoLoginWithTGT(localSession.tgt!,
+            keepLocalSession: keepLocalSession);
       } else {
-        isLoading = false;
-        return Result(state: false, message: preloadParsed['data']);
+        return Result(state: false, message: "Unknown login type");
+      }
+    } catch (e) {
+      return Result(state: false, message: e.toString());
+    }
+  }
+
+  Future<void> updateLoginStatus() async {
+    Dio client = BaseSingleton.singleton.dio;
+    Response response = await client.get(zhixueLoginStatusUrl);
+    Map<String, dynamic> json = jsonDecode(response.data);
+    logger.d("updateLoginStatus $response");
+    if (json["result"] != "success") {
+      Result res = Result(state: false, message: "Unknown LoginType");
+      try {
+        if (session?.loginType == LoginType.parWeakCheckLogin) {
+          res = await parWeakCheckLogin(session!.loginName!, session!.password!,
+              keepLocalSession: keepLocalSession);
+        } else if (session?.loginType == LoginType.app) {
+          res = await ssoLoginWithTGT(session!.tgt!,
+              keepLocalSession: keepLocalSession);
+        } else if (session?.loginType == LoginType.webview) {
+          res = Result(state: false, message: "Webview isn't support reLogin");
+        }
+      } catch (e) {
+        if (autoLogout) {
+          await logoff();
+          reLoginFailedCallback();
+        }
+      }
+      if (res.state != true && autoLogout) {
+        await logoff();
+        reLoginFailedCallback();
       }
     }
-    // Use lt and execution from previous request to do actual login.
-    String lt = preloadParsed['data']['lt'];
-    String execution = preloadParsed['data']['execution'];
+  }
 
-    logger.d(
-        "loginUri: $changyanSSOUrl&${getParsedParams(lt, execution, username, password)}");
-    Response response = await client.get(
-        "$changyanSSOUrl&${getParsedParams(lt, execution, username, password)}");
-    String body = response.data;
-    body = body.trim();
-    logger.d("loginBody: $body");
-    body = body.replaceAll('\\', '').replaceAll('\'', '');
-    body = body.replaceAll('(', '').replaceAll(')', '');
+  /// Remove **all** cookies and session data to logoff
+  Future<bool> logoff() async {
+    SharedPreferences sharedPrefs = BaseSingleton.singleton.sharedPreferences;
+    session = null;
+    basicInfo = null;
+    studentInfo = null;
+    isBasicInfoLoaded = false;
+    keepLocalSession = false;
+    BaseSingleton.singleton.dio.options.headers["XToken"] = null;
 
-    // Fetch user basic info.
+    // Remove all cookies from related sites.
+    CookieJar cookieJar = BaseSingleton.singleton.cookieJar;
     try {
-      await fetchBasicInfo();
-    } catch (e) {
-      logger.e("login: fetchBasicInfo error: $e");
-    }
-    // Parse response.
-    // Return code 1000 means not logged in.
-    // Return code 1001 means already logged in.
-    // Other return code means failed to login.
-    // In this case, any code other than 1001 is considered as failed.
-    Map<String, dynamic> parsed = jsonDecode(body);
-    if (parsed['code'] != 1001) {
-      isLoading = false;
-      return Result(state: false, message: parsed['data']);
-    }
-    session = await getSessionFromSt(parsed['data']['st']);
-    if (session == null) {
-      isLoading = false;
-      return Result(state: false, message: "登录失败, Session缺失");
-    }
-    loginCredential.userName = username;
-    loginCredential.password = password;
-    this.keepLocalSession = keepLocalSession;
-    if (keepLocalSession) {
-      await saveLocalSession();
-    }
-    // Login to private server.
-    try {
-      await telemetryLogin();
-    } catch (e) {
-      logger.e("login: telemetryLogin error: $e");
-    }
+      cookieJar.deleteAll();
+    } catch (_) {}
+    cookieJar.delete(Uri.parse(zhixueBaseUrl));
+    cookieJar.delete(Uri.parse(zhixueBaseUrl_2));
+    cookieJar.delete(Uri.parse(changyanBaseUrl));
 
-    if (callback != null) {
-      callback();
-    }
-    isLoading = false;
-    //LocalLogger.write("登录成功", isError: false);
-    return Result(state: true, message: "登录成功");
+    return await databaseLock.synchronized(() async {
+      Database database = await initLocalSessionDataBase();
+      await database.rawDelete('DELETE FROM $userSession');
+      await database.close();
+      sharedPrefs.setBool("localSessionExist", false);
+      return true;
+    });
   }
 
   /// Login to private server to record exam data.
@@ -722,11 +754,11 @@ class User {
     Response response = await client.get(url);
     Map<String, dynamic> json = jsonDecode(response.data);
     logger.d("exams: $json");
-    if (json["errorCode"] != 0 && json["errorInfo"].contains("Token")) {
+    /*if (json["errorCode"] != 0 && json["errorInfo"].contains("Token")) {
       await updateLoginStatus(force: true);
       Response response = await client.get(url);
       json = jsonDecode(response.data);
-    }
+    }*/
     if (json["errorCode"] != 0) {
       logger.d("exams: failed");
       //LocalLogger.write("fetchExams failed: ${json["errorCode"]} ${json["errorInfo"]}", isError: true);
@@ -775,7 +807,7 @@ class User {
         double? userScore;
         double? standardScore;
         try {
-          if (requestScore) {
+          /*if (requestScore) {
             logger.d(
                 "fetchPreviewPaper $zhixueTranscriptUrl?subjectCode=${subject["subjectCode"]}&examId=${subject["examId"]}&paperId=${subject["markingPaperId"]}&token=${session?.xToken}");
             Response response = await client.get(
@@ -802,22 +834,28 @@ class User {
                 }
               }
             }
-          }
+          }*/
         } catch (_) {}
         try {
+          MarkingStatus status = MarkingStatus.noMarkingStatus;
+          try {
+            status = subject["markingStatus"] == "m4CompleteMarking"
+                ? MarkingStatus.m4CompleteMarking
+                : subject["markingStatus"] == "m3marking"
+                    ? MarkingStatus.m3marking
+                    : MarkingStatus.unknown;
+          } catch (_) {}
           return Paper(
               examId: subject["examId"],
               paperId: subject["markingPaperId"],
+              id: subject["id"],
+              answerSheet: subject["dispName"],
               name: subject["subjectName"],
               subjectId: subject["subjectCode"],
               userScore: userScore,
               fullScore: standardScore,
               source: Source.preview,
-              markingStatus: subject["markingStatus"] == "m4CompleteMarking"
-                  ? MarkingStatus.m4CompleteMarking
-                  : subject["markingStatus"] == "m3marking"
-                      ? MarkingStatus.m3marking
-                      : MarkingStatus.unknown);
+              markingStatus: status);
         } catch (_) {}
         return null;
       }
@@ -846,7 +884,8 @@ class User {
     Response response =
         await client.get("$zhixueMarkingProgressUrl_2?markingPaperId=$paperId");
     logger.d("fetchMarkingProgress, data: ${response.data}");
-    List<Map<String, dynamic>> json = (jsonDecode(response.data) as List<dynamic>).map((item) {
+    List<Map<String, dynamic>> json =
+        (jsonDecode(response.data) as List<dynamic>).map((item) {
       return item as Map<String, dynamic>;
     }).toList();
     bool allZero = true;
@@ -858,7 +897,8 @@ class User {
     }
     if (allZero) {
       Response response =
-        await client.get("$zhixueMarkingProgressUrl?markingPaperId=$paperId");
+          await client.get("$zhixueMarkingProgressUrl?markingPaperId=$paperId");
+
       logger.d("fetchMarkingProgress, data: ${response.data}");
       json = (jsonDecode(response.data) as List<dynamic>).map((item) {
         return item as Map<String, dynamic>;
@@ -1795,6 +1835,23 @@ class User {
     }
   }
 
+  Future<Result<PaperPercentile>> fetchPapersPercentile(
+      List<String> paperIds, double score) async {
+    Result<List<dynamic>> pred = await fetchPapersPredict(paperIds, score);
+    if (pred.state) {
+      return Result(
+          state: true,
+          message: "",
+          result: PaperPercentile(
+              percentile: pred.result![1],
+              count: 1,
+              version: pred.result![0],
+              official: false));
+    } else {
+      return Result(state: false, message: pred.message);
+    }
+  }
+
   Future<Result<String>> uploadPaperData(Paper paper) async {
     await fetchBasicInfo();
     if (paper.source == Source.preview) {
@@ -1926,7 +1983,26 @@ class User {
     }
   }
 
-    Future<Result<DistributionData>> fetchPaperDistribution(
+  Future<Result<List<dynamic>>> fetchPapersPredict(
+      List<String> paperIds, double score) async {
+    Dio client = BaseSingleton.singleton.dio;
+
+    Response response = await client
+        .post('$telemetryPaperPredictUrl/$score', data: {"paper_id": paperIds});
+    logger.d("fetchPapersPredict: cronet, response: ${response.data}");
+
+    Map<String, dynamic> result = jsonDecode(response.data);
+    if (result["code"] == 0) {
+      return Result(
+          state: true,
+          message: "成功哒！",
+          result: [result["version"], result["percent"]]);
+    } else {
+      return Result(state: false, message: result["code"].toString());
+    }
+  }
+
+  Future<Result<DistributionData>> fetchPaperDistribution(
       {required String paperId, double step = 1}) async {
     Dio client = BaseSingleton.singleton.dio;
 
@@ -1938,13 +2014,16 @@ class User {
     if (result["code"] == 0) {
       DistributionData paperDistribution = DistributionData();
       for (var element in result["data"]["distribute"]) {
-        paperDistribution.distribute.add(DistributionScoreItem(score: element["score"], sum: element["sum"]));
+        paperDistribution.distribute.add(DistributionScoreItem(
+            score: element["score"], sum: element["sum"]));
       }
       for (var element in result["data"]["prefix"]) {
-        paperDistribution.prefix.add(DistributionScoreItem(score: element["score"], sum: element["sum"]));
+        paperDistribution.prefix.add(DistributionScoreItem(
+            score: element["score"], sum: element["sum"]));
       }
       for (var element in result["data"]["suffix"]) {
-        paperDistribution.suffix.add(DistributionScoreItem(score: element["score"], sum: element["sum"]));
+        paperDistribution.suffix.add(DistributionScoreItem(
+            score: element["score"], sum: element["sum"]));
       }
       return Result(state: true, message: "", result: paperDistribution);
     } else {
@@ -1988,6 +2067,27 @@ class User {
           avg: result["data"]["avg"],
           med: result["data"]["med"]);
 
+      return Result(state: true, message: "成功哒！", result: scoreInfo);
+    } else {
+      return Result(state: false, message: result["code"]);
+    }
+  }
+
+  Future<Result<ScoreInfo>> fetchPapersScoreInfo(List<String> paperIds) async {
+    Dio client = BaseSingleton.singleton.dio;
+
+    logger.d("fetchPapersScoreInfo: start, $paperIds");
+    Response response = await client
+        .post(telemetryPaperScoreInfoUrl, data: {"paper_id": paperIds});
+    logger.d("fetchPapersScoreInfo: e, ${response.data}");
+    Map<String, dynamic> result = jsonDecode(response.data);
+    logger.d("fetchPapersScoreInfo: end, $result");
+    if (result["code"] == 0) {
+      ScoreInfo scoreInfo = ScoreInfo(
+          max: result["data"]["max"],
+          min: result["data"]["min"],
+          avg: result["data"]["avg"],
+          med: result["data"]["med"]);
       return Result(state: true, message: "成功哒！", result: scoreInfo);
     } else {
       return Result(state: false, message: result["code"]);

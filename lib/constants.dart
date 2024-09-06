@@ -8,12 +8,21 @@ const Map<String, String> commonHeaders = {
 const String userAgent =
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.124 Safari/537.36 Edg/102.0.1245.41";
 
-const String changyanSSOUrl =
-    "https://sso.zhixue.com/sso_alpha/login?service=https://www.zhixue.com:443/ssoservice.jsp";
+const String geetestCaptchaId = "a6474422e78e5bb048082ec77d141068"; 
+const String zhixueRsaKeyModules =
+"00ccd806a03c7391ee8f884f5902102d95f6d534d597ac42219dd8a79b1465e186c0162a6771b55e7be7422c4af494ba0112ede4eb00fc751723f2c235ca419876e7103ea904c29522b72d754f66ff1958098396f17c6cd2c9446e8c2bb5f4000a9c1c6577236a57e270bef07e7fe7bbec1f0e8993734c8bd4750e01feb21b6dc9";
+const String zhixueRsaKeyPublicExponent = "010001";
+
+const String changyanBaseUrl = "https://open.changyan.com";
+const String changyanSSOLoginUrl = "$changyanBaseUrl/sso/v1/api";
 
 const String zhixueBaseUrl = "https://www.zhixue.com";
 const String zhixueBaseUrl_2 = "https://pt-ali-bj.zhixue.com";
 
+const String zhixueContainerUrl = "$zhixueBaseUrl/container";
+
+const String zhixueCasLogin = "$zhixueBaseUrl/container/app/login/casLogin";
+const String zhixueParWeakCheckLogin = "$zhixueBaseUrl/container/app/parWeakCheckLogin";
 const String wapLoginUrl = "$zhixueBaseUrl/wap_login.html";
 const String loginNoThirdCookieUrl = "$zhixueBaseUrl/login_no_third_cookie.html";
 

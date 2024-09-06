@@ -81,7 +81,7 @@ Future<void> login({bool force = true}) async {
   //String username = BaseSingleton.singleton.sharedPreferences.getString("username") ?? "";
   //String password = BaseSingleton.singleton.sharedPreferences.getString("password") ?? "";
   //Result result = await user.login(username, password, force: force);
-  Result result = await user.login("", "", force: force, useLocalSession: true);
+  Result result = await user.loginFromLocal(force: force);
   if (result.state) {
     user.reLoginFailedCallback = () {
       channel.invokeMethod('stopService');
@@ -92,7 +92,7 @@ Future<void> login({bool force = true}) async {
           'setupForeground', '${user.basicInfo?.name} 已登录');
     } else {
       await channel.invokeMethod(
-          'setupForeground', '${user.loginCredential.userName} 已登录');
+          'setupForeground', '已登录');
     }
     return;
   } else {

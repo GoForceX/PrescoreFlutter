@@ -84,12 +84,15 @@ class ExamModel extends ChangeNotifier {
   void addPapers(List<Paper> value) {
     for (Paper paperElement in value) {
       Paper? currentSamePaper = papers
-          .firstWhereOrNull((item) => item.paperId == paperElement.paperId);
+          .firstWhereOrNull((item) => item.subjectId == paperElement.subjectId);
       if (currentSamePaper != null) {
         if (currentSamePaper.source != Source.common) {
           int index = papers.indexOf(currentSamePaper);
           papers.remove(currentSamePaper);
           papers.insert(index, paperElement);
+        } else {
+          currentSamePaper.id ??= paperElement.id;
+          currentSamePaper.answerSheet ??= paperElement.answerSheet;
         }
       } else {
         papers.add(paperElement);

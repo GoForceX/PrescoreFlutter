@@ -1,31 +1,45 @@
 import 'dart:math';
 import 'dart:ui';
 
-class Session {
-  String? st;
-  String sessionId;
-  String xToken;
-  String? userId;
-  String? serverToken;
+class SsoInfo {
+  String tgt;
+  String at;
+  String userId;
 
-  Session(this.st, this.sessionId, this.xToken, this.userId,
-      {this.serverToken});
+  SsoInfo({required this.tgt, required this.at, required this.userId});
 
   @override
   String toString() {
-    return 'Session{st: $st, sessionId: $sessionId, xToken: $xToken, userId: $userId, serverToken: $serverToken}';
+    return 'SsoInfo{tgt: $tgt, at: $at, userId: $userId}';
   }
 }
 
-class LoginCredential {
-  String? userName;
-  String? password;
+enum LoginType {
+  webview,
+  app,
+  parWeakCheckLogin;
 
-  LoginCredential(this.userName, this.password);
+
+  static LoginType getTypeByName(String name) =>
+    LoginType.values.firstWhere((type) => type.name == name);
+}
+
+class Session {
+  String? loginName;
+  String? password;
+  String? tgt;
+  String? st;
+  String sessionId;
+  String xToken;
+  LoginType loginType;
+  String? userId;
+  String? serverToken;
+
+  Session({this.loginName, this.password ,this.tgt, this.st, required this.sessionId, required this.xToken, required this.loginType, this.userId, this.serverToken});
 
   @override
   String toString() {
-    return 'LoginCredential{userName: $userName, password: $password';
+    return 'Session{loginName: $loginName, password:$password, tgt: $tgt, st: $st, sessionId: $sessionId, xToken: $xToken, userId: $userId, serverToken: $serverToken, loginType: $loginType}';
   }
 }
 
@@ -136,11 +150,13 @@ enum Source {
   preview,
 }
 
-enum MarkingStatus { unknown, m4CompleteMarking, m3marking }
+enum MarkingStatus { unknown, m4CompleteMarking, m3marking, noMarkingStatus }
 
 class Paper {
   String examId;
-  String paperId;
+  String? id;
+  String? answerSheet;
+  String? paperId;
   String name;
   String subjectId;
   double? userScore;
@@ -159,12 +175,14 @@ class Paper {
       required this.fullScore,
       required this.source,
       this.assignScore,
+      this.id,
+      this.answerSheet,
       this.diagnosticScore,
       this.markingStatus = MarkingStatus.unknown});
 
   @override
   String toString() {
-    return 'Paper{examId: $examId, paperId: $paperId, name: $name, subjectId: $subjectId, userScore: $userScore, fullScore: $fullScore, assignScore: $assignScore, diagnosticScore: $diagnosticScore, source: $source}';
+    return 'Paper{examId: $examId, id: $id, answerSheet: $answerSheet, paperId: $paperId, name: $name, subjectId: $subjectId, userScore: $userScore, fullScore: $fullScore, assignScore: $assignScore, diagnosticScore: $diagnosticScore, source: $source}';
   }
 
   Map<String, dynamic> toMap() {

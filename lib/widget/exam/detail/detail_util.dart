@@ -2,7 +2,7 @@ import 'package:prescore_flutter/main.dart';
 import 'package:prescore_flutter/util/struct.dart';
 import 'package:provider/provider.dart';
 
-import '../../model/exam_model.dart';
+import '../../../model/exam_model.dart';
 
 void setUploadListener(context) {
   Provider.of<ExamModel>(context, listen: false).addListener(() {
@@ -17,6 +17,9 @@ void setUploadListener(context) {
       Provider.of<ExamModel>(context, listen: false)
           .setUploadStatus(UploadStatus.uploading);
       for (var paper in Provider.of<ExamModel>(context, listen: false).papers) {
+        if (paper.paperId == null) {
+          continue;
+        }
         try {
           logger.d("DashboardInfo: $paper");
           bool noDiag = false;
@@ -48,16 +51,19 @@ void setUploadListener(context) {
           Provider.of<ExamModel>(context, listen: false)
               .user
               .uploadPaperData(processedPaper);
-          Provider.of<ExamModel>(context, listen: false)
+          if (BaseSingleton.singleton.sharedPreferences.getBool("allowTelemetry") == true) {
+            Provider.of<ExamModel>(context, listen: false)
               .user
-              .fetchPaperClassList(paper.paperId)
+              .fetchPaperClassList(paper.paperId!)
               .then((value) {
-            if (value.state && value.result != null) {
-              Provider.of<ExamModel>(context, listen: false)
-                  .user
-                  .uploadPaperClassData(value.result!, paper.paperId);
-            }
-          });
+                if (value.state && value.result != null) {
+                  Provider.of<ExamModel>(context, listen: false)
+                      .user
+                      .uploadPaperClassData(value.result!, paper.paperId!);
+                }
+              });
+          }
+          
         } catch (e) {
           Provider.of<ExamModel>(context, listen: false)
               .setUploadStatus(UploadStatus.incomplete);

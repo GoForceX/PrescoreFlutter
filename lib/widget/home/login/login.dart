@@ -27,22 +27,13 @@ class _LoginWidgetState extends State<LoginWidget> {
   SharedPreferences sharedPrefs = BaseSingleton.singleton.sharedPreferences;
   final PageController controller = PageController();
 
-  void login({useLocalSession = false, keepLocalSession = false}) async {
-    if (useLocalSession) {
-      Provider.of<LoginModel>(context, listen: false).setAutoLogging(true);
-    }
+  void localLogin({keepLocalSession = false}) async {
+    Provider.of<LoginModel>(context, listen: false).setAutoLogging(true);
     Provider.of<LoginModel>(context, listen: false).setLoading(true);
-    final username = usernameController.text;
-    final password = passwordController.text;
-
-    sharedPrefs.setString("username", username);
-    sharedPrefs.setString("password", password);
-
     User user = Provider.of<LoginModel>(context, listen: false).user;
     Result result;
     try {
-      result = await user.login(username, password,
-          useLocalSession: useLocalSession, keepLocalSession: keepLocalSession);
+      result = await user.loginFromLocal(keepLocalSession: keepLocalSession);
     } catch (e) {
       SnackBar snackBar = SnackBar(
           content: Text('呜呜呜，登录失败了……\n失败原因：${(e as DioException).error}'));
@@ -98,7 +89,7 @@ class _LoginWidgetState extends State<LoginWidget> {
     }
     if (sharedPrefs.getBool('localSessionExist') == true) {
       Future.microtask(() {
-        login(useLocalSession: true, keepLocalSession: true);
+        localLogin(keepLocalSession: true);
       });
     }
     final textTheme = Theme.of(context)
@@ -129,7 +120,42 @@ class _LoginWidgetState extends State<LoginWidget> {
               physics: const NeverScrollableScrollPhysics(),
               controller: controller,
               children: [
-                if (kDebugMode)
+                Column(children: [
+                  Expanded(
+                      flex: 6,
+                      child: Align(
+                          alignment: Alignment.bottomLeft,
+                          child: Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 32, vertical: 46),
+                              child: Text("  登入",
+                                  style: textTheme.displayMedium)))),
+                  Expanded(
+                    flex: 11,
+                    child: Column(
+                      children: [
+                        const WebviewLoginCard(),
+                        TextButton(
+                          child: Text("备用登录方式 >",
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelSmall
+                                  ?.copyWith(
+                                      color: Theme.of(context).hintColor)),
+                          onPressed: () {
+                            controller.animateToPage(1,
+                                duration: const Duration(milliseconds: 500),
+                                curve: Curves.easeOut);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Text("© GoForceX | 2021 - 2024",
+                            style: TextStyle(color: Colors.grey, fontSize: 10)),
+                        const Text("© 北京市八一学校 NPC 信息社 | 2023 - 2024",
+                            style: TextStyle(color: Colors.grey, fontSize: 10)),
+                        const SizedBox(height: 10),
+                ]),
                 Column(children: [
                   Expanded(
                       flex: 3,
@@ -148,16 +174,16 @@ class _LoginWidgetState extends State<LoginWidget> {
                               usernameController: usernameController,
                               passwordController: passwordController),
                           TextButton(
-                            child: Text("备用登录方式 >",
+                            child: Text("< 返回",
                                 style: Theme.of(context)
                                     .textTheme
                                     .labelSmall
                                     ?.copyWith(
                                         color: Theme.of(context).hintColor)),
                             onPressed: () {
-                              controller.animateToPage(1,
+                              controller.animateToPage(0,
                                   duration: const Duration(milliseconds: 500),
-                                  curve: Curves.easeOut);
+                                  curve: Curves.easeInOut);
                             },
                           ),
                         ],
@@ -167,43 +193,6 @@ class _LoginWidgetState extends State<LoginWidget> {
                   const Text("© 北京市八一学校 NPC 信息社 | 2023 - 2024",
                       style: TextStyle(color: Colors.grey, fontSize: 10)),
                   const SizedBox(height: 10),
-                ]),
-                Column(children: [
-                  Expanded(
-                      flex: 6,
-                      child: Align(
-                          alignment: Alignment.bottomLeft,
-                          child: Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 32, vertical: 46),
-                              child: Text("  登入",
-                                  style: textTheme.displayMedium)))),
-                  Expanded(
-                    flex: 11,
-                    child: Column(
-                      children: [
-                        const WebviewLoginCard(),
-                        if (kDebugMode)
-                        TextButton(
-                          child: Text("< 返回",
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .labelSmall
-                                  ?.copyWith(
-                                      color: Theme.of(context).hintColor)),
-                          onPressed: () {
-                            controller.animateToPage(0,
-                                duration: const Duration(milliseconds: 500),
-                                curve: Curves.easeInOut);
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Text("© GoForceX | 2021 - 2024",
-                            style: TextStyle(color: Colors.grey, fontSize: 10)),
-                        const Text("© 北京市八一学校 NPC 信息社 | 2023 - 2024",
-                            style: TextStyle(color: Colors.grey, fontSize: 10)),
-                        const SizedBox(height: 10),
                 ]),
               ],
             ));
