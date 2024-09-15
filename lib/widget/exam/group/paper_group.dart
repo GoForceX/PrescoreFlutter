@@ -1,24 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:prescore_flutter/main.dart';
+import 'package:prescore_flutter/util/paper_group_db.dart';
 import 'package:prescore_flutter/widget/exam/group/detail_card_group.dart';
 import 'package:provider/provider.dart';
 
 import '../../../model/exam_model.dart';
 import '../../../util/struct.dart';
 
-class ExamGroup extends StatefulWidget {
+class PaperGroup extends StatefulWidget {
   final String examId;
-  const ExamGroup({Key? key, required this.examId}) : super(key: key);
+  const PaperGroup({Key? key, required this.examId}) : super(key: key);
 
   @override
-  State<ExamGroup> createState() => _ExamGroupState();
+  State<PaperGroup> createState() => _PaperGroupState();
 }
 
-class _ExamGroupState extends State<ExamGroup>
+class _PaperGroupState extends State<PaperGroup>
     with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
   List<List<Paper>> papersGroupList = [];
+
+  Future<void> updateLocalDb() async {
+    await deletePapersGroups(widget.examId);
+    await savePapersGroups(papersGroupList);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,8 +34,7 @@ class _ExamGroupState extends State<ExamGroup>
       builder:
           (BuildContext consumerContext, ExamModel examModel, Widget? child) {
         List<Paper> papers = [];
-        if ((examModel.isPaperLoaded || examModel.isPreviewPaperLoaded) &&
-            examModel.pageAnimationComplete) {
+        if (examModel.isPaperLoaded) {
           List<String> absentPaperIds =
               examModel.absentPapers.map((paper) => paper.paperId!).toList();
           papers = examModel.papers
@@ -36,6 +42,30 @@ class _ExamGroupState extends State<ExamGroup>
                   !absentPaperIds.contains(paper.paperId) &&
                   paper.source == Source.common)
               .toList();
+          readPaperGroups(widget.examId)
+              .then((List<List<String>> papersGroups) {
+            logger.d("readPaperGroups $papersGroups");
+            if (papersGroupList.isNotEmpty) {
+              return;
+            }
+            for (List<String> idGroup in papersGroups) {
+              List<Paper> papersGroup = [];
+              for (String paperId in idGroup) {
+                List fetchRes =
+                    papers.where((paper) => paper.paperId == paperId).toList();
+                if (fetchRes.isNotEmpty) {
+                  papersGroup.add(fetchRes[0]);
+                }
+              }
+              papersGroupList.add(papersGroup);
+            }
+            setState(() {});
+          });
+        } else {
+          return Center(
+              child: Container(
+                  margin: const EdgeInsets.all(10),
+                  child: const CircularProgressIndicator()));
         }
         return Stack(children: [
           if (papersGroupList.isNotEmpty)
@@ -45,7 +75,13 @@ class _ExamGroupState extends State<ExamGroup>
               itemCount: papersGroupList.length,
               itemBuilder: (BuildContext context, int index) {
                 return DetailCardGroup(
-                    paperGroups: papersGroupList[index], examId: widget.examId);
+                    paperGroups: papersGroupList[index],
+                    examId: widget.examId,
+                    deleteCallback: () {
+                      papersGroupList.remove(papersGroupList[index]);
+                      updateLocalDb();
+                      setState(() {});
+                    });
               },
             )
           else
@@ -81,6 +117,7 @@ class _ExamGroupState extends State<ExamGroup>
                                   callback: (result) {
                                     setState(() {
                                       papersGroupList.add(result);
+                                      updateLocalDb();
                                     });
                                   });
                             });

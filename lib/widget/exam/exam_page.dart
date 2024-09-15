@@ -7,7 +7,7 @@ import '../../model/exam_model.dart';
 import 'package:prescore_flutter/util/user_util/user_util.dart';
 import 'dashboard/exam_dashboard.dart';
 import 'detail/exam_detail.dart';
-import 'group/exam_group.dart';
+import 'group/paper_group.dart';
 
 @RoutePage()
 class ExamPage extends StatefulWidget {
@@ -56,7 +56,7 @@ class _ExamPageState extends State<ExamPage> {
                 child: ExamDetail(examId: widget.uuid),
               ),
               Center(
-                child: ExamGroup(examId: widget.uuid),
+                child: PaperGroup(examId: widget.uuid),
               ),
               Center(
                 child: ExamDashboard(

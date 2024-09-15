@@ -30,9 +30,13 @@ extension PapersExtension on List<Paper> {
 class DetailCardGroup extends StatefulWidget {
   final String examId;
   final List<Paper> paperGroups;
+  final Function() deleteCallback;
 
   const DetailCardGroup(
-      {Key? key, required this.paperGroups, required this.examId})
+      {Key? key,
+      required this.paperGroups,
+      required this.examId,
+      required this.deleteCallback})
       : super(key: key);
 
   @override
@@ -64,17 +68,16 @@ class _DetailCardGroupState extends State<DetailCardGroup>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Wrap(
-                    alignment: WrapAlignment.center,
-                    children: widget.paperGroups
-                        .map((paper) => Container(
-                            margin: const EdgeInsets.symmetric(
-                                vertical: 1, horizontal: 2),
-                            child: TagCard(text: paper.name)))
-                        .toList()),
-              ],
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: widget.paperGroups
+                    .map((paper) => Container(
+                        margin: const EdgeInsets.symmetric(
+                            vertical: 1, horizontal: 2),
+                        child: TagCard(text: paper.name)))
+                    .toList(),
+              ),
             ),
             Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -235,6 +238,7 @@ class _DetailCardGroupState extends State<DetailCardGroup>
       margin: const EdgeInsets.all(8.0),
       child: InkWell(
         borderRadius: BorderRadius.circular(12.0),
+        onLongPress: () => widget.deleteCallback(),
         child: infoCard,
       ),
     );
