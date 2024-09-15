@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
-import 'package:prescore_flutter/util/user_util.dart';
+import 'package:prescore_flutter/util/user_util/user_util.dart';
 import 'package:prescore_flutter/widget/component.dart';
 import 'package:prescore_flutter/widget/paper/paper_page.dart';
 import 'package:provider/provider.dart';

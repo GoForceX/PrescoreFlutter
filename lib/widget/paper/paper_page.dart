@@ -4,11 +4,11 @@ import 'package:prescore_flutter/widget/paper/paper_detail.dart';
 import 'package:prescore_flutter/widget/paper/paper_marking.dart';
 import 'package:prescore_flutter/widget/paper/paper_photo.dart';
 import 'package:prescore_flutter/widget/paper/paper_distrib.dart';
+import 'package:prescore_flutter/util/user_util/user_util.dart';
 import 'package:provider/provider.dart';
 
 import '../../main.dart';
 import '../../model/paper_model.dart';
-import '../../util/user_util.dart';
 
 @RoutePage()
 class PaperPage extends StatefulWidget {
@@ -68,7 +68,9 @@ class _PaperPageState extends State<PaperPage> {
                 ),
                 Center(
                   child: PaperDistribution(
-                      examId: widget.examId, paperId: widget.paperId, userScore: widget.userScore),
+                      examId: widget.examId,
+                      paperId: widget.paperId,
+                      userScore: widget.userScore),
                 ),
               ],
               onPageChanged: (value) {
@@ -87,11 +89,15 @@ class _PaperPageState extends State<PaperPage> {
                 ),
                 Center(
                   child: PaperPhoto(
-                      examId: widget.examId, paperId: widget.paperId, showNonFinalAlert: true),
+                      examId: widget.examId,
+                      paperId: widget.paperId,
+                      showNonFinalAlert: true),
                 ),
                 Center(
                   child: PaperDetail(
-                      examId: widget.examId, paperId: widget.paperId, nonFinalAlert: true),
+                      examId: widget.examId,
+                      paperId: widget.paperId,
+                      nonFinalAlert: true),
                 )
               ],
               onPageChanged: (value) {

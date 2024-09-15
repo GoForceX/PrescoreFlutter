@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../main.dart';
 import '../../model/exam_model.dart';
-import '../../util/user_util.dart';
+import 'package:prescore_flutter/util/user_util/user_util.dart';
 import 'dashboard/exam_dashboard.dart';
 import 'detail/exam_detail.dart';
 import 'group/exam_group.dart';

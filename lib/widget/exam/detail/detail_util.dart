@@ -1,5 +1,6 @@
 import 'package:prescore_flutter/main.dart';
 import 'package:prescore_flutter/util/struct.dart';
+import 'package:prescore_flutter/util/user_util/user_util.dart';
 import 'package:provider/provider.dart';
 
 import '../../../model/exam_model.dart';
@@ -51,19 +52,20 @@ void setUploadListener(context) {
           Provider.of<ExamModel>(context, listen: false)
               .user
               .uploadPaperData(processedPaper);
-          if (BaseSingleton.singleton.sharedPreferences.getBool("allowTelemetry") == true) {
+          if (BaseSingleton.singleton.sharedPreferences
+                  .getBool("allowTelemetry") ==
+              true) {
             Provider.of<ExamModel>(context, listen: false)
-              .user
-              .fetchPaperClassList(paper.paperId!)
-              .then((value) {
-                if (value.state && value.result != null) {
-                  Provider.of<ExamModel>(context, listen: false)
-                      .user
-                      .uploadPaperClassData(value.result!, paper.paperId!);
-                }
-              });
+                .user
+                .fetchPaperClassList(paper.paperId!)
+                .then((value) {
+              if (value.state && value.result != null) {
+                Provider.of<ExamModel>(context, listen: false)
+                    .user
+                    .uploadPaperClassData(value.result!, paper.paperId!);
+              }
+            });
           }
-          
         } catch (e) {
           Provider.of<ExamModel>(context, listen: false)
               .setUploadStatus(UploadStatus.incomplete);

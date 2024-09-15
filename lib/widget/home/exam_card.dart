@@ -5,7 +5,7 @@ import 'package:prescore_flutter/widget/exam/exam_page.dart';
 import 'package:prescore_flutter/widget/open_container.dart';
 
 //import '../../main.gr.dart';
-import '../../util/user_util.dart';
+import 'package:prescore_flutter/util/user_util/user_util.dart';
 
 class ExamCard extends StatelessWidget {
   const ExamCard(

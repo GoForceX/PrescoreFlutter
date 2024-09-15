@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:prescore_flutter/constants.dart';
 import 'package:prescore_flutter/main.dart';
 import 'package:prescore_flutter/model/login_model.dart';
+import 'package:prescore_flutter/util/user_util/user_util.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -183,7 +184,10 @@ class _WebviewLoginCardState extends State<WebviewLoginCard>
             Map<String, dynamic> json = jsonDecode(response);
             String xToken = json["result"];
             if (json["errorCode"] == 0) {
-              model.user.session = Session(sessionId: tlsysSessionId!, xToken: xToken, loginType: LoginType.webview);
+              model.user.session = Session(
+                  sessionId: tlsysSessionId!,
+                  xToken: xToken,
+                  loginType: LoginType.webview);
               model.user.keepLocalSession =
                   sharedPrefs.getBool("keepLogin") ?? true;
               BaseSingleton.singleton.dio.options.headers["XToken"] = xToken;

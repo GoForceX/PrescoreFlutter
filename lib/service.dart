@@ -2,13 +2,13 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:path/path.dart';
+import 'package:prescore_flutter/util/user_util/user_util.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:prescore_flutter/main.dart';
 import 'package:prescore_flutter/util/struct.dart';
-import 'package:prescore_flutter/util/user_util.dart';
 import 'package:collection/collection.dart';
 //import './util/flutter_log_local/flutter_log_local.dart';
 
@@ -91,8 +91,7 @@ Future<void> login({bool force = true}) async {
       await channel.invokeMethod(
           'setupForeground', '${user.basicInfo?.name} 已登录');
     } else {
-      await channel.invokeMethod(
-          'setupForeground', '已登录');
+      await channel.invokeMethod('setupForeground', '已登录');
     }
     return;
   } else {
@@ -302,7 +301,8 @@ Future<void> serviceMain() async {
           case "fetchPaper":
             {
               Future normalPaper = user.fetchPaper(call.arguments["examId"]);
-              Future<Result> previewPaper = Future.value(Result(state: true, result: [[], []], message: ''));
+              Future<Result> previewPaper = Future.value(
+                  Result(state: true, result: [[], []], message: ''));
               if (showMoreSubject) {
                 bool previewScore = BaseSingleton.singleton.sharedPreferences
                         .getBool('tryPreviewScore') ==
