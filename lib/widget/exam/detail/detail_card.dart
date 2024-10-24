@@ -1,9 +1,13 @@
 //import 'package:auto_route/auto_route.dart';
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_file_downloader/flutter_file_downloader.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
-import 'package:prescore_flutter/util/user_util/user_util.dart';
+import 'package:prescore_flutter/constants.dart';
+import 'package:prescore_flutter/util/user_util.dart';
 import 'package:prescore_flutter/widget/component.dart';
 import 'package:prescore_flutter/widget/paper/paper_page.dart';
 import 'package:provider/provider.dart';
@@ -14,6 +18,84 @@ import 'package:prescore_flutter/main.dart';
 import 'package:prescore_flutter/model/exam_model.dart';
 import 'package:prescore_flutter/util/struct.dart';
 import 'package:prescore_flutter/widget/open_container.dart';
+
+class LongPressDialog extends StatefulWidget {
+  final Paper paper;
+  const LongPressDialog({super.key, required this.paper});
+
+  @override
+  LongPressDialogState createState() => LongPressDialogState();
+}
+
+class LongPressDialogState extends State<LongPressDialog> {
+  void copyToClipboard() {
+    Clipboard.setData(ClipboardData(text: widget.paper.toString()));
+    Future.microtask(() {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text("已复制到剪贴板"), duration: Duration(seconds: 1)));
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: SelectableText("[${widget.paper.subjectId}] ${widget.paper.name}",
+          style: Theme.of(context).textTheme.headlineSmall),
+      content: SingleChildScrollView(
+          child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: {
+                "ExamId": widget.paper.examId,
+                "PaperId": widget.paper.paperId,
+                "Id": widget.paper.id,
+                "题卡": widget.paper.answerSheet,
+                "状态": widget.paper.markingStatus.name,
+                "来源": widget.paper.source.name,
+              }.entries.map((entry) {
+                final key = entry.key;
+                final value = entry.value;
+                return Wrap(children: [
+                  SelectableText("$key: ",
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(fontWeight: FontWeight.bold)),
+                  SelectableText(value ?? "Null",
+                      style: Theme.of(context).textTheme.bodySmall)
+                ]);
+              }).toList())),
+      actions: <Widget>[
+        if (widget.paper.answerSheet != null)
+          TextButton(
+            onPressed: () async {
+              FileDownloader.downloadFile(
+                url:
+                    "$zhixueDownloadUserFileUrl/?subSetId=${widget.paper.id}&examId=${widget.paper.examId}",
+                name: widget.paper.answerSheet,
+                notificationType: NotificationType.all,
+              );
+              Navigator.pop(context, '题卡');
+            },
+            child: const Text('题卡'),
+          ),
+        TextButton(
+          onPressed: () async {
+            copyToClipboard();
+            Navigator.pop(context, '复制');
+          },
+          child: const Text('复制'),
+        ),
+        TextButton(
+          onPressed: () async {
+            Navigator.pop(context, '确定');
+          },
+          child: const Text('确定'),
+        ),
+      ],
+    );
+  }
+}
 
 class DetailCard extends StatefulWidget {
   final String examId;
@@ -32,16 +114,14 @@ class _DetailCardState extends State<DetailCard> with TickerProviderStateMixin {
           .getBool("defaultShowAllSubject") ??
       false;
 
-  copyToClipboard() {
-    if (kReleaseMode) {
-      //TODO
-      return;
+  void onLongPress() {
+    if (!kReleaseMode) {
+      showDialog<String>(
+        context: context,
+        builder: (BuildContext dialogContext) =>
+            LongPressDialog(paper: widget.paper),
+      );
     }
-    Clipboard.setData(ClipboardData(text: widget.paper.toString()));
-    Future.microtask(() {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text("已复制到剪贴板"), duration: Duration(seconds: 1)));
-    });
   }
 
   @override
@@ -308,7 +388,7 @@ class _DetailCardState extends State<DetailCard> with TickerProviderStateMixin {
             child: InkWell(
               borderRadius: BorderRadius.circular(12.0),
               onTap: openContainer,
-              onLongPress: () => copyToClipboard(),
+              onLongPress: () => onLongPress(),
               child: infoCard,
             ),
           );
@@ -319,7 +399,7 @@ class _DetailCardState extends State<DetailCard> with TickerProviderStateMixin {
         margin: const EdgeInsets.all(8.0),
         child: InkWell(
           borderRadius: BorderRadius.circular(12.0),
-          onLongPress: () => copyToClipboard(),
+          onLongPress: () => onLongPress(),
           child: infoCard,
         ),
       );

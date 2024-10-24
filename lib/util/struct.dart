@@ -19,9 +19,8 @@ enum LoginType {
   app,
   parWeakCheckLogin;
 
-
   static LoginType getTypeByName(String name) =>
-    LoginType.values.firstWhere((type) => type.name == name);
+      LoginType.values.firstWhere((type) => type.name == name);
 }
 
 class Session {
@@ -35,7 +34,16 @@ class Session {
   String? userId;
   String? serverToken;
 
-  Session({this.loginName, this.password ,this.tgt, this.st, required this.sessionId, required this.xToken, required this.loginType, this.userId, this.serverToken});
+  Session(
+      {this.loginName,
+      this.password,
+      this.tgt,
+      this.st,
+      required this.sessionId,
+      required this.xToken,
+      required this.loginType,
+      this.userId,
+      this.serverToken});
 
   @override
   String toString() {
@@ -150,7 +158,13 @@ enum Source {
   preview,
 }
 
-enum MarkingStatus { unknown, m4CompleteMarking, m3marking, noMarkingStatus }
+enum MarkingStatus {
+  unknown,
+  m4CompleteMarking,
+  m3marking,
+  m2startScan,
+  noMarkingStatus
+}
 
 class Paper {
   String examId;
@@ -650,7 +664,10 @@ class DistributionData {
   List<DistributionScoreItem> prefix;
   List<DistributionScoreItem> suffix;
 
-  DistributionData({List<DistributionScoreItem>? distribute, List<DistributionScoreItem>? prefix, List<DistributionScoreItem>? suffix}) 
+  DistributionData(
+      {List<DistributionScoreItem>? distribute,
+      List<DistributionScoreItem>? prefix,
+      List<DistributionScoreItem>? suffix})
       : distribute = distribute ?? [],
         prefix = prefix ?? [],
         suffix = suffix ?? [];
@@ -670,7 +687,8 @@ extension DistributionScoreItemExtension on List<DistributionScoreItem> {
     }
     List<DistributionScoreItem> res = [];
     score.forEach((key, value) {
-      res.add(DistributionScoreItem(score: (key * step).toDouble(), sum: value));
+      res.add(
+          DistributionScoreItem(score: (key * step).toDouble(), sum: value));
     });
     res.sort((a, b) => a.score.compareTo(b.score));
     return res;
