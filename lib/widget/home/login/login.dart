@@ -12,7 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:prescore_flutter/util/struct.dart';
 import 'package:prescore_flutter/service.dart' show refreshService;
-import 'package:prescore_flutter/util/user_util.dart';
+import 'package:prescore_flutter/util/user_util/user_util.dart';
 
 class LoginWidget extends StatefulWidget {
   const LoginWidget({Key? key}) : super(key: key);
@@ -59,8 +59,8 @@ class _LoginWidgetState extends State<LoginWidget> {
           model.setUser(User());
           try {
             Navigator.of(context, rootNavigator: true)
-              .pushReplacementNamed(HomeRoute.name);
-          } catch(_) {}
+                .pushReplacementNamed(HomeRoute.name);
+          } catch (_) {}
         };
       } else {
         SnackBar snackBar =
@@ -164,7 +164,8 @@ class _LoginWidgetState extends State<LoginWidget> {
                       child: Align(
                           alignment: Alignment.bottomLeft,
                           child: Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 32, vertical: 46),
+                              margin: const EdgeInsets.symmetric(
+                                  horizontal: 32, vertical: 46),
                               child: Text("  登入",
                                   style: textTheme.displayMedium)))),
                   Expanded(
@@ -189,10 +190,10 @@ class _LoginWidgetState extends State<LoginWidget> {
                     ),
                   ),
                   const Text("© GoForceX | 2021 - 2024",
-                            style: TextStyle(color: Colors.grey, fontSize: 10)),
-                        const Text("© 北京市八一学校 NPC 信息社 | 2023 - 2024",
-                            style: TextStyle(color: Colors.grey, fontSize: 10)),
-                        const SizedBox(height: 10),
+                      style: TextStyle(color: Colors.grey, fontSize: 10)),
+                  const Text("© 北京市八一学校 NPC 信息社 | 2023 - 2024",
+                      style: TextStyle(color: Colors.grey, fontSize: 10)),
+                  const SizedBox(height: 10),
                 ])
               ],
             ));
