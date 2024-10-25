@@ -20,14 +20,14 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 315532800,
-        "narHash": "sha256-fWnXK4sfuhE+OCwKz4THrKmA7KqFmvw7dhbp+zn5wTI=",
+        "lastModified": 1729595356,
+        "narHash": "sha256-c0FRqkIyt1UhmzMN+u6O4y6l2Roj7rZEnpMfrbAY5OI=",
         "type": "tarball",
-        "url": "https://mirrors.ustc.edu.cn/nix-channels/nixpkgs-unstable/nixexprs.tar.xz"
+        "url": "https://mirrors.ustc.edu.cn/nix-channels/nixos-24.05/nixexprs.tar.xz"
       },
       "original": {
         "type": "tarball",
-        "url": "https://mirrors.ustc.edu.cn/nix-channels/nixpkgs-unstable/nixexprs.tar.xz"
+        "url": "https://mirrors.ustc.edu.cn/nix-channels/nixos-24.05/nixexprs.tar.xz"
       }
     },
     "root": {

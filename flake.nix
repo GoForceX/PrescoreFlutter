@@ -1,7 +1,7 @@
 {
   description = "Flutter 3.19.x";
   inputs = {
-    nixpkgs.url = "https://mirrors.ustc.edu.cn/nix-channels/nixpkgs-unstable/nixexprs.tar.xz";
+    nixpkgs.url = "https://mirrors.ustc.edu.cn/nix-channels/nixos-24.05/nixexprs.tar.xz";
     flake-utils.url = "github:numtide/flake-utils";
   };
   
