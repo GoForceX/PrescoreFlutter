@@ -277,10 +277,10 @@ class ExamDiagnosis {
 }
 
 class TeacherMarking {
-  String role;
+  String? role;
   double score;
-  String teacherId;
-  String teacherName;
+  String? teacherId;
+  String? teacherName;
   TeacherMarking({
     required this.role,
     required this.score,

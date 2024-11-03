@@ -38,7 +38,9 @@ class QuestionCardState extends State<QuestionCard>
         complexMarking = true;
       }
       for (var teacher in subQuestion.teacherMarkingRecords) {
-        teachersName.add(teacher.teacherName);
+        if (teacher.teacherName != null) {
+          teachersName.add(teacher.teacherName!);
+        }
       }
     }
     if (teachersName.isNotEmpty) {
@@ -68,7 +70,9 @@ class QuestionCardState extends State<QuestionCard>
       List<Widget> subTeachersWidget = [];
       for (TeacherMarking teacher in subQuestion.teacherMarkingRecords) {
         //遍历该空所有判卷人
-        allTeachersName.add(teacher.teacherName);
+        if (teacher.teacherName != null) {
+          allTeachersName.add(teacher.teacherName!);
+        }
       }
       if (allTeachersName.isNotEmpty) {
         subTeachersWidget.add(const SizedBox(width: 8));
@@ -105,10 +109,7 @@ class QuestionCardState extends State<QuestionCard>
                               : Colors.red),
             ),
           ),
-          if (BaseSingleton.singleton.sharedPreferences
-                  .getBool("showMarkingRecords") ==
-              true)
-            Row(children: subTeachersWidget),
+          Row(children: subTeachersWidget),
           Text(
             "  $subStudentScore",
             style: const TextStyle(fontSize: 24),
@@ -231,17 +232,10 @@ class QuestionCardState extends State<QuestionCard>
                   ),
                 )),
             //const SizedBox(height: 4),
-            if (BaseSingleton.singleton.sharedPreferences
-                    .getBool("showMarkingRecords") ==
-                true) ...[
-              Row(
-                children: allTeachersWidget,
-              ),
-              const SizedBox(height: 8),
-            ],
-            const SizedBox(
-              height: 4,
+            Row(
+              children: allTeachersWidget,
             ),
+            const SizedBox(height: 10),
             LinearPercentIndicator(
               lineHeight: 8.0,
               percent: widget.question.userScore / widget.question.fullScore,
@@ -313,7 +307,8 @@ class QuestionCardState extends State<QuestionCard>
               }
             }),
             Builder(builder: (BuildContext context) {
-              if (widget.question.userAnswer != null && widget.question.isSelected) {
+              if (widget.question.userAnswer != null &&
+                  widget.question.isSelected) {
                 String answer = "?";
                 if (widget.question.answerHtml != null) {
                   if (widget.question.answerHtml!.length <= 8) {
