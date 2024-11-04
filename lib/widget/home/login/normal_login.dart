@@ -8,12 +8,12 @@ import 'package:prescore_flutter/constants.dart';
 import 'package:prescore_flutter/main.dart';
 import 'package:prescore_flutter/main.gr.dart';
 import 'package:prescore_flutter/model/login_model.dart';
+import 'package:prescore_flutter/util/user_util/user_util.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:prescore_flutter/util/struct.dart';
 import 'package:prescore_flutter/service.dart' show refreshService;
-import 'package:prescore_flutter/util/user_util.dart';
 
 class ClearButton extends StatelessWidget {
   const ClearButton({super.key, required this.controller});
@@ -47,7 +47,7 @@ class _NormalLoginCardState extends State<NormalLoginCard> {
   final bool useSsoLogin = false;
 
   void login({keepLocalSession = false}) async {
-      LoginModel model = Provider.of<LoginModel>(context, listen: false);
+    LoginModel model = Provider.of<LoginModel>(context, listen: false);
     model.setLoading(true);
     Completer completer = Completer();
 
@@ -84,8 +84,7 @@ class _NormalLoginCardState extends State<NormalLoginCard> {
               keepLocalSession: keepLocalSession);
         }
       } catch (e) {
-        SnackBar snackBar = SnackBar(
-            content: Text('呜呜呜，登录失败了……\n失败原因：$e'));
+        SnackBar snackBar = SnackBar(content: Text('呜呜呜，登录失败了……\n失败原因：$e'));
         model.setLoading(false);
         model.setAutoLogging(false);
         if (mounted) {
@@ -122,8 +121,8 @@ class _NormalLoginCardState extends State<NormalLoginCard> {
       model.setLoading(false);
       model.setAutoLogging(false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('呜呜呜，登录失败了……\n失败原因：$message')));
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('呜呜呜，登录失败了……\n失败原因：$message')));
       }
     });
     return;

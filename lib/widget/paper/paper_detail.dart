@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:prescore_flutter/util/user_util/user_util.dart';
 import 'package:prescore_flutter/widget/paper/question_card.dart';
 import 'package:provider/provider.dart';
 import 'package:scrollview_observer/scrollview_observer.dart';
@@ -147,12 +148,12 @@ class _PaperDetailState extends State<PaperDetail>
               SliverList(
                 delegate: SliverChildListDelegate([
                   if (widget.nonFinalAlert)
-                   const Row(children: [
-                          SizedBox(width: 20),
-                          Icon(Icons.warning_amber_rounded,
-                              size: 16, color: Colors.red),
-                          Text(" 判卷未完成，不代表最终成绩，可能误标零分")
-                        ]),
+                    const Row(children: [
+                      SizedBox(width: 20),
+                      Icon(Icons.warning_amber_rounded,
+                          size: 16, color: Colors.red),
+                      Text(" 判卷未完成，不代表最终成绩，可能误标零分")
+                    ]),
                   ...questionCards,
                   const SizedBox(height: 84), // to avoid FAB covering last item
                 ]),

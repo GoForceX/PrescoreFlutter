@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:prescore_flutter/main.dart';
 import 'package:prescore_flutter/util/struct.dart';
+import 'package:prescore_flutter/util/user_util/extensions/telemetry_util.dart';
 import 'package:provider/provider.dart';
 
 import '../../../model/exam_model.dart';

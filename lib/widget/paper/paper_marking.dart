@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:prescore_flutter/util/struct.dart';
+import 'package:prescore_flutter/util/user_util/user_util.dart';
 import 'package:provider/provider.dart';
 import 'package:scrollview_observer/scrollview_observer.dart';
 
@@ -252,8 +253,6 @@ class QuestionProgressCardState extends State<QuestionProgressCard>
             ),
           ],
         ));
-    return Card.filled(
-        margin: const EdgeInsets.all(8.0),
-        child: body);
+    return Card.filled(margin: const EdgeInsets.all(8.0), child: body);
   }
 }

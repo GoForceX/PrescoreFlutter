@@ -3,6 +3,7 @@ import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:prescore_flutter/main.dart';
 import 'package:prescore_flutter/model/login_model.dart';
+import 'package:prescore_flutter/util/user_util/user_util.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -39,15 +40,14 @@ class Exams extends StatelessWidget {
       //title: Text("考试列表"),
       forceElevated: true,
       flexibleSpace: FlexibleSpaceBar(
-        title: Text("考试列表",
-            style: Theme.of(context).textTheme.titleLarge),
-        titlePadding:
-            const EdgeInsetsDirectional.only(start: 56, bottom: 14),
+        title: Text("考试列表", style: Theme.of(context).textTheme.titleLarge),
+        titlePadding: const EdgeInsetsDirectional.only(start: 56, bottom: 14),
         expandedTitleScale: 1.8,
       ),
       actions: [
         IconButton(
-            onPressed: () => launchUrl(Uri.parse("https://bjbybbs.com/t/Revealer")),
+            onPressed: () =>
+                launchUrl(Uri.parse("https://bjbybbs.com/t/Revealer")),
             icon: const Icon(Icons.insert_comment))
       ],
       expandedHeight: 200.0,
@@ -97,14 +97,12 @@ class Exams extends StatelessWidget {
                 await key.currentState?.load();
               }
             : null,
-        childBuilder: (BuildContext ct, ScrollPhysics sp) =>
-            CustomScrollView(
+        childBuilder: (BuildContext ct, ScrollPhysics sp) => CustomScrollView(
               physics: sp,
               slivers: slivers,
             ));
   }
 }
-
 
 class ExamsList extends StatefulWidget {
   final EasyRefreshController controller;

@@ -48,11 +48,12 @@ serviceEntry() async {
 bool firebaseAnalyseEnable = kReleaseMode;
 bool sentryAnalyseEnable = kReleaseMode;
 
-class HttpsTurstAll extends HttpOverrides{
+class HttpsTurstAll extends HttpOverrides {
   @override
-  HttpClient createHttpClient(SecurityContext? context){
+  HttpClient createHttpClient(SecurityContext? context) {
     return super.createHttpClient(context)
-      ..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+      ..badCertificateCallback =
+          (X509Certificate cert, String host, int port) => true;
   }
 }
 
@@ -182,7 +183,6 @@ class MyApp extends StatelessWidget {
       "checkExamsInterval": 15,
       "brandColor": "天蓝色",
       "useDynamicColor": true,
-      "showMarkingRecords": false,
       "showMoreSubject": false,
       "tryPreviewScore": false,
       "developMode": false,

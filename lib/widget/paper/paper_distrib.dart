@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:prescore_flutter/model/paper_model.dart';
 import 'package:prescore_flutter/util/struct.dart';
+import 'package:prescore_flutter/util/user_util/user_util.dart';
 import 'package:provider/provider.dart';
 
 class PaperDistribution extends StatefulWidget {
@@ -12,7 +13,10 @@ class PaperDistribution extends StatefulWidget {
   final String paperId;
   final double? userScore;
   const PaperDistribution(
-      {Key? key, required this.paperId, required this.examId, required this.userScore})
+      {Key? key,
+      required this.paperId,
+      required this.examId,
+      required this.userScore})
       : super(key: key);
 
   @override
@@ -60,7 +64,9 @@ class _PaperDistributionState extends State<PaperDistribution>
                 child: Container(
                     padding: const EdgeInsets.all(12.0),
                     child: TrendChart(
-                        prefixSpots: prefixSpots, suffixSpots: suffixSpots, userScore: widget.userScore))),
+                        prefixSpots: prefixSpots,
+                        suffixSpots: suffixSpots,
+                        userScore: widget.userScore))),
             Center(
                 child: Text("(竖滑变更分段，长按查看标签)",
                     style: Theme.of(context)
@@ -94,7 +100,10 @@ class TrendChart extends StatefulWidget {
   final double? userScore;
 
   const TrendChart(
-      {super.key, required this.prefixSpots, required this.suffixSpots, this.userScore});
+      {super.key,
+      required this.prefixSpots,
+      required this.suffixSpots,
+      this.userScore});
 
   @override
   State<TrendChart> createState() => _TrendChartState();
@@ -167,20 +176,24 @@ class _TrendChartState extends State<TrendChart> {
                               .primary
                               .withOpacity(0.1))),
                 ],
-                
-                extraLinesData: widget.userScore != null ? ExtraLinesData(verticalLines: [
-                  VerticalLine(
-                    label: VerticalLineLabel(
-                        labelResolver: (p0) => widget.userScore.toString(),
-                        show: true,
-                        alignment: (widget.userScore ?? 0) > findMedian() ? Alignment.topLeft : Alignment.topRight,
-                        style: const TextStyle(
-                            fontSize: 8, fontWeight: FontWeight.bold)),
-                    x: widget.userScore ?? 0,
-                    color: Theme.of(context).colorScheme.secondary,
-                    strokeWidth: 1,
-                  )
-                ]) : null,
+                extraLinesData: widget.userScore != null
+                    ? ExtraLinesData(verticalLines: [
+                        VerticalLine(
+                          label: VerticalLineLabel(
+                              labelResolver: (p0) =>
+                                  widget.userScore.toString(),
+                              show: true,
+                              alignment: (widget.userScore ?? 0) > findMedian()
+                                  ? Alignment.topLeft
+                                  : Alignment.topRight,
+                              style: const TextStyle(
+                                  fontSize: 8, fontWeight: FontWeight.bold)),
+                          x: widget.userScore ?? 0,
+                          color: Theme.of(context).colorScheme.secondary,
+                          strokeWidth: 1,
+                        )
+                      ])
+                    : null,
                 titlesData: FlTitlesData(
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
@@ -249,7 +262,8 @@ class _TrendChartState extends State<TrendChart> {
 class Histogram extends StatefulWidget {
   final List<DistributionScoreItem> distribute;
   final int initStep;
-  const Histogram({super.key, required this.distribute, required this.initStep});
+  const Histogram(
+      {super.key, required this.distribute, required this.initStep});
 
   @override
   State<StatefulWidget> createState() => HistogramState();
@@ -271,7 +285,7 @@ class HistogramState extends State<Histogram> {
     } else {
       style = const TextStyle(fontSize: 8);
     }
-    
+
     //String text = "[${value.toInt()}, ${value.toInt() + widget.step})";
 
     return SideTitleWidget(

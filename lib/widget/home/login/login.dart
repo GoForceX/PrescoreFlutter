@@ -12,7 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:prescore_flutter/util/struct.dart';
 import 'package:prescore_flutter/service.dart' show refreshService;
-import 'package:prescore_flutter/util/user_util.dart';
+import 'package:prescore_flutter/util/user_util/user_util.dart';
 
 class LoginWidget extends StatefulWidget {
   const LoginWidget({Key? key}) : super(key: key);
@@ -59,8 +59,8 @@ class _LoginWidgetState extends State<LoginWidget> {
           model.setUser(User());
           try {
             Navigator.of(context, rootNavigator: true)
-              .pushReplacementNamed(HomeRoute.name);
-          } catch(_) {}
+                .pushReplacementNamed(HomeRoute.name);
+          } catch (_) {}
         };
       } else {
         SnackBar snackBar =
@@ -122,42 +122,6 @@ class _LoginWidgetState extends State<LoginWidget> {
               children: [
                 Column(children: [
                   Expanded(
-                      flex: 6,
-                      child: Align(
-                          alignment: Alignment.bottomLeft,
-                          child: Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 32, vertical: 46),
-                              child: Text("  登入",
-                                  style: textTheme.displayMedium)))),
-                  Expanded(
-                    flex: 11,
-                    child: Column(
-                      children: [
-                        const WebviewLoginCard(),
-                        TextButton(
-                          child: Text("备用登录方式 >",
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .labelSmall
-                                  ?.copyWith(
-                                      color: Theme.of(context).hintColor)),
-                          onPressed: () {
-                            controller.animateToPage(1,
-                                duration: const Duration(milliseconds: 500),
-                                curve: Curves.easeOut);
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Text("© GoForceX | 2021 - 2024",
-                            style: TextStyle(color: Colors.grey, fontSize: 10)),
-                        const Text("© 北京市八一学校 NPC 信息社 | 2023 - 2024",
-                            style: TextStyle(color: Colors.grey, fontSize: 10)),
-                        const SizedBox(height: 10),
-                ]),
-                Column(children: [
-                  Expanded(
                       flex: 3,
                       child: Align(
                           alignment: Alignment.bottomLeft,
@@ -194,6 +158,43 @@ class _LoginWidgetState extends State<LoginWidget> {
                       style: TextStyle(color: Colors.grey, fontSize: 10)),
                   const SizedBox(height: 10),
                 ]),
+                Column(children: [
+                  Expanded(
+                      flex: 6,
+                      child: Align(
+                          alignment: Alignment.bottomLeft,
+                          child: Container(
+                              margin: const EdgeInsets.symmetric(
+                                  horizontal: 32, vertical: 46),
+                              child: Text("  登入",
+                                  style: textTheme.displayMedium)))),
+                  Expanded(
+                    flex: 11,
+                    child: Column(
+                      children: [
+                        const WebviewLoginCard(),
+                        TextButton(
+                          child: Text("< 返回",
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelSmall
+                                  ?.copyWith(
+                                      color: Theme.of(context).hintColor)),
+                          onPressed: () {
+                            controller.animateToPage(0,
+                                duration: const Duration(milliseconds: 500),
+                                curve: Curves.easeOut);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Text("© GoForceX | 2021 - 2024",
+                      style: TextStyle(color: Colors.grey, fontSize: 10)),
+                  const Text("© 北京市八一学校 NPC 信息社 | 2023 - 2024",
+                      style: TextStyle(color: Colors.grey, fontSize: 10)),
+                  const SizedBox(height: 10),
+                ])
               ],
             ));
       },
