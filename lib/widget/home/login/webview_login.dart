@@ -35,6 +35,7 @@ class _WebviewLoginCardState extends State<WebviewLoginCard>
   SharedPreferences sharedPrefs = BaseSingleton.singleton.sharedPreferences;
   Widget webviewCard = Container();
   webview.InAppWebViewController? inAppWebViewController;
+  webview.CookieManager cookieManager = webview.CookieManager.instance();
 
   @override
   void reassemble() {
@@ -128,15 +129,59 @@ class _WebviewLoginCardState extends State<WebviewLoginCard>
       """);
   }
 
+  void login(webview.WebUri url) async {
+    LoginModel model = Provider.of<LoginModel>(context, listen: false);
+    List<webview.Cookie> cookies = await cookieManager.getCookies(url: url);
+    BaseSingleton.singleton.cookieJar.saveFromResponse(
+        url, cookies.map((e) => Cookie(e.name, e.value)).toList());
+    String? tlsysSessionId;
+    for (var element in cookies) {
+      if (element.name == "tlsysSessionId") {
+        tlsysSessionId = element.value;
+        debugPrint(element.toString());
+      }
+    }
+    String getToken = """
+          var request = new Promise(function (resolve, reject) { 
+            const Http = new XMLHttpRequest();
+            Http.open("GET", "$zhixueXTokenUrl");
+            Http.send();
+            Http.onreadystatechange = (e) => {
+              if (Http.readyState === 4 && Http.status === 200) {
+                resolve(Http.responseText);
+              }
+            };
+          });
+          return await request;
+        """;
+    String response = (await inAppWebViewController?.callAsyncJavaScript(
+            functionBody: getToken))
+        ?.value;
+    Map<String, dynamic> json = jsonDecode(response);
+    String xToken = json["result"];
+    if (json["errorCode"] == 0) {
+      model.user.session = Session(
+          sessionId: tlsysSessionId!,
+          xToken: xToken,
+          loginType: LoginType.webview);
+      model.user.keepLocalSession = sharedPrefs.getBool("keepLogin") ?? true;
+      BaseSingleton.singleton.dio.options.headers["XToken"] = xToken;
+      if (sharedPrefs.getBool("keepLogin") ?? true) {
+        model.user.saveLocalSession();
+      }
+      model.user.telemetryLogin();
+      inAppWebViewController?.stopLoading();
+      model.setLoggedIn(true);
+    }
+  }
+
   @override
   void initState() {
     super.initState();
-    webview.CookieManager cookieManager = webview.CookieManager.instance();
     if (Platform.isAndroid) {
       webview.InAppWebViewController.setWebContentsDebuggingEnabled(
           !kReleaseMode);
     }
-    LoginModel model = Provider.of<LoginModel>(context, listen: false);
 
     webviewCard = webview.InAppWebView(
         initialUrlRequest: webview.URLRequest(url: webview.WebUri.uri(initUrl)),
@@ -159,45 +204,8 @@ class _WebviewLoginCardState extends State<WebviewLoginCard>
               url, cookies.map((e) => Cookie(e.name, e.value)).toList());
         },
         onUpdateVisitedHistory: (controller, url, androidIsReload) async {
-          List<webview.Cookie> cookies =
-              await cookieManager.getCookies(url: url!);
-          BaseSingleton.singleton.cookieJar.saveFromResponse(
-              url, cookies.map((e) => Cookie(e.name, e.value)).toList());
-          if (url.path.contains('htm-vessel')) {
-            String? tlsysSessionId;
-            for (var element in cookies) {
-              if (element.name == "tlsysSessionId") {
-                tlsysSessionId = element.value;
-                debugPrint(element.toString());
-              }
-            }
-            String getToken = """
-                var request = new Promise(function (resolve, reject) {
-                  \$.get("https://www.zhixue.com/addon/error/book/index",function(data, status) {resolve(data)})
-                });
-                await request;
-                return request;
-              """;
-            String response =
-                (await controller.callAsyncJavaScript(functionBody: getToken))
-                    ?.value;
-            Map<String, dynamic> json = jsonDecode(response);
-            String xToken = json["result"];
-            if (json["errorCode"] == 0) {
-              model.user.session = Session(
-                  sessionId: tlsysSessionId!,
-                  xToken: xToken,
-                  loginType: LoginType.webview);
-              model.user.keepLocalSession =
-                  sharedPrefs.getBool("keepLogin") ?? true;
-              BaseSingleton.singleton.dio.options.headers["XToken"] = xToken;
-              if (sharedPrefs.getBool("keepLogin") ?? true) {
-                model.user.saveLocalSession();
-              }
-              model.user.telemetryLogin();
-              controller.stopLoading();
-              model.setLoggedIn(true);
-            }
+          if (url!.path.contains('htm-vessel')) {
+            login(url);
           }
         });
   }
@@ -265,13 +273,18 @@ class _WebviewLoginCardState extends State<WebviewLoginCard>
                             style: Theme.of(context).textTheme.labelMedium),
                         const Expanded(child: SizedBox()),
                         GestureDetector(
-                            child: Text("清除缓存",
-                                style: Theme.of(context).textTheme.labelMedium),
+                            child: Icon(Icons.refresh,
+                                color: Theme.of(context).colorScheme.primary,
+                                semanticLabel: "刷新",
+                                size: 20),
                             onTap: () {
                               webview.InAppWebViewController.clearAllCache();
                               inAppWebViewController?.reload();
+                              inAppWebViewController?.getUrl().then((url) {
+                                login(url!);
+                              });
                             }),
-                        const SizedBox(width: 20)
+                        const SizedBox(width: 16)
                       ],
                     ),
                   ],
