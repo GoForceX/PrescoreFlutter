@@ -138,14 +138,14 @@ class _LoginWidgetState extends State<LoginWidget> {
                               usernameController: usernameController,
                               passwordController: passwordController),
                           TextButton(
-                            child: Text("< 返回",
+                            child: Text("备用登陆方式 >",
                                 style: Theme.of(context)
                                     .textTheme
                                     .labelSmall
                                     ?.copyWith(
                                         color: Theme.of(context).hintColor)),
                             onPressed: () {
-                              controller.animateToPage(0,
+                              controller.animateToPage(1,
                                   duration: const Duration(milliseconds: 500),
                                   curve: Curves.easeInOut);
                             },
